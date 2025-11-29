@@ -1,0 +1,30 @@
+{
+  "expo": {
+    "name": "AsaanCar",
+    "slug": "asaancar-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#7e246c"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.asaancar.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#7e246c"
+      },
+      "package": "com.asaancar.app"
+    },
+    "web": {
+      "bundler": "metro"
+    }
+  }
+}
+
