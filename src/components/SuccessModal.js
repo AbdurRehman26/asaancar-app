@@ -8,8 +8,15 @@ import {
   TouchableWithoutFeedback,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import { useTheme } from '@/context/ThemeContext';
 
 const SuccessModal = ({ visible, onClose, title = 'Success', message, onConfirm }) => {
+  const { theme } = useTheme();
+
+  if (!theme) {
+    return null;
+  }
+
   return (
     <Modal
       visible={visible}
@@ -20,15 +27,43 @@ const SuccessModal = ({ visible, onClose, title = 'Success', message, onConfirm 
       <TouchableWithoutFeedback onPress={onClose}>
         <View style={styles.overlay}>
           <TouchableWithoutFeedback>
-            <View style={styles.modalContainer}>
+            <View 
+              style={[
+                styles.modalContainer, 
+                { 
+                  backgroundColor: theme.colors.cardBackground || theme.colors.background 
+                }
+              ]}
+            >
               <View style={styles.header}>
-                <Icon name="check-circle" size={48} color="#85ea2d" />
-                <Text style={styles.title}>{title}</Text>
-                <Text style={styles.message}>{message}</Text>
+                <Icon 
+                  name="check-circle" 
+                  size={48} 
+                  color={theme.colors.primary || '#7e246c'} 
+                />
+                <Text 
+                  style={[
+                    styles.title, 
+                    { color: theme.colors.text || '#1a1a1a' }
+                  ]}
+                >
+                  {title}
+                </Text>
+                <Text 
+                  style={[
+                    styles.message, 
+                    { color: theme.colors.textSecondary || '#666666' }
+                  ]}
+                >
+                  {message}
+                </Text>
               </View>
 
               <TouchableOpacity
-                style={styles.button}
+                style={[
+                  styles.button, 
+                  { backgroundColor: theme.colors.primary || '#7e246c' }
+                ]}
                 onPress={() => {
                   if (onConfirm) {
                     onConfirm();
@@ -54,7 +89,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   modalContainer: {
-    backgroundColor: '#fff',
     borderRadius: 16,
     padding: 24,
     width: '85%',
@@ -72,20 +106,17 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: '#333',
     marginTop: 12,
     marginBottom: 8,
   },
   message: {
     fontSize: 14,
-    color: '#666',
     textAlign: 'center',
     lineHeight: 20,
   },
   button: {
     paddingVertical: 14,
     borderRadius: 12,
-    backgroundColor: '#85ea2d',
     alignItems: 'center',
   },
   buttonText: {
@@ -96,4 +127,5 @@ const styles = StyleSheet.create({
 });
 
 export default SuccessModal;
+
 

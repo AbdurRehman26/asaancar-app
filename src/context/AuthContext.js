@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
-import { authAPI } from '../services/api';
+import { authAPI } from '@/services/api';
 
 const AuthContext = createContext({});
 
@@ -32,6 +32,27 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const loginWithOtp = async (phone, otp) => {
+    try {
+      const response = await authAPI.verifyLoginOtp(phone, otp);
+      setUser(response.user);
+      return response;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const setUserFromStorage = async () => {
+    try {
+      const userData = await authAPI.getCurrentUser();
+      setUser(userData);
+      return userData;
+    } catch (error) {
+      console.error('Error loading user from storage:', error);
+      return null;
+    }
+  };
+
   const register = async (userData) => {
     try {
       const response = await authAPI.register(userData);
@@ -51,8 +72,12 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const updateUser = (userData) => {
+    setUser(userData);
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, loginWithOtp, register, logout, setUserFromStorage, updateUser }}>
       {children}
     </AuthContext.Provider>
   );
@@ -65,4 +90,5 @@ export const useAuth = () => {
   }
   return context;
 };
+
 

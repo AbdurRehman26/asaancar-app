@@ -9,7 +9,7 @@ import {
   RefreshControl,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { bookingAPI } from '../services/api';
+import { bookingAPI } from '@/services/api';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
 const MyBookingsScreen = () => {
@@ -17,16 +17,33 @@ const MyBookingsScreen = () => {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [page, setPage] = useState(1);
+  const [perPage] = useState(10);
+  const [hasMore, setHasMore] = useState(true);
 
   useEffect(() => {
-    loadBookings();
+    loadBookings(1);
   }, []);
 
-  const loadBookings = async () => {
+  const loadBookings = async (pageNum = 1, append = false) => {
     try {
-      setLoading(true);
-      const data = await bookingAPI.getBookings();
-      setBookings(data.data || data || []);
+      if (!append) {
+        setLoading(true);
+      }
+      const data = await bookingAPI.getBookings({ page: pageNum, per_page: perPage });
+      
+      // Handle different response structures
+      const bookingsList = data.data || data.bookings || data || [];
+      const totalPages = data.last_page || data.total_pages || Math.ceil((data.total || bookingsList.length) / perPage);
+      
+      if (append) {
+        setBookings(prev => [...prev, ...bookingsList]);
+      } else {
+        setBookings(bookingsList);
+      }
+      
+      setHasMore(pageNum < totalPages);
+      setPage(pageNum);
     } catch (error) {
       console.error('Error loading bookings:', error);
     } finally {
@@ -37,14 +54,16 @@ const MyBookingsScreen = () => {
 
   const onRefresh = () => {
     setRefreshing(true);
-    loadBookings();
+    setPage(1);
+    setHasMore(true);
+    loadBookings(1, false);
   };
 
   const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
       case 'confirmed':
       case 'active':
-        return '#85ea2d';
+        return '#7e246c';
       case 'pending':
         return '#ffa500';
       case 'cancelled':
@@ -119,7 +138,7 @@ const MyBookingsScreen = () => {
   if (loading && !refreshing) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#85ea2d" />
+        <ActivityIndicator size="large" color="#7e246c" />
       </View>
     );
   }
@@ -139,7 +158,7 @@ const MyBookingsScreen = () => {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor="#85ea2d"
+            tintColor="#7e246c"
           />
         }
         ListEmptyComponent={
@@ -238,7 +257,7 @@ const styles = StyleSheet.create({
   totalAmount: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#85ea2d',
+    color: '#7e246c',
   },
   emptyContainer: {
     flex: 1,
@@ -261,4 +280,5 @@ const styles = StyleSheet.create({
 });
 
 export default MyBookingsScreen;
+
 

@@ -8,11 +8,11 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
-import { useAuth } from '../context/AuthContext';
-import { useTheme } from '../context/ThemeContext';
-import { pickDropAPI } from '../services/api';
+import { useAuth } from '@/context/AuthContext';
+import { useTheme } from '@/context/ThemeContext';
+import { pickDropAPI } from '@/services/api';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import ErrorModal from '../components/ErrorModal';
+import ErrorModal from '@/components/ErrorModal';
 
 const PickDropDetailScreen = () => {
   const route = useRoute();

@@ -17,7 +17,7 @@ const ConfirmModal = ({
   confirmText = 'Confirm',
   cancelText = 'Cancel',
   onConfirm,
-  confirmColor = '#85ea2d',
+  confirmColor = '#7e246c',
   destructive = false,
 }) => {
   return (
@@ -35,7 +35,7 @@ const ConfirmModal = ({
                 <Icon
                   name={destructive ? 'warning' : 'help-outline'}
                   size={48}
-                  color={destructive ? '#ff4444' : '#85ea2d'}
+                  color={destructive ? '#ff4444' : '#7e246c'}
                 />
                 <Text style={styles.title}>{title}</Text>
                 <Text style={styles.message}>{message}</Text>
@@ -137,4 +137,5 @@ const styles = StyleSheet.create({
 });
 
 export default ConfirmModal;
+
 

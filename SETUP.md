@@ -89,3 +89,4 @@ The app connects to `https://asaancar.com/api` with the following endpoints:
 - Implement offline support
 - Add push notifications
 
+

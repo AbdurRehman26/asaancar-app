@@ -11,24 +11,29 @@ import {
   ScrollView,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { useAuth } from '../context/AuthContext';
-import { useTheme } from '../context/ThemeContext';
+import { useAuth } from '@/context/AuthContext';
+import { useTheme } from '@/context/ThemeContext';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import ErrorModal from '../components/ErrorModal';
+import ErrorModal from '@/components/ErrorModal';
+import SuccessModal from '@/components/SuccessModal';
+import { authAPI } from '@/services/api';
 
 const LoginScreen = () => {
   const navigation = useNavigation();
   const { theme } = useTheme();
-  const { login } = useAuth();
+  const { login, loginWithOtp, setUserFromStorage } = useAuth();
   const [authMethod, setAuthMethod] = useState('otp'); // 'otp' or 'password'
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [otp, setOtp] = useState('');
+  const [otpSent, setOtpSent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showErrorModal, setShowErrorModal] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
 
   const handleSendOTP = async () => {
     if (!phone || phone.length !== 10) {
@@ -39,12 +44,26 @@ const LoginScreen = () => {
 
     try {
       setLoading(true);
-      // TODO: Implement OTP sending API call
-      // await authAPI.sendOTP(phone);
-      setErrorMessage('OTP functionality will be implemented');
-      setShowErrorModal(true);
+      // Format phone number with country code (Pakistan: +92)
+      const formattedPhone = `+92${phone}`;
+      const response = await authAPI.sendLoginOtp(formattedPhone);
+      
+      // Check if user is returned in response (auto-login scenario)
+      if (response.user && response.token) {
+        // User is automatically logged in, no OTP verification needed
+        // Token and user are already stored by the API call
+        // Update the AuthContext user state
+        await setUserFromStorage();
+        // Navigation will happen automatically when user state updates
+        return;
+      }
+      
+      // If no user in response, show OTP input field
+      setOtpSent(true);
+      setSuccessMessage('OTP has been sent to your phone number');
+      setShowSuccessModal(true);
     } catch (error) {
-      setErrorMessage(error.response?.data?.message || 'Failed to send OTP');
+      setErrorMessage(error.response?.data?.message || error.message || 'Failed to send OTP');
       setShowErrorModal(true);
     } finally {
       setLoading(false);
@@ -53,14 +72,30 @@ const LoginScreen = () => {
 
   const handleLogin = async () => {
     if (authMethod === 'otp') {
-      if (!otp) {
-        setErrorMessage('Please enter the OTP');
+      if (!otpSent) {
+        // If OTP hasn't been sent yet, send it first
+        await handleSendOTP();
+        return;
+      }
+
+      if (!otp || otp.length !== 6) {
+        setErrorMessage('Please enter the 6-digit OTP');
         setShowErrorModal(true);
         return;
       }
-      // TODO: Implement OTP verification
-      setErrorMessage('OTP verification will be implemented');
-      setShowErrorModal(true);
+
+      try {
+        setLoading(true);
+        // Format phone number with country code (Pakistan: +92)
+        const formattedPhone = `+92${phone}`;
+        await loginWithOtp(formattedPhone, otp);
+        // Navigation will happen automatically via AuthContext
+      } catch (error) {
+        setErrorMessage(error.response?.data?.message || error.message || 'Invalid OTP. Please try again.');
+        setShowErrorModal(true);
+      } finally {
+        setLoading(false);
+      }
       return;
     }
 
@@ -116,7 +151,11 @@ const LoginScreen = () => {
                 styles.authMethodButton,
                 authMethod === 'otp' && { backgroundColor: theme.colors.primary },
               ]}
-              onPress={() => setAuthMethod('otp')}
+              onPress={() => {
+                setAuthMethod('otp');
+                setOtpSent(false);
+                setOtp('');
+              }}
             >
               <Text
                 style={[
@@ -138,7 +177,11 @@ const LoginScreen = () => {
                   borderColor: '#e0e0e0',
                 },
               ]}
-              onPress={() => setAuthMethod('password')}
+              onPress={() => {
+                setAuthMethod('password');
+                setOtpSent(false);
+                setOtp('');
+              }}
             >
               <Text
                 style={[
@@ -181,18 +224,34 @@ const LoginScreen = () => {
                 Enter your 10-digit phone number without the country code
               </Text>
 
-              {otp && (
-                <View style={styles.inputContainer}>
-                  <TextInput
-                    style={[styles.input, { color: theme.colors.text }]}
-                    placeholder="Enter OTP"
-                    placeholderTextColor={theme.colors.placeholder}
-                    value={otp}
-                    onChangeText={setOtp}
-                    keyboardType="number-pad"
-                    maxLength={6}
-                  />
-                </View>
+              {otpSent && (
+                <>
+                  <View style={styles.labelContainer}>
+                    <Text style={[styles.label, { color: theme.colors.text }]}>Enter OTP</Text>
+                  </View>
+                  <View style={[styles.inputContainer, { borderColor: theme.colors.border }]}>
+                    <TextInput
+                      style={[styles.input, { color: theme.colors.text }]}
+                      placeholder="Enter 6-digit OTP"
+                      placeholderTextColor={theme.colors.placeholder}
+                      value={otp}
+                      onChangeText={setOtp}
+                      keyboardType="number-pad"
+                      maxLength={6}
+                    />
+                    <View style={styles.inputIcons}>
+                      <Icon name="lock" size={16} color={theme.colors.textSecondary} />
+                    </View>
+                  </View>
+                  <TouchableOpacity
+                    onPress={handleSendOTP}
+                    style={styles.resendButton}
+                  >
+                    <Text style={[styles.resendText, { color: theme.colors.primary }]}>
+                      Resend OTP
+                    </Text>
+                  </TouchableOpacity>
+                </>
               )}
             </>
           )}
@@ -253,14 +312,14 @@ const LoginScreen = () => {
               { backgroundColor: theme.colors.primary },
               loading && styles.buttonDisabled,
             ]}
-            onPress={authMethod === 'otp' ? handleSendOTP : handleLogin}
+            onPress={handleLogin}
             disabled={loading}
           >
             {loading ? (
               <ActivityIndicator color="#fff" />
             ) : (
               <Text style={styles.buttonText}>
-                {authMethod === 'otp' ? 'Send OTP' : 'Login'}
+                {authMethod === 'otp' ? (otpSent ? 'Verify OTP' : 'Send OTP') : 'Login'}
               </Text>
             )}
           </TouchableOpacity>
@@ -281,6 +340,13 @@ const LoginScreen = () => {
         visible={showErrorModal}
         onClose={() => setShowErrorModal(false)}
         message={errorMessage}
+      />
+
+      <SuccessModal
+        visible={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}
+        title="OTP Sent"
+        message={successMessage}
       />
     </KeyboardAvoidingView>
   );
@@ -369,14 +435,16 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderRadius: 12,
     marginBottom: 8,
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
+    paddingVertical: 4,
     borderWidth: 1,
-    height: 50,
+    minHeight: 56,
   },
   countryCodeContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+    paddingRight: 4,
   },
   flag: {
     fontSize: 20,
@@ -394,6 +462,8 @@ const styles = StyleSheet.create({
   phoneInput: {
     flex: 1,
     fontSize: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 8,
   },
   input: {
     flex: 1,
@@ -410,6 +480,15 @@ const styles = StyleSheet.create({
   helperText: {
     fontSize: 12,
     marginBottom: 16,
+  },
+  resendButton: {
+    alignSelf: 'flex-end',
+    marginTop: 8,
+    marginBottom: 16,
+  },
+  resendText: {
+    fontSize: 14,
+    fontWeight: '500',
   },
   button: {
     paddingVertical: 16,

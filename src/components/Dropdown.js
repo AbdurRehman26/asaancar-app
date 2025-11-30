@@ -7,7 +7,7 @@ import {
   Modal,
   FlatList,
 } from 'react-native';
-import { useTheme } from '../context/ThemeContext';
+import { useTheme } from '@/context/ThemeContext';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
 const Dropdown = ({
@@ -140,4 +140,5 @@ const styles = StyleSheet.create({
 });
 
 export default Dropdown;
+
 

@@ -55,6 +55,43 @@ export const carAPI = {
     const response = await api.get(`/cars/${id}`);
     return response.data;
   },
+
+  // Get user's own cars
+  getMyCars: async (filters = {}) => {
+    const params = new URLSearchParams();
+    
+    // Add pagination
+    if (filters.page) {
+      params.append('page', filters.page);
+    }
+    if (filters.per_page) {
+      params.append('per_page', filters.per_page);
+    }
+    
+    // Add other filters if needed
+    Object.keys(filters).forEach((key) => {
+      if (filters[key] && key !== 'page' && key !== 'per_page') {
+        params.append(key, filters[key]);
+      }
+    });
+    
+    const queryString = params.toString();
+    const url = queryString ? `/my-cars?${queryString}` : '/my-cars';
+    const response = await api.get(url);
+    return response.data;
+  },
+
+  // Update car
+  updateCar: async (id, carData) => {
+    const response = await api.put(`/cars/${id}`, carData);
+    return response.data;
+  },
+
+  // Delete car
+  deleteCar: async (id) => {
+    const response = await api.delete(`/cars/${id}`);
+    return response.data;
+  },
 };
 
 export const carBrandAPI = {
@@ -80,9 +117,28 @@ export const bookingAPI = {
     return response.data;
   },
 
-  // Get user bookings
-  getBookings: async () => {
-    const response = await api.get('/customer/booking');
+  // Get user bookings with pagination
+  getBookings: async (filters = {}) => {
+    const params = new URLSearchParams();
+    
+    // Add pagination
+    if (filters.page) {
+      params.append('page', filters.page);
+    }
+    if (filters.per_page) {
+      params.append('per_page', filters.per_page);
+    }
+    
+    // Add other filters if needed
+    Object.keys(filters).forEach((key) => {
+      if (filters[key] && key !== 'page' && key !== 'per_page') {
+        params.append(key, filters[key]);
+      }
+    });
+    
+    const queryString = params.toString();
+    const url = queryString ? `/bookings?${queryString}` : '/bookings';
+    const response = await api.get(url);
     return response.data;
   },
 
@@ -143,6 +199,29 @@ export const authAPI = {
     return response.data;
   },
 
+  // Send login OTP
+  sendLoginOtp: async (phone) => {
+    const response = await api.post('/send-login-otp', { phone_number: phone });
+    // If response includes token and user, store them (auto-login scenario)
+    if (response.data.token) {
+      await AsyncStorage.setItem('authToken', response.data.token);
+      if (response.data.user) {
+        await AsyncStorage.setItem('user', JSON.stringify(response.data.user));
+      }
+    }
+    return response.data;
+  },
+
+  // Verify login OTP
+  verifyLoginOtp: async (phone, otp) => {
+    const response = await api.post('/verify-login-otp', { phone_number: phone, otp });
+    if (response.data.token) {
+      await AsyncStorage.setItem('authToken', response.data.token);
+      await AsyncStorage.setItem('user', JSON.stringify(response.data.user));
+    }
+    return response.data;
+  },
+
   // Register
   register: async (userData) => {
     const response = await api.post('/auth/register', userData);
@@ -163,6 +242,25 @@ export const authAPI = {
   getCurrentUser: async () => {
     const userStr = await AsyncStorage.getItem('user');
     return userStr ? JSON.parse(userStr) : null;
+  },
+
+  // Update user profile
+  updateProfile: async (userData) => {
+    const response = await api.put('/user/profile', userData);
+    if (response.data.user) {
+      await AsyncStorage.setItem('user', JSON.stringify(response.data.user));
+    }
+    return response.data;
+  },
+
+  // Change password
+  changePassword: async (currentPassword, newPassword, confirmPassword) => {
+    const response = await api.post('/user/change-password', {
+      current_password: currentPassword,
+      new_password: newPassword,
+      confirm_password: confirmPassword,
+    });
+    return response.data;
   },
 };
 

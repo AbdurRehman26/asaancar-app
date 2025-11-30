@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -12,13 +12,13 @@ import {
   RefreshControl,
 } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
-import { useAuth } from '../context/AuthContext';
-import { useTheme } from '../context/ThemeContext';
-import { carAPI, carBrandAPI, carTypeAPI } from '../services/api';
+import { useAuth } from '@/context/AuthContext';
+import { useTheme } from '@/context/ThemeContext';
+import { carAPI, carBrandAPI, carTypeAPI } from '@/services/api';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import ServiceTabs from '../components/ServiceTabs';
-import Dropdown from '../components/Dropdown';
-import FilterDrawer from '../components/FilterDrawer';
+import ServiceTabs from '@/components/ServiceTabs';
+import Dropdown from '@/components/Dropdown';
+import FilterDrawer from '@/components/FilterDrawer';
 
 const HomeScreen = () => {
   const navigation = useNavigation();
@@ -49,9 +49,11 @@ const HomeScreen = () => {
     }, [])
   );
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
+  const [apiCurrentPage, setApiCurrentPage] = useState(1); // Current page from API
+  const [lastPage, setLastPage] = useState(1);
   const [totalCars, setTotalCars] = useState(0);
   const [pageSize] = useState(9); // 9 cars per page
+  const flatListRef = useRef(null);
 
   useEffect(() => {
     loadData();
@@ -66,6 +68,11 @@ const HomeScreen = () => {
       navigation.navigate('RentalCars');
     }
   };
+
+  useEffect(() => {
+    // Reset to page 1 when filters change
+    setCurrentPage(1);
+  }, [filters]);
 
   useEffect(() => {
     loadCars();
@@ -122,19 +129,35 @@ const HomeScreen = () => {
       
       setCars(carsData);
       
-      // Handle pagination - check multiple possible structures
+      // Handle pagination - check for current_page and last_page
+      let currentPageValue = 1;
+      let lastPageValue = 1;
+      
       if (data?.pagination) {
-        setTotalPages(data.pagination.total_pages || data.pagination.last_page || 1);
-        setTotalCars(data.pagination.total || carsData.length);
+        currentPageValue = data.pagination.current_page || data.pagination.page || 1;
+        lastPageValue = data.pagination.last_page || 1;
       } else if (data?.meta) {
-        setTotalPages(data.meta.last_page || data.meta.total_pages || 1);
-        setTotalCars(data.meta.total || carsData.length);
+        currentPageValue = data.meta.current_page || data.meta.page || 1;
+        lastPageValue = data.meta.last_page || 1;
       } else if (data?.data?.pagination) {
-        setTotalPages(data.data.pagination.total_pages || data.data.pagination.last_page || 1);
-        setTotalCars(data.data.pagination.total || carsData.length);
+        currentPageValue = data.data.pagination.current_page || data.data.pagination.page || 1;
+        lastPageValue = data.data.pagination.last_page || 1;
+      } else if (data?.current_page) {
+        currentPageValue = data.current_page;
+        lastPageValue = data.last_page || 1;
+      }
+      
+      setApiCurrentPage(currentPageValue);
+      setLastPage(lastPageValue);
+      
+      // Get total cars count
+      if (data?.pagination?.total) {
+        setTotalCars(data.pagination.total);
+      } else if (data?.meta?.total) {
+        setTotalCars(data.meta.total);
+      } else if (data?.data?.pagination?.total) {
+        setTotalCars(data.data.pagination.total);
       } else {
-        // Default: assume single page if no pagination info
-        setTotalPages(1);
         setTotalCars(carsData.length);
       }
     } catch (error) {
@@ -174,7 +197,9 @@ const HomeScreen = () => {
   const handleApplyFilters = () => {
     setFilters(tempFilters);
     setCurrentPage(1); // Reset to first page when filters change
+    setCars([]); // Clear cars when filters change
   };
+
 
   const openFilters = () => {
     setTempFilters(filters); // Sync temp filters with current filters
@@ -249,7 +274,11 @@ const HomeScreen = () => {
     return 'https://via.placeholder.com/300x200?text=Car+Image';
   };
 
-  const renderCarItem = ({ item }) => (
+  const renderCarItem = ({ item, index }) => {
+    // Calculate car number based on API's current_page
+    const carNumber = (apiCurrentPage - 1) * pageSize + index + 1;
+    
+    return (
     <TouchableOpacity
       style={[styles.carCard, { borderColor: theme.colors.primary }]}
       onPress={() => navigation.navigate('CarDetail', { carId: item.id })}
@@ -262,6 +291,9 @@ const HomeScreen = () => {
           style={styles.carImage}
           resizeMode="cover"
         />
+        <View style={[styles.carNumberBadge, { backgroundColor: theme.colors.primary }]}>
+          <Text style={styles.carNumberText}>{carNumber}</Text>
+        </View>
       </View>
       <View style={styles.carInfo}>
         <Text style={styles.carName}>
@@ -306,7 +338,8 @@ const HomeScreen = () => {
         )}
       </View>
     </TouchableOpacity>
-  );
+    );
+  };
 
   const dynamicStyles = {
     container: { backgroundColor: theme.colors.backgroundTertiary },
@@ -367,12 +400,9 @@ const HomeScreen = () => {
 
       {/* Pagination Info */}
       {!loading && cars.length > 0 && (
-        <View style={styles.paginationInfo}>
-          <Text style={styles.paginationText}>
-            Page {currentPage} of {totalPages}
-          </Text>
-          <Text style={styles.paginationText}>
-            Showing {cars.length} cars
+        <View style={[styles.paginationInfo, { backgroundColor: theme.colors.cardBackground, borderBottomColor: theme.colors.border }]}>
+          <Text style={[styles.paginationText, { color: theme.colors.textSecondary }]}>
+            Showing {cars.length} {totalCars > 0 ? `of ${totalCars}` : ''} cars
           </Text>
         </View>
       )}
@@ -383,6 +413,7 @@ const HomeScreen = () => {
         </View>
       ) : (
         <FlatList
+          ref={flatListRef}
           data={cars}
           renderItem={renderCarItem}
           keyExtractor={(item) => item.id?.toString() || Math.random().toString()}
@@ -404,123 +435,40 @@ const HomeScreen = () => {
       )}
 
       {/* Pagination Controls */}
-      {!loading && totalPages > 1 && (
-        <View style={styles.paginationContainer}>
+      {!loading && cars.length > 0 && (
+        <View style={[styles.paginationContainer, { backgroundColor: theme.colors.cardBackground, borderTopColor: theme.colors.border }]}>
           <TouchableOpacity
             style={[
               styles.paginationButton,
+              { backgroundColor: theme.colors.backgroundSecondary },
               currentPage === 1 && styles.paginationButtonDisabled,
             ]}
-            onPress={() => setCurrentPage(Math.max(1, currentPage - 1))}
+            onPress={() => {
+              if (currentPage > 1) {
+                setCurrentPage(currentPage - 1);
+              }
+            }}
             disabled={currentPage === 1}
           >
-            <Text style={styles.paginationButtonText}>Prev</Text>
+            <Icon name="chevron-left" size={20} color={currentPage === 1 ? theme.colors.textLight : theme.colors.text} />
+            <Text style={[styles.paginationButtonText, { color: currentPage === 1 ? theme.colors.textLight : theme.colors.text }]}>Back</Text>
           </TouchableOpacity>
-
-          <View style={styles.pageNumbers}>
-            {/* Always show page 1 */}
-            <TouchableOpacity
-              style={[
-                styles.pageNumber,
-                currentPage === 1 && [
-                  styles.pageNumberActive,
-                  { backgroundColor: theme.colors.primary },
-                ],
-              ]}
-              onPress={() => setCurrentPage(1)}
-            >
-              <Text
-                style={[
-                  styles.pageNumberText,
-                  currentPage === 1 && styles.pageNumberTextActive,
-                ]}
-              >
-                1
-              </Text>
-            </TouchableOpacity>
-
-            {/* Show current page and nearby pages */}
-            {currentPage > 2 && currentPage < totalPages - 1 && (
-              <>
-                {currentPage > 3 && <Text style={styles.ellipsis}>...</Text>}
-                <TouchableOpacity
-                  style={[
-                    styles.pageNumber,
-                    { backgroundColor: theme.colors.primary },
-                    styles.pageNumberActive,
-                  ]}
-                  onPress={() => setCurrentPage(currentPage)}
-                >
-                  <Text style={styles.pageNumberTextActive}>{currentPage}</Text>
-                </TouchableOpacity>
-                {currentPage < totalPages - 2 && <Text style={styles.ellipsis}>...</Text>}
-              </>
-            )}
-
-            {/* Show pages around current if near start or end */}
-            {currentPage <= 2 && totalPages > 3 && (
-              <>
-                {totalPages > 4 && <Text style={styles.ellipsis}>...</Text>}
-                <TouchableOpacity
-                  style={[
-                    styles.pageNumber,
-                    currentPage === 2 && [
-                      styles.pageNumberActive,
-                      { backgroundColor: theme.colors.primary },
-                    ],
-                  ]}
-                  onPress={() => setCurrentPage(2)}
-                >
-                  <Text
-                    style={[
-                      styles.pageNumberText,
-                      currentPage === 2 && styles.pageNumberTextActive,
-                    ]}
-                  >
-                    2
-                  </Text>
-                </TouchableOpacity>
-              </>
-            )}
-
-            {/* Always show last page if more than 1 page */}
-            {totalPages > 1 && (
-              <>
-                {currentPage >= totalPages - 1 && totalPages > 3 && (
-                  <Text style={styles.ellipsis}>...</Text>
-                )}
-                <TouchableOpacity
-                  style={[
-                    styles.pageNumber,
-                    currentPage === totalPages && [
-                      styles.pageNumberActive,
-                      { backgroundColor: theme.colors.primary },
-                    ],
-                  ]}
-                  onPress={() => setCurrentPage(totalPages)}
-                >
-                  <Text
-                    style={[
-                      styles.pageNumberText,
-                      currentPage === totalPages && styles.pageNumberTextActive,
-                    ]}
-                  >
-                    {totalPages}
-                  </Text>
-                </TouchableOpacity>
-              </>
-            )}
-          </View>
 
           <TouchableOpacity
             style={[
               styles.paginationButton,
-              currentPage === totalPages && styles.paginationButtonDisabled,
+              { backgroundColor: theme.colors.backgroundSecondary },
+              currentPage >= lastPage && styles.paginationButtonDisabled,
             ]}
-            onPress={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-            disabled={currentPage === totalPages}
+            onPress={() => {
+              if (currentPage < lastPage) {
+                setCurrentPage(currentPage + 1);
+              }
+            }}
+            disabled={currentPage >= lastPage}
           >
-            <Text style={styles.paginationButtonText}>Next</Text>
+            <Text style={[styles.paginationButtonText, { color: currentPage >= lastPage ? theme.colors.textLight : theme.colors.text }]}>Next</Text>
+            <Icon name="chevron-right" size={20} color={currentPage >= lastPage ? theme.colors.textLight : theme.colors.text} />
           </TouchableOpacity>
         </View>
       )}
@@ -575,7 +523,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#85ea2d',
+    color: '#7e246c',
   },
   headerActions: {
     flexDirection: 'row',
@@ -613,7 +561,7 @@ const styles = StyleSheet.create({
   loginButton: {
     paddingHorizontal: 16,
     paddingVertical: 8,
-    backgroundColor: '#85ea2d',
+    backgroundColor: '#7e246c',
     borderRadius: 20,
   },
   loginButtonText: {
@@ -654,10 +602,31 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 8,
     borderTopRightRadius: 8,
     backgroundColor: '#e0e0e0',
+    position: 'relative',
   },
   carImage: {
     width: '100%',
     height: '100%',
+  },
+  carNumberBadge: {
+    position: 'absolute',
+    top: 12,
+    left: 12,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  carNumberText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: 'bold',
   },
   carInfo: {
     padding: 16,
@@ -723,7 +692,7 @@ const styles = StyleSheet.create({
   price: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#85ea2d',
+    color: '#7e246c',
   },
   emptyContainer: {
     flex: 1,
@@ -756,9 +725,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: '#fff',
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
   },
   paginationText: {
     fontSize: 14,
@@ -770,52 +737,27 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 16,
-    backgroundColor: '#fff',
     borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 5,
   },
   paginationButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 10,
+    paddingVertical: 12,
     borderRadius: 8,
-    backgroundColor: '#f0f0f0',
+    gap: 6,
   },
   paginationButtonDisabled: {
     opacity: 0.5,
   },
   paginationButtonText: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '600',
-    color: '#333',
-  },
-  pageNumbers: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  pageNumber: {
-    minWidth: 36,
-    height: 36,
-    borderRadius: 8,
-    backgroundColor: '#f0f0f0',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  pageNumberActive: {
-    backgroundColor: '#7e246c',
-  },
-  pageNumberText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
-  },
-  pageNumberTextActive: {
-    color: '#fff',
-  },
-  ellipsis: {
-    fontSize: 14,
-    color: '#666',
-    paddingHorizontal: 4,
   },
 });
 

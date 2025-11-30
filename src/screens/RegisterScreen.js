@@ -12,10 +12,10 @@ import {
   Modal,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { useAuth } from '../context/AuthContext';
-import { useTheme } from '../context/ThemeContext';
+import { useAuth } from '@/context/AuthContext';
+import { useTheme } from '@/context/ThemeContext';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import ErrorModal from '../components/ErrorModal';
+import ErrorModal from '@/components/ErrorModal';
 
 const RegisterScreen = () => {
   const navigation = useNavigation();

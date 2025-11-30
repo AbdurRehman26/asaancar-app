@@ -5,10 +5,10 @@ export const colors = {
   primaryDark: '#5d1a4f',
   primaryLight: '#9d3a85',
   
-  // Secondary brand colors
-  secondary: '#85ea2d', // Green - logo and accent color
-  secondaryDark: '#6bc91f',
-  secondaryLight: '#a5f05a',
+  // Secondary brand colors (using primary for consistency)
+  secondary: '#7e246c', // Purple - same as primary
+  secondaryDark: '#5d1a4f',
+  secondaryLight: '#9d3a85',
   
   // Background colors
   background: '#ffffff',
@@ -31,7 +31,7 @@ export const colors = {
   borderDark: '#cccccc',
   
   // Status colors
-  success: '#85ea2d',
+  success: '#7e246c',
   error: '#ff4444',
   warning: '#ffa500',
   info: '#2196f3',
@@ -48,7 +48,7 @@ export const colors = {
   
   // Button colors
   buttonPrimary: '#7e246c',
-  buttonSecondary: '#85ea2d',
+  buttonSecondary: '#7e246c',
   buttonText: '#ffffff',
 };
 
@@ -58,10 +58,10 @@ export const darkColors = {
   primaryDark: '#5d1a4f',
   primaryLight: '#9d3a85',
   
-  // Secondary brand colors (same)
-  secondary: '#85ea2d',
-  secondaryDark: '#6bc91f',
-  secondaryLight: '#a5f05a',
+  // Secondary brand colors (using primary for consistency)
+  secondary: '#7e246c',
+  secondaryDark: '#5d1a4f',
+  secondaryLight: '#9d3a85',
   
   // Background colors
   background: '#1a1a1a',
@@ -84,7 +84,7 @@ export const darkColors = {
   borderDark: '#555555',
   
   // Status colors (same)
-  success: '#85ea2d',
+  success: '#7e246c',
   error: '#ff4444',
   warning: '#ffa500',
   info: '#2196f3',
@@ -101,7 +101,7 @@ export const darkColors = {
   
   // Button colors
   buttonPrimary: '#7e246c',
-  buttonSecondary: '#85ea2d',
+  buttonSecondary: '#7e246c',
   buttonText: '#ffffff',
 };
 

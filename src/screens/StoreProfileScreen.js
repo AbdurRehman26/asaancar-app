@@ -10,10 +10,10 @@ import {
   FlatList,
 } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
-import { useTheme } from '../context/ThemeContext';
-import { carAPI, storeAPI } from '../services/api';
+import { useTheme } from '@/context/ThemeContext';
+import { carAPI, storeAPI } from '@/services/api';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import ErrorModal from '../components/ErrorModal';
+import ErrorModal from '@/components/ErrorModal';
 
 const StoreProfileScreen = () => {
   const route = useRoute();

@@ -2,21 +2,23 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { useAuth } from '../context/AuthContext';
-import { useTheme } from '../context/ThemeContext';
+import { useAuth } from '@/context/AuthContext';
+import { useTheme } from '@/context/ThemeContext';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
 // Screens
-import HomeScreen from '../screens/HomeScreen';
-import PickDropScreen from '../screens/PickDropScreen';
-import PickDropDetailScreen from '../screens/PickDropDetailScreen';
-import CarDetailScreen from '../screens/CarDetailScreen';
-import StoreProfileScreen from '../screens/StoreProfileScreen';
-import LoginScreen from '../screens/LoginScreen';
-import RegisterScreen from '../screens/RegisterScreen';
-import BookingScreen from '../screens/BookingScreen';
-import MyBookingsScreen from '../screens/MyBookingsScreen';
-import ProfileScreen from '../screens/ProfileScreen';
+import HomeScreen from '@/screens/HomeScreen';
+import PickDropScreen from '@/screens/PickDropScreen';
+import PickDropDetailScreen from '@/screens/PickDropDetailScreen';
+import CarDetailScreen from '@/screens/CarDetailScreen';
+import StoreProfileScreen from '@/screens/StoreProfileScreen';
+import LoginScreen from '@/screens/LoginScreen';
+import RegisterScreen from '@/screens/RegisterScreen';
+import BookingScreen from '@/screens/BookingScreen';
+import MyBookingsScreen from '@/screens/MyBookingsScreen';
+import SettingsScreen from '@/screens/SettingsScreen';
+import ProfileScreen from '@/screens/ProfileScreen';
+import MyCarsScreen from '@/screens/MyCarsScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -90,6 +92,34 @@ const MainStack = () => {
   );
 };
 
+// Settings stack (nested inside tabs)
+const SettingsStack = () => {
+  return (
+    <Stack.Navigator>
+      <Stack.Screen
+        name="SettingsMain"
+        component={SettingsScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="Profile"
+        component={ProfileScreen}
+        options={{
+          title: 'Profile',
+          headerBackTitle: 'Back',
+        }}
+      />
+      <Stack.Screen
+        name="MyCars"
+        component={MyCarsScreen}
+        options={{
+          headerShown: false,
+        }}
+      />
+    </Stack.Navigator>
+  );
+};
+
 // Authenticated tabs (only shown when logged in)
 const AuthenticatedTabs = () => {
   const { theme } = useTheme();
@@ -104,7 +134,7 @@ const AuthenticatedTabs = () => {
             iconName = 'home';
           } else if (route.name === 'Bookings') {
             iconName = 'book';
-          } else if (route.name === 'Profile') {
+          } else if (route.name === 'Settings') {
             iconName = 'person';
           }
 
@@ -121,7 +151,7 @@ const AuthenticatedTabs = () => {
     >
       <Tab.Screen name="Home" component={MainStack} />
       <Tab.Screen name="Bookings" component={MyBookingsScreen} />
-      <Tab.Screen name="Profile" component={ProfileScreen} />
+      <Tab.Screen name="Settings" component={SettingsStack} />
     </Tab.Navigator>
   );
 };

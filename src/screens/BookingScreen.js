@@ -10,14 +10,14 @@ import {
   Platform,
 } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
-import { useAuth } from '../context/AuthContext';
-import { useTheme } from '../context/ThemeContext';
-import { bookingAPI } from '../services/api';
+import { useAuth } from '@/context/AuthContext';
+import { useTheme } from '@/context/ThemeContext';
+import { bookingAPI } from '@/services/api';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import LoginModal from '../components/LoginModal';
-import ErrorModal from '../components/ErrorModal';
-import SuccessModal from '../components/SuccessModal';
+import LoginModal from '@/components/LoginModal';
+import ErrorModal from '@/components/ErrorModal';
+import SuccessModal from '@/components/SuccessModal';
 
 const BookingScreen = () => {
   const route = useRoute();
@@ -117,7 +117,7 @@ const BookingScreen = () => {
               style={styles.dateButton}
               onPress={() => setShowStartPicker(true)}
             >
-              <Icon name="calendar-today" size={20} color="#85ea2d" />
+              <Icon name="calendar-today" size={20} color="#7e246c" />
               <Text style={styles.dateText}>
                 {startDate.toLocaleDateString()}
               </Text>
@@ -161,7 +161,7 @@ const BookingScreen = () => {
               style={styles.dateButton}
               onPress={() => setShowEndPicker(true)}
             >
-              <Icon name="calendar-today" size={20} color="#85ea2d" />
+              <Icon name="calendar-today" size={20} color="#7e246c" />
               <Text style={styles.dateText}>
                 {endDate.toLocaleDateString()}
               </Text>
@@ -242,7 +242,7 @@ const BookingScreen = () => {
           <Icon
             name={withDriver ? 'check-circle' : 'radio-button-unchecked'}
             size={24}
-            color={withDriver ? '#85ea2d' : '#ccc'}
+            color={withDriver ? '#7e246c' : '#ccc'}
           />
           <Text style={styles.optionText}>With Driver</Text>
         </TouchableOpacity>
@@ -334,7 +334,7 @@ const styles = StyleSheet.create({
   },
   price: {
     fontSize: 18,
-    color: '#85ea2d',
+    color: '#7e246c',
     fontWeight: '600',
   },
   section: {
@@ -383,7 +383,7 @@ const styles = StyleSheet.create({
   daysText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#85ea2d',
+    color: '#7e246c',
   },
   inputContainer: {
     flexDirection: 'row',
@@ -435,7 +435,7 @@ const styles = StyleSheet.create({
   summaryTotal: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#85ea2d',
+    color: '#7e246c',
   },
   bookButton: {
     paddingVertical: 16,
@@ -464,7 +464,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   pickerButtonText: {
-    color: '#85ea2d',
+    color: '#7e246c',
     fontSize: 16,
     fontWeight: '600',
   },

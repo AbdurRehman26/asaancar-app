@@ -22,7 +22,7 @@ const LoginModal = ({ visible, onClose, onLogin, onRegister }) => {
           <TouchableWithoutFeedback>
             <View style={styles.modalContainer}>
               <View style={styles.header}>
-                <Icon name="lock" size={32} color="#85ea2d" />
+                <Icon name="lock" size={32} color="#7e246c" />
                 <Text style={styles.title}>Login Required</Text>
                 <Text style={styles.message}>
                   Please login to continue with this action
@@ -119,7 +119,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 14,
     borderRadius: 12,
-    backgroundColor: '#85ea2d',
+    backgroundColor: '#7e246c',
     alignItems: 'center',
   },
   loginButtonText: {
@@ -133,10 +133,11 @@ const styles = StyleSheet.create({
   },
   registerLinkText: {
     fontSize: 14,
-    color: '#85ea2d',
+    color: '#7e246c',
     fontWeight: '500',
   },
 });
 
 export default LoginModal;
+
 

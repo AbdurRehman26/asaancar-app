@@ -10,12 +10,12 @@ import {
   FlatList,
 } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
-import { useAuth } from '../context/AuthContext';
-import { useTheme } from '../context/ThemeContext';
-import { pickDropAPI } from '../services/api';
+import { useAuth } from '@/context/AuthContext';
+import { useTheme } from '@/context/ThemeContext';
+import { pickDropAPI } from '@/services/api';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import ServiceTabs from '../components/ServiceTabs';
-import PickDropFilterDrawer from '../components/PickDropFilterDrawer';
+import ServiceTabs from '@/components/ServiceTabs';
+import PickDropFilterDrawer from '@/components/PickDropFilterDrawer';
 
 const PickDropScreen = () => {
   const { theme } = useTheme();
@@ -392,7 +392,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#85ea2d',
+    color: '#7e246c',
   },
   headerActions: {
     flexDirection: 'row',
