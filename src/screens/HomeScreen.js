@@ -402,7 +402,13 @@ const HomeScreen = () => {
       {!loading && cars.length > 0 && (
         <View style={[styles.paginationInfo, { backgroundColor: theme.colors.cardBackground, borderBottomColor: theme.colors.border }]}>
           <Text style={[styles.paginationText, { color: theme.colors.textSecondary }]}>
-            Showing {cars.length} {totalCars > 0 ? `of ${totalCars}` : ''} cars
+            {(() => {
+              const startNumber = (apiCurrentPage - 1) * pageSize + 1;
+              const endNumber = Math.min(apiCurrentPage * pageSize, totalCars);
+              return totalCars > 0 
+                ? `Showing ${startNumber}-${endNumber} of ${totalCars}`
+                : `Showing ${startNumber}-${endNumber}`;
+            })()}
           </Text>
         </View>
       )}

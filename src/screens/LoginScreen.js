@@ -24,7 +24,6 @@ const LoginScreen = () => {
   const { login, loginWithOtp, setUserFromStorage } = useAuth();
   const [authMethod, setAuthMethod] = useState('otp'); // 'otp' or 'password'
   const [phone, setPhone] = useState('');
-  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [otp, setOtp] = useState('');
   const [otpSent, setOtpSent] = useState(false);
@@ -99,17 +98,26 @@ const LoginScreen = () => {
       return;
     }
 
-    if (!email || !password) {
-      setErrorMessage('Please fill in all fields');
+    if (!phone || phone.length !== 10) {
+      setErrorMessage('Please enter a valid 10-digit phone number');
+      setShowErrorModal(true);
+      return;
+    }
+
+    if (!password) {
+      setErrorMessage('Please enter your password');
       setShowErrorModal(true);
       return;
     }
 
     try {
       setLoading(true);
-      await login(email, password);
+      // Format phone number with country code (Pakistan: +92)
+      const formattedPhone = `+92${phone}`;
+      await login(formattedPhone, password);
+      // Navigation will happen automatically via AuthContext
     } catch (error) {
-      setErrorMessage(error.response?.data?.message || 'Invalid email or password');
+      setErrorMessage(error.response?.data?.message || 'Invalid phone number or password');
       setShowErrorModal(true);
     } finally {
       setLoading(false);
@@ -212,7 +220,11 @@ const LoginScreen = () => {
                   placeholder="3001234567"
                   placeholderTextColor={theme.colors.placeholder}
                   value={phone}
-                  onChangeText={setPhone}
+                  onChangeText={(text) => {
+                    // Only allow numeric characters
+                    const numericText = text.replace(/[^0-9]/g, '');
+                    setPhone(numericText);
+                  }}
                   keyboardType="phone-pad"
                   maxLength={10}
                 />
@@ -256,27 +268,38 @@ const LoginScreen = () => {
             </>
           )}
 
-          {/* Email and Password Inputs (for Password method) */}
+          {/* Phone Number and Password Inputs (for Password method) */}
           {authMethod === 'password' && (
             <>
               <View style={styles.labelContainer}>
-                <Text style={[styles.label, { color: theme.colors.text }]}>Email</Text>
+                <Text style={[styles.label, { color: theme.colors.text }]}>Phone Number</Text>
               </View>
-              <View style={[styles.inputContainer, { borderColor: theme.colors.border }]}>
+              <View style={[styles.phoneInputContainer, { borderColor: theme.colors.border }]}>
+                <View style={styles.countryCodeContainer}>
+                  <Text style={styles.flag}>🇵🇰</Text>
+                  <Text style={[styles.countryCode, { color: theme.colors.text }]}>+92</Text>
+                </View>
+                <View style={styles.phoneInputDivider} />
                 <TextInput
-                  style={[styles.input, { color: theme.colors.text }]}
-                  placeholder="Enter your email"
+                  style={[styles.phoneInput, { color: theme.colors.text }]}
+                  placeholder="3001234567"
                   placeholderTextColor={theme.colors.placeholder}
-                  value={email}
-                  onChangeText={setEmail}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  autoComplete="email"
+                  value={phone}
+                  onChangeText={(text) => {
+                    // Only allow numeric characters
+                    const numericText = text.replace(/[^0-9]/g, '');
+                    setPhone(numericText);
+                  }}
+                  keyboardType="phone-pad"
+                  maxLength={10}
                 />
                 <View style={styles.inputIcons}>
                   <Icon name="lock" size={16} color={theme.colors.textSecondary} />
                 </View>
               </View>
+              <Text style={[styles.helperText, { color: theme.colors.textSecondary }]}>
+                Enter your 10-digit phone number without the country code
+              </Text>
 
               <View style={styles.labelContainer}>
                 <Text style={[styles.label, { color: theme.colors.text }]}>Password</Text>
@@ -425,9 +448,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderRadius: 12,
     marginBottom: 8,
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
+    paddingVertical: 4,
     borderWidth: 1,
-    height: 50,
+    minHeight: 56,
   },
   phoneInputContainer: {
     flexDirection: 'row',

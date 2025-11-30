@@ -81,6 +81,12 @@ export const carAPI = {
     return response.data;
   },
 
+  // Create car
+  createCar: async (carData) => {
+    const response = await api.post('/cars', carData);
+    return response.data;
+  },
+
   // Update car
   updateCar: async (id, carData) => {
     const response = await api.put(`/cars/${id}`, carData);
@@ -156,9 +162,52 @@ export const storeAPI = {
     return response.data;
   },
 
+  // Get user's stores (for dropdown)
+  getMyStoresList: async () => {
+    const response = await api.get('/my-stores?per_page=100');
+    return response.data;
+  },
+
+  // Get user's own stores
+  getMyStores: async (filters = {}) => {
+    const params = new URLSearchParams();
+    
+    // Add pagination
+    if (filters.page) {
+      params.append('page', filters.page);
+    }
+    if (filters.per_page) {
+      params.append('per_page', filters.per_page);
+    }
+    
+    // Add other filters if needed
+    Object.keys(filters).forEach((key) => {
+      if (filters[key] && key !== 'page' && key !== 'per_page') {
+        params.append(key, filters[key]);
+      }
+    });
+    
+    const queryString = params.toString();
+    const url = queryString ? `/my-stores?${queryString}` : '/my-stores';
+    const response = await api.get(url);
+    return response.data;
+  },
+
   // Get store by ID
   getStoreById: async (id) => {
     const response = await api.get(`/stores/${id}`);
+    return response.data;
+  },
+
+  // Update store
+  updateStore: async (id, storeData) => {
+    const response = await api.put(`/stores/${id}`, storeData);
+    return response.data;
+  },
+
+  // Delete store
+  deleteStore: async (id) => {
+    const response = await api.delete(`/stores/${id}`);
     return response.data;
   },
 };
@@ -186,12 +235,59 @@ export const pickDropAPI = {
     const response = await api.get(`/pick-and-drop?${params.toString()}`);
     return response.data;
   },
+
+  // Create pick and drop service
+  createPickAndDropService: async (serviceData) => {
+    const response = await api.post('/pick-and-drop', serviceData);
+    return response.data;
+  },
+
+  // Get user's own pick and drop services
+  getMyPickDropServices: async (filters = {}) => {
+    const params = new URLSearchParams();
+    
+    // Add pagination
+    if (filters.page) {
+      params.append('page', filters.page);
+    }
+    if (filters.per_page) {
+      params.append('per_page', filters.per_page);
+    }
+    
+    // Add other filters if needed
+    Object.keys(filters).forEach((key) => {
+      if (filters[key] && key !== 'page' && key !== 'per_page') {
+        params.append(key, filters[key]);
+      }
+    });
+    
+    const queryString = params.toString();
+    const url = queryString ? `/my-pick-and-drop?${queryString}` : '/my-pick-and-drop';
+    const response = await api.get(url);
+    return response.data;
+  },
+
+  // Update pick and drop service
+  updatePickDropService: async (id, serviceData) => {
+    const response = await api.put(`/pick-and-drop/${id}`, serviceData);
+    return response.data;
+  },
+
+  // Delete pick and drop service
+  deletePickDropService: async (id) => {
+    const response = await api.delete(`/pick-and-drop/${id}`);
+    return response.data;
+  },
 };
 
 export const authAPI = {
-  // Login
-  login: async (email, password) => {
-    const response = await api.post('/auth/login', { email, password });
+  // Login with phone number and password
+  login: async (phone, password) => {
+    const response = await api.post('/login', { 
+      login_method: 'password',
+      phone_number: phone,
+      password: password
+    });
     if (response.data.token) {
       await AsyncStorage.setItem('authToken', response.data.token);
       await AsyncStorage.setItem('user', JSON.stringify(response.data.user));
@@ -259,6 +355,47 @@ export const authAPI = {
       current_password: currentPassword,
       new_password: newPassword,
       confirm_password: confirmPassword,
+    });
+    return response.data;
+  },
+};
+
+export const chatAPI = {
+  // Get all conversations
+  getConversations: async () => {
+    const response = await api.get('/chat/conversations');
+    return response.data;
+  },
+
+  // Get messages for a conversation
+  getMessages: async (conversationId, page = 1, perPage = 50) => {
+    const params = new URLSearchParams();
+    params.append('page', page);
+    params.append('per_page', perPage);
+    const response = await api.get(`/chat/conversations/${conversationId}/messages?${params.toString()}`);
+    return response.data;
+  },
+
+  // Send a message
+  sendMessage: async (conversationId, message) => {
+    const response = await api.post(`/chat/conversations/${conversationId}/messages`, {
+      message: message,
+    });
+    return response.data;
+  },
+
+  // Create or get conversation with a user
+  getOrCreateConversation: async (userId) => {
+    const response = await api.post('/chat/conversations', {
+      user_id: userId,
+    });
+    return response.data;
+  },
+
+  // Mark messages as read
+  markAsRead: async (conversationId, messageIds = []) => {
+    const response = await api.post(`/chat/conversations/${conversationId}/read`, {
+      message_ids: messageIds,
     });
     return response.data;
   },

@@ -126,7 +126,11 @@ const RegisterScreen = () => {
               placeholder="3001234567"
               placeholderTextColor={theme.colors.placeholder}
               value={formData.phone}
-              onChangeText={(text) => setFormData({ ...formData, phone: text })}
+              onChangeText={(text) => {
+                // Only allow numeric characters
+                const numericText = text.replace(/[^0-9]/g, '');
+                setFormData({ ...formData, phone: numericText });
+              }}
               keyboardType="phone-pad"
               maxLength={10}
             />

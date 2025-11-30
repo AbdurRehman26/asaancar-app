@@ -12,12 +12,14 @@ import {
 } from 'react-native';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
+import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { authAPI } from '@/services/api';
 import ErrorModal from '@/components/ErrorModal';
 import SuccessModal from '@/components/SuccessModal';
 
 const ProfileScreen = () => {
+  const navigation = useNavigation();
   const { user, setUserFromStorage } = useAuth();
   const { theme } = useTheme();
   const [name, setName] = useState(user?.name || '');
@@ -109,7 +111,11 @@ const ProfileScreen = () => {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Header */}
         <View style={styles.header}>
+          <TouchableOpacity onPress={() => navigation.navigate('SettingsMain')} style={styles.backButton}>
+            <Icon name="arrow-back" size={24} color={theme.colors.text} />
+          </TouchableOpacity>
           <Text style={[styles.headerTitle, { color: theme.colors.text }]}>Profile</Text>
+          <View style={styles.placeholder} />
         </View>
 
         {/* Personal Information Card */}
@@ -303,11 +309,21 @@ const styles = StyleSheet.create({
     paddingTop: 24,
   },
   header: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 24,
+  },
+  backButton: {
+    padding: 4,
+    marginRight: 8,
   },
   headerTitle: {
     fontSize: 28,
     fontWeight: 'bold',
+    flex: 1,
+  },
+  placeholder: {
+    width: 32,
   },
   card: {
     borderRadius: 12,

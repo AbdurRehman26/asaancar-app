@@ -216,13 +216,14 @@ const MyCarsScreen = () => {
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.backgroundTertiary }]}>
       <View style={[styles.header, { backgroundColor: theme.colors.cardBackground }]}>
+        <TouchableOpacity onPress={() => navigation.navigate('SettingsMain')} style={styles.backButton}>
+          <Icon name="arrow-back" size={24} color={theme.colors.text} />
+        </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: theme.colors.text }]}>My Cars</Text>
         <TouchableOpacity
           style={[styles.addButton, { backgroundColor: theme.colors.primary }]}
           onPress={() => {
-            // Navigate to add car screen (you can create this later)
-            Alert.alert('Add Car', 'Add car functionality will be implemented');
-            // navigation.navigate('AddCar');
+            navigation.navigate('AddCar');
           }}
         >
           <Icon name="add" size={20} color="#fff" />
@@ -297,15 +298,19 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
     padding: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#e0e0e0',
   },
+  backButton: {
+    padding: 4,
+    marginRight: 12,
+  },
   headerTitle: {
     fontSize: 24,
     fontWeight: 'bold',
+    flex: 1,
   },
   addButton: {
     flexDirection: 'row',
@@ -405,4 +410,5 @@ const styles = StyleSheet.create({
 });
 
 export default MyCarsScreen;
+
 

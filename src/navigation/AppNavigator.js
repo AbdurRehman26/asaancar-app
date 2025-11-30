@@ -19,6 +19,12 @@ import MyBookingsScreen from '@/screens/MyBookingsScreen';
 import SettingsScreen from '@/screens/SettingsScreen';
 import ProfileScreen from '@/screens/ProfileScreen';
 import MyCarsScreen from '@/screens/MyCarsScreen';
+import MyStoresScreen from '@/screens/MyStoresScreen';
+import MyPickDropServicesScreen from '@/screens/MyPickDropServicesScreen';
+import CreatePickDropServiceScreen from '@/screens/CreatePickDropServiceScreen';
+import AddCarScreen from '@/screens/AddCarScreen';
+import ChatScreen from '@/screens/ChatScreen';
+import ConversationsScreen from '@/screens/ConversationsScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -48,6 +54,14 @@ const MainStack = () => {
         }}
       />
       <Stack.Screen 
+        name="CreatePickDropService" 
+        component={CreatePickDropServiceScreen}
+        options={{ 
+          headerShown: false,
+          presentation: 'card'
+        }}
+      />
+      <Stack.Screen 
         name="CarDetail" 
         component={CarDetailScreen}
         options={{ 
@@ -68,6 +82,20 @@ const MainStack = () => {
         options={{ 
           title: 'Book Car',
           headerBackTitle: 'Back'
+        }}
+      />
+      <Stack.Screen 
+        name="Conversations" 
+        component={ConversationsScreen}
+        options={{ 
+          headerShown: false
+        }}
+      />
+      <Stack.Screen 
+        name="Chat" 
+        component={ChatScreen}
+        options={{ 
+          headerShown: false
         }}
       />
       <Stack.Screen 
@@ -105,13 +133,33 @@ const SettingsStack = () => {
         name="Profile"
         component={ProfileScreen}
         options={{
-          title: 'Profile',
-          headerBackTitle: 'Back',
+          headerShown: false,
         }}
       />
       <Stack.Screen
         name="MyCars"
         component={MyCarsScreen}
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="AddCar"
+        component={AddCarScreen}
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="MyStores"
+        component={MyStoresScreen}
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="MyPickDropServices"
+        component={MyPickDropServicesScreen}
         options={{
           headerShown: false,
         }}
@@ -134,8 +182,8 @@ const AuthenticatedTabs = () => {
             iconName = 'home';
           } else if (route.name === 'Bookings') {
             iconName = 'book';
-          } else if (route.name === 'Settings') {
-            iconName = 'person';
+          } else if (route.name === 'Dashboard') {
+            iconName = 'dashboard';
           }
 
           return <Icon name={iconName} size={size} color={color} />;
@@ -151,7 +199,7 @@ const AuthenticatedTabs = () => {
     >
       <Tab.Screen name="Home" component={MainStack} />
       <Tab.Screen name="Bookings" component={MyBookingsScreen} />
-      <Tab.Screen name="Settings" component={SettingsStack} />
+      <Tab.Screen name="Dashboard" component={SettingsStack} />
     </Tab.Navigator>
   );
 };

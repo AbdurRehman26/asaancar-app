@@ -37,19 +37,29 @@ const SettingsScreen = () => {
       onPress: () => navigation.navigate('MyCars'),
     },
     {
+      id: 'myStores',
+      title: 'My Stores',
+      icon: 'store',
+      onPress: () => navigation.navigate('MyStores'),
+    },
+    {
+      id: 'myPickDropServices',
+      title: 'My Pick & Drop Services',
+      icon: 'directions-transit',
+      onPress: () => navigation.navigate('MyPickDropServices'),
+    },
+    {
+      id: 'messages',
+      title: 'Messages',
+      icon: 'chat',
+      onPress: () => navigation.navigate('Conversations'),
+    },
+    {
       id: 'notifications',
       title: 'Notifications',
       icon: 'notifications',
       onPress: () => {
         // TODO: Navigate to notifications settings
-      },
-    },
-    {
-      id: 'payment',
-      title: 'Payment Methods',
-      icon: 'payment',
-      onPress: () => {
-        // TODO: Navigate to payment methods
       },
     },
     {
@@ -74,7 +84,7 @@ const SettingsScreen = () => {
     <ScrollView style={[styles.container, { backgroundColor: theme.colors.backgroundTertiary }]}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={[styles.headerTitle, { color: theme.colors.text }]}>Settings</Text>
+        <Text style={[styles.headerTitle, { color: theme.colors.text }]}>Dashboard</Text>
       </View>
 
       {/* User Info Section */}
@@ -84,9 +94,6 @@ const SettingsScreen = () => {
         </View>
         <Text style={[styles.userName, { color: theme.colors.text }]}>
           {user?.name || 'User'}
-        </Text>
-        <Text style={[styles.userEmail, { color: theme.colors.textSecondary }]}>
-          {user?.email || ''}
         </Text>
         {user?.phone && (
           <Text style={[styles.userPhone, { color: theme.colors.textSecondary }]}>
@@ -175,10 +182,6 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     marginBottom: 4,
-  },
-  userEmail: {
-    fontSize: 14,
-    marginBottom: 2,
   },
   userPhone: {
     fontSize: 14,

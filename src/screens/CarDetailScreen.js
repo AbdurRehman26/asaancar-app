@@ -412,11 +412,15 @@ const CarDetailScreen = () => {
             <View style={[styles.inputContainer, { borderColor: theme.colors.border }]}>
               <TextInput
                 style={[styles.input, { color: theme.colors.text }]}
-                placeholder="Email or Phone Number"
+                placeholder="Phone Number"
                 placeholderTextColor={theme.colors.placeholder}
                 value={inquiryContact}
-                onChangeText={setInquiryContact}
-                keyboardType="email-address"
+                onChangeText={(text) => {
+                  // Only allow numeric characters
+                  const numericText = text.replace(/[^0-9+]/g, '');
+                  setInquiryContact(numericText);
+                }}
+                keyboardType="phone-pad"
               />
               <Icon name="lock" size={16} color={theme.colors.textSecondary} />
             </View>

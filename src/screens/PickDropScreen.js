@@ -210,8 +210,7 @@ const PickDropScreen = () => {
                     navigation.navigate('Login');
                     return;
                   }
-                  // TODO: Navigate to Add Service screen
-                  console.log('Add new pick and drop service');
+                  navigation.navigate('CreatePickDropService');
                 }}
                 style={[styles.addServiceButton, { backgroundColor: theme.colors.primary }]}
               >
