@@ -25,6 +25,9 @@ import CreatePickDropServiceScreen from '@/screens/CreatePickDropServiceScreen';
 import AddCarScreen from '@/screens/AddCarScreen';
 import ChatScreen from '@/screens/ChatScreen';
 import ConversationsScreen from '@/screens/ConversationsScreen';
+import ContactUsScreen from '@/screens/ContactUsScreen';
+import NotificationsScreen from '@/screens/NotificationsScreen';
+import AboutUsScreen from '@/screens/AboutUsScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -160,6 +163,27 @@ const SettingsStack = () => {
       <Stack.Screen
         name="MyPickDropServices"
         component={MyPickDropServicesScreen}
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="ContactUs"
+        component={ContactUsScreen}
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="Notifications"
+        component={NotificationsScreen}
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="AboutUs"
+        component={AboutUsScreen}
         options={{
           headerShown: false,
         }}

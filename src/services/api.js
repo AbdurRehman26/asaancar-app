@@ -401,5 +401,64 @@ export const chatAPI = {
   },
 };
 
+export const contactAPI = {
+  // Send contact message
+  sendContactMessage: async (contactData) => {
+    const response = await api.post('/contact-messages', contactData);
+    return response.data;
+  },
+};
+
+export const notificationAPI = {
+  // Get all notifications with pagination
+  getNotifications: async (filters = {}) => {
+    const params = new URLSearchParams();
+    
+    // Add pagination
+    if (filters.page) {
+      params.append('page', filters.page);
+    }
+    if (filters.per_page) {
+      params.append('per_page', filters.per_page);
+    }
+    
+    // Add other filters if needed
+    Object.keys(filters).forEach((key) => {
+      if (filters[key] && key !== 'page' && key !== 'per_page') {
+        params.append(key, filters[key]);
+      }
+    });
+    
+    const queryString = params.toString();
+    const url = queryString ? `/notifications?${queryString}` : '/notifications';
+    const response = await api.get(url);
+    return response.data;
+  },
+
+  // Get notification by ID
+  getNotificationById: async (id) => {
+    const response = await api.get(`/notifications/${id}`);
+    return response.data;
+  },
+
+  // Mark notification as read
+  markAsRead: async (id) => {
+    const response = await api.put(`/notifications/${id}/read`);
+    return response.data;
+  },
+
+  // Mark all notifications as read
+  markAllAsRead: async () => {
+    const response = await api.put('/notifications/read-all');
+    return response.data;
+  },
+
+  // Delete notification
+  deleteNotification: async (id) => {
+    const response = await api.delete(`/notifications/${id}`);
+    return response.data;
+  },
+};
+
 export default api;
 

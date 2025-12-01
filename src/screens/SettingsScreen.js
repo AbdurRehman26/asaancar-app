@@ -58,25 +58,19 @@ const SettingsScreen = () => {
       id: 'notifications',
       title: 'Notifications',
       icon: 'notifications',
-      onPress: () => {
-        // TODO: Navigate to notifications settings
-      },
+      onPress: () => navigation.navigate('Notifications'),
     },
     {
-      id: 'help',
-      title: 'Help & Support',
-      icon: 'help',
-      onPress: () => {
-        // TODO: Navigate to help & support
-      },
+      id: 'contact',
+      title: 'Contact Us',
+      icon: 'mail',
+      onPress: () => navigation.navigate('ContactUs'),
     },
     {
       id: 'about',
-      title: 'About',
+      title: 'About Us',
       icon: 'info',
-      onPress: () => {
-        // TODO: Navigate to about
-      },
+      onPress: () => navigation.navigate('AboutUs'),
     },
   ];
 

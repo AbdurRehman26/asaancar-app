@@ -274,10 +274,7 @@ const HomeScreen = () => {
     return 'https://via.placeholder.com/300x200?text=Car+Image';
   };
 
-  const renderCarItem = ({ item, index }) => {
-    // Calculate car number based on API's current_page
-    const carNumber = (apiCurrentPage - 1) * pageSize + index + 1;
-    
+  const renderCarItem = ({ item }) => {
     return (
     <TouchableOpacity
       style={[styles.carCard, { borderColor: theme.colors.primary }]}
@@ -291,9 +288,6 @@ const HomeScreen = () => {
           style={styles.carImage}
           resizeMode="cover"
         />
-        <View style={[styles.carNumberBadge, { backgroundColor: theme.colors.primary }]}>
-          <Text style={styles.carNumberText}>{carNumber}</Text>
-        </View>
       </View>
       <View style={styles.carInfo}>
         <Text style={styles.carName}>
@@ -613,26 +607,6 @@ const styles = StyleSheet.create({
   carImage: {
     width: '100%',
     height: '100%',
-  },
-  carNumberBadge: {
-    position: 'absolute',
-    top: 12,
-    left: 12,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  carNumberText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: 'bold',
   },
   carInfo: {
     padding: 16,
