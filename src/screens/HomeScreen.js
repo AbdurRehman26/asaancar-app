@@ -11,6 +11,7 @@ import {
   ActivityIndicator,
   RefreshControl,
 } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
@@ -24,6 +25,7 @@ const HomeScreen = () => {
   const navigation = useNavigation();
   const { user } = useAuth();
   const { theme } = useTheme();
+  const insets = useSafeAreaInsets();
   const [cars, setCars] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -321,11 +323,6 @@ const HomeScreen = () => {
                 <Text style={styles.rentalProvider}>
                   {item.store?.name || item.dealer?.name || 'N/A'}
                 </Text>
-                {(item.store?.address || item.dealer?.address) && (
-                  <Text style={styles.address} numberOfLines={2}>
-                    {item.store?.address || item.dealer?.address}
-                  </Text>
-                )}
               </View>
             </TouchableOpacity>
           </>
@@ -348,24 +345,12 @@ const HomeScreen = () => {
   };
 
   return (
-    <View style={[styles.container, dynamicStyles.container]}>
+    <SafeAreaView style={[styles.container, dynamicStyles.container]} edges={['top']}>
       <View style={[styles.header, dynamicStyles.header]}>
         <View style={styles.headerTop}>
           <View style={styles.headerTitleSection}>
-            <Text style={styles.pageTitle}>Available Cars</Text>
-            <Text style={styles.pageSubtitle}>
-              Find the perfect car for your journey. Modern, clean, and easy booking experience.
-            </Text>
           </View>
           <View style={styles.headerActions}>
-            {!user && (
-              <TouchableOpacity
-                onPress={() => navigation.navigate('Login')}
-                style={[styles.loginButton, dynamicStyles.loginButton]}
-              >
-                <Text style={styles.loginButtonText}>Login</Text>
-              </TouchableOpacity>
-            )}
           </View>
         </View>
         
@@ -436,7 +421,7 @@ const HomeScreen = () => {
 
       {/* Pagination Controls */}
       {!loading && cars.length > 0 && (
-        <View style={[styles.paginationContainer, { backgroundColor: theme.colors.cardBackground, borderTopColor: theme.colors.border }]}>
+        <View style={[styles.paginationContainer, { backgroundColor: theme.colors.cardBackground, borderTopColor: theme.colors.border, paddingBottom: Math.max(insets.bottom + 10, 16) }]}>
           <TouchableOpacity
             style={[
               styles.paginationButton,
@@ -453,6 +438,15 @@ const HomeScreen = () => {
             <Icon name="chevron-left" size={20} color={currentPage === 1 ? theme.colors.textLight : theme.colors.text} />
             <Text style={[styles.paginationButtonText, { color: currentPage === 1 ? theme.colors.textLight : theme.colors.text }]}>Back</Text>
           </TouchableOpacity>
+
+          {!user && (
+            <TouchableOpacity
+              onPress={() => navigation.navigate('Login')}
+              style={[styles.loginButton, dynamicStyles.loginButton]}
+            >
+              <Text style={styles.loginButtonText}>Login</Text>
+            </TouchableOpacity>
+          )}
 
           <TouchableOpacity
             style={[
@@ -484,7 +478,7 @@ const HomeScreen = () => {
         brands={brands}
         types={types}
       />
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -502,23 +496,23 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    padding: 16,
-    paddingBottom: 8,
+    padding: 12,
+    paddingBottom: 6,
   },
   headerTitleSection: {
     flex: 1,
-    marginRight: 16,
+    marginRight: 12,
   },
   pageTitle: {
-    fontSize: 32,
+    fontSize: 22,
     fontWeight: 'bold',
     color: '#1a1a1a',
     marginBottom: 8,
   },
   pageSubtitle: {
-    fontSize: 16,
+    fontSize: 13,
     color: '#666',
-    lineHeight: 22,
+    lineHeight: 18,
   },
   headerTitle: {
     fontSize: 24,
@@ -534,8 +528,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
     backgroundColor: '#fff',
     borderBottomWidth: 1,
     borderBottomColor: '#e0e0e0',
@@ -552,10 +546,11 @@ const styles = StyleSheet.create({
   infoBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 4,
+    marginLeft: -4,
   },
   infoText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '500',
   },
   loginButton: {
@@ -585,7 +580,7 @@ const styles = StyleSheet.create({
   carCard: {
     backgroundColor: '#fff',
     borderRadius: 12,
-    marginBottom: 16,
+    marginBottom: 12,
     overflow: 'hidden',
     borderWidth: 1,
     width: '100%',
@@ -597,7 +592,7 @@ const styles = StyleSheet.create({
   },
   imageContainer: {
     width: '100%',
-    height: 200,
+    height: 150,
     overflow: 'hidden',
     borderTopLeftRadius: 8,
     borderTopRightRadius: 8,
@@ -609,16 +604,16 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   carInfo: {
-    padding: 16,
+    padding: 12,
   },
   carName: {
-    fontSize: 20,
+    fontSize: 16,
     fontWeight: 'bold',
     color: '#333',
     marginBottom: 4,
   },
   carBrand: {
-    fontSize: 16,
+    fontSize: 13,
     color: '#666',
     marginBottom: 12,
   },
@@ -636,15 +631,15 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   rentalProvider: {
-    fontSize: 14,
+    fontSize: 12,
     color: '#1a1a1a',
     marginBottom: 4,
     fontWeight: '500',
   },
   address: {
-    fontSize: 12,
+    fontSize: 11,
     color: '#666',
-    lineHeight: 18,
+    lineHeight: 16,
   },
   carDetails: {
     flexDirection: 'row',
@@ -670,7 +665,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   price: {
-    fontSize: 20,
+    fontSize: 16,
     fontWeight: 'bold',
     color: '#7e246c',
   },
@@ -703,8 +698,8 @@ const styles = StyleSheet.create({
   paginationInfo: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
     borderBottomWidth: 1,
   },
   paginationText: {
@@ -716,13 +711,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 16,
     borderTopWidth: 1,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 5,
+    gap: 8,
   },
   paginationButton: {
     flexDirection: 'row',

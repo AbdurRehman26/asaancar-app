@@ -9,6 +9,7 @@ import {
   Image,
   FlatList,
 } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
@@ -21,6 +22,7 @@ const PickDropScreen = () => {
   const { theme } = useTheme();
   const { user } = useAuth();
   const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
   const [searchQuery, setSearchQuery] = useState('');
   const [filters, setFilters] = useState({
     startLocation: '',
@@ -35,7 +37,9 @@ const PickDropScreen = () => {
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
+  const [apiCurrentPage, setApiCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [totalServices, setTotalServices] = useState(0);
   const [pageSize] = useState(12);
 
   // Update active tab when screen is focused
@@ -82,16 +86,36 @@ const PickDropScreen = () => {
       
       setServices(servicesData);
       
-      // Handle pagination
-      if (data?.pagination) {
-        setTotalPages(data.pagination.total_pages || data.pagination.last_page || 1);
-      } else if (data?.meta) {
-        setTotalPages(data.meta.last_page || data.meta.total_pages || 1);
+      // Handle pagination - prioritize meta key as user indicated
+      let currentPageValue = 1;
+      let lastPageValue = 1;
+      let totalValue = 0;
+      
+      if (data?.meta) {
+        currentPageValue = parseInt(data.meta.current_page || data.meta.page || currentPage, 10) || 1;
+        lastPageValue = parseInt(data.meta.last_page || data.meta.total_pages || 1, 10) || 1;
+        totalValue = parseInt(data.meta.total || servicesData.length, 10) || 0;
+      } else if (data?.pagination) {
+        currentPageValue = parseInt(data.pagination.current_page || data.pagination.page || currentPage, 10) || 1;
+        lastPageValue = parseInt(data.pagination.last_page || data.pagination.total_pages || 1, 10) || 1;
+        totalValue = parseInt(data.pagination.total || servicesData.length, 10) || 0;
+      } else if (data?.data?.meta) {
+        currentPageValue = parseInt(data.data.meta.current_page || data.data.meta.page || currentPage, 10) || 1;
+        lastPageValue = parseInt(data.data.meta.last_page || data.data.meta.total_pages || 1, 10) || 1;
+        totalValue = parseInt(data.data.meta.total || servicesData.length, 10) || 0;
       } else if (data?.data?.pagination) {
-        setTotalPages(data.data.pagination.total_pages || data.data.pagination.last_page || 1);
+        currentPageValue = parseInt(data.data.pagination.current_page || data.data.pagination.page || currentPage, 10) || 1;
+        lastPageValue = parseInt(data.data.pagination.last_page || data.data.pagination.total_pages || 1, 10) || 1;
+        totalValue = parseInt(data.data.pagination.total || servicesData.length, 10) || 0;
       } else {
-        setTotalPages(1);
+        currentPageValue = currentPage || 1;
+        lastPageValue = 1;
+        totalValue = servicesData.length || 0;
       }
+      
+      setApiCurrentPage(currentPageValue);
+      setTotalPages(lastPageValue);
+      setTotalServices(totalValue);
     } catch (error) {
       console.error('Error loading pick and drop services:', error);
       setServices([]);
@@ -141,24 +165,12 @@ const PickDropScreen = () => {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.backgroundTertiary }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.backgroundTertiary }]} edges={['top']}>
       <View style={[styles.header, { backgroundColor: theme.colors.background }]}>
         <View style={styles.headerTop}>
           <View style={styles.headerTitleSection}>
-            <Text style={styles.pageTitle}>Pick & Drop Services</Text>
-            <Text style={styles.pageSubtitle}>
-              Share rides or find passengers for your journey. Multiple stops available.
-            </Text>
           </View>
           <View style={styles.headerActions}>
-            {!user && (
-              <TouchableOpacity
-                onPress={() => navigation.navigate('Login')}
-                style={[styles.loginButton, { backgroundColor: theme.colors.primary }]}
-              >
-                <Text style={styles.loginButtonText}>Login</Text>
-              </TouchableOpacity>
-            )}
           </View>
         </View>
         <ServiceTabs
@@ -167,30 +179,51 @@ const PickDropScreen = () => {
         />
       </View>
 
-      {/* Search and Filter Section */}
+      {/* Filter and Add Service Section (match Rental Cars layout) */}
       <View style={[styles.searchSection, { backgroundColor: theme.colors.background }]}>
         <View style={styles.searchBarContainer}>
-          <View style={[styles.searchBar, { borderColor: theme.colors.border }]}>
-            <Icon name="search" size={20} color={theme.colors.textSecondary} />
-            <TextInput
-              style={[styles.searchInput, { color: theme.colors.text }]}
-              placeholder="Search by start or end location..."
-              placeholderTextColor={theme.colors.placeholder}
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-            />
-          </View>
+          {/* Filter icon (same as Rental Cars) */}
           <TouchableOpacity
             style={[styles.filterButton, { borderColor: theme.colors.primary }]}
             onPress={openFilters}
           >
             <Icon name="tune" size={20} color={theme.colors.primary} />
-            <Text style={[styles.filterButtonText, { color: theme.colors.primary }]}>
-              Filters
-            </Text>
+          </TouchableOpacity>
+
+          {/* Add Service aligned to the right */}
+          <TouchableOpacity
+            onPress={() => {
+              if (!user) {
+                navigation.navigate('Login');
+                return;
+              }
+              navigation.navigate('CreatePickDropService');
+            }}
+            style={[styles.addServiceButton, { backgroundColor: theme.colors.primary }]}
+          >
+            <Icon name="add" size={18} color="#fff" />
+            <Text style={styles.addServiceButtonText}>Add Service</Text>
           </TouchableOpacity>
         </View>
       </View>
+
+      {/* Pagination Info */}
+      {!loading && services.length > 0 && (
+        <View style={[styles.paginationInfo, { backgroundColor: theme.colors.cardBackground, borderBottomColor: theme.colors.border }]}>
+          <Text style={[styles.paginationText, { color: theme.colors.textSecondary }]}>
+            {(() => {
+              const currentPageNum = Number(apiCurrentPage) || 1;
+              const pageSizeNum = Number(pageSize) || 12;
+              const totalNum = Number(totalServices) || 0;
+              const startNumber = (currentPageNum - 1) * pageSizeNum + 1;
+              const endNumber = Math.min(currentPageNum * pageSizeNum, totalNum);
+              return totalNum > 0 
+                ? `Showing ${startNumber}-${endNumber} of ${totalNum}`
+                : `Showing ${startNumber}-${endNumber}`;
+            })()}
+          </Text>
+        </View>
+      )}
       
       <ScrollView>
         {/* Services List */}
@@ -200,24 +233,6 @@ const PickDropScreen = () => {
           </View>
         ) : services.length > 0 ? (
           <View style={styles.servicesContainer}>
-            <View style={styles.servicesHeader}>
-              <Text style={[styles.servicesTitle, { color: theme.colors.text }]}>
-                Available Services ({services.length})
-              </Text>
-              <TouchableOpacity
-                onPress={() => {
-                  if (!user) {
-                    navigation.navigate('Login');
-                    return;
-                  }
-                  navigation.navigate('CreatePickDropService');
-                }}
-                style={[styles.addServiceButton, { backgroundColor: theme.colors.primary }]}
-              >
-                <Icon name="add" size={18} color="#fff" />
-                <Text style={styles.addServiceButtonText}>Add Service</Text>
-              </TouchableOpacity>
-            </View>
             {services.map((service) => (
               <View key={service.id} style={[styles.serviceCard, { backgroundColor: theme.colors.background }]}>
                   {/* Route */}
@@ -345,6 +360,54 @@ const PickDropScreen = () => {
         </View>
       </ScrollView>
 
+      {/* Pagination Controls */}
+      {!loading && services.length > 0 && (
+        <View style={[styles.paginationContainer, { backgroundColor: theme.colors.cardBackground, borderTopColor: theme.colors.border, paddingBottom: Math.max(insets.bottom + 10, 16) }]}>
+          <TouchableOpacity
+            style={[
+              styles.paginationButton,
+              { backgroundColor: theme.colors.backgroundSecondary },
+              currentPage === 1 && styles.paginationButtonDisabled,
+            ]}
+            onPress={() => {
+              if (currentPage > 1) {
+                setCurrentPage(currentPage - 1);
+              }
+            }}
+            disabled={currentPage === 1}
+          >
+            <Icon name="chevron-left" size={20} color={currentPage === 1 ? theme.colors.textLight : theme.colors.text} />
+            <Text style={[styles.paginationButtonText, { color: currentPage === 1 ? theme.colors.textLight : theme.colors.text }]}>Back</Text>
+          </TouchableOpacity>
+
+          {!user && (
+            <TouchableOpacity
+              onPress={() => navigation.navigate('Login')}
+              style={[styles.loginButton, { backgroundColor: theme.colors.primary }]}
+            >
+              <Text style={styles.loginButtonText}>Login</Text>
+            </TouchableOpacity>
+          )}
+
+          <TouchableOpacity
+            style={[
+              styles.paginationButton,
+              { backgroundColor: theme.colors.backgroundSecondary },
+              currentPage >= totalPages && styles.paginationButtonDisabled,
+            ]}
+            onPress={() => {
+              if (currentPage < totalPages) {
+                setCurrentPage(currentPage + 1);
+              }
+            }}
+            disabled={currentPage >= totalPages}
+          >
+            <Text style={[styles.paginationButtonText, { color: currentPage >= totalPages ? theme.colors.textLight : theme.colors.text }]}>Next</Text>
+            <Icon name="chevron-right" size={20} color={currentPage >= totalPages ? theme.colors.textLight : theme.colors.text} />
+          </TouchableOpacity>
+        </View>
+      )}
+
       {/* Filter Drawer */}
       <PickDropFilterDrawer
         visible={showFilters}
@@ -354,7 +417,7 @@ const PickDropScreen = () => {
         onClearAll={clearFilters}
         onApply={handleApplyFilters}
       />
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -378,15 +441,15 @@ const styles = StyleSheet.create({
     marginRight: 16,
   },
   pageTitle: {
-    fontSize: 32,
+    fontSize: 22,
     fontWeight: 'bold',
     color: '#1a1a1a',
     marginBottom: 8,
   },
   pageSubtitle: {
-    fontSize: 16,
+    fontSize: 13,
     color: '#666',
-    lineHeight: 22,
+    lineHeight: 18,
   },
   headerTitle: {
     fontSize: 24,
@@ -422,45 +485,27 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     fontSize: 14,
   },
+  // Match Rental Cars filter layout
   searchSection: {
-    padding: 16,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
     borderBottomWidth: 1,
     borderBottomColor: '#e0e0e0',
+    backgroundColor: '#fff',
   },
   searchBarContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-  },
-  searchBar: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    height: 50,
-    backgroundColor: '#f5f5f5',
-  },
-  searchInput: {
-    flex: 1,
-    marginLeft: 12,
-    fontSize: 16,
+    justifyContent: 'space-between',
   },
   filterButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     borderWidth: 1.5,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    height: 50,
-    gap: 6,
+    justifyContent: 'center',
+    alignItems: 'center',
     backgroundColor: '#fff',
-  },
-  filterButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
   },
   sectionTitle: {
     fontSize: 20,
@@ -626,6 +671,48 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#999',
     marginTop: 16,
+  },
+  paginationInfo: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+  },
+  paginationText: {
+    fontSize: 14,
+    color: '#666',
+    fontWeight: '500',
+  },
+  paginationContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 16,
+    borderTopWidth: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 5,
+    gap: 8,
+  },
+  paginationButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 8,
+    gap: 6,
+  },
+  paginationButtonDisabled: {
+    opacity: 0.5,
+  },
+  paginationButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
   },
 });
 
