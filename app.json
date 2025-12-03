@@ -7,6 +7,7 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "splash": {
+      "image": "./assets/icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#7e246c"
     },
@@ -22,7 +23,14 @@
         "foregroundImage": "./assets/icon.png",
         "backgroundColor": "#7e246c"
       },
-      "package": "com.asaancar.app"
+      "package": "com.asaancar.app",
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "READ_MEDIA_IMAGES"
+      ],
+      "versionCode": 1
     },
     "web": {
       "bundler": "metro"
@@ -34,3 +42,4 @@
     }
   }
 }
+ 

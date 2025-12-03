@@ -578,7 +578,7 @@ const PickDropScreen = () => {
 
       {/* Pagination Controls */}
       {!loading && services.length > 0 && (
-        <View style={[styles.paginationContainer, { backgroundColor: theme.colors.cardBackground, borderTopColor: theme.colors.border, paddingBottom: Math.max(insets.bottom + 10, 16) }]}>
+        <View style={[styles.paginationContainer, { paddingBottom: user ? 8 : Math.max(insets.bottom + 10, 8) }]}>
           <TouchableOpacity
             style={[
               styles.paginationButton,
@@ -941,14 +941,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 16,
-    borderTopWidth: 1,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 5,
+    paddingTop: 8,
+    paddingBottom: 8,
     gap: 8,
   },
   paginationButton: {
