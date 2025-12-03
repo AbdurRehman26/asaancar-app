@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Alert,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
@@ -75,14 +76,10 @@ const SettingsScreen = () => {
   ];
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: theme.colors.backgroundTertiary }]}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={[styles.headerTitle, { color: theme.colors.text }]}>Dashboard</Text>
-      </View>
-
-      {/* User Info Section */}
-      <View style={[styles.userCard, { backgroundColor: theme.colors.cardBackground }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.backgroundTertiary }]} edges={['top']}>
+      <ScrollView style={styles.scrollView}>
+        {/* User Info Section */}
+        <View style={[styles.userCard, { backgroundColor: theme.colors.cardBackground }]}>
         <View style={styles.avatarContainer}>
           <Icon name="person" size={48} color={theme.colors.primary} />
         </View>
@@ -135,7 +132,8 @@ const SettingsScreen = () => {
         destructive={true}
         onConfirm={handleLogout}
       />
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 
@@ -143,13 +141,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  header: {
-    padding: 16,
-    paddingTop: 24,
-  },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: 'bold',
+  scrollView: {
+    flex: 1,
   },
   userCard: {
     marginHorizontal: 16,

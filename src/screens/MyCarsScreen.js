@@ -10,6 +10,7 @@ import {
   RefreshControl,
   Alert,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useTheme } from '@/context/ThemeContext';
 import { carAPI } from '@/services/api';
@@ -207,14 +208,14 @@ const MyCarsScreen = () => {
 
   if (loading && !refreshing) {
     return (
-      <View style={[styles.loadingContainer, { backgroundColor: theme.colors.backgroundTertiary }]}>
+      <SafeAreaView style={[styles.loadingContainer, { backgroundColor: theme.colors.backgroundTertiary }]} edges={['top']}>
         <ActivityIndicator size="large" color={theme.colors.primary} />
-      </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.backgroundTertiary }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.backgroundTertiary }]} edges={['top']}>
       <View style={[styles.header, { backgroundColor: theme.colors.cardBackground }]}>
         <TouchableOpacity onPress={() => navigation.navigate('SettingsMain')} style={styles.backButton}>
           <Icon name="arrow-back" size={24} color={theme.colors.text} />
@@ -283,7 +284,7 @@ const MyCarsScreen = () => {
         destructive={true}
         onConfirm={confirmDelete}
       />
-    </View>
+    </SafeAreaView>
   );
 };
 

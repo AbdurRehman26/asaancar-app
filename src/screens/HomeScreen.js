@@ -72,7 +72,6 @@ const HomeScreen = () => {
   };
 
   useEffect(() => {
-    // Reset to page 1 when filters change
     setCurrentPage(1);
   }, [filters]);
 
@@ -193,11 +192,30 @@ const HomeScreen = () => {
   };
 
   const handleFilterChange = (key, value) => {
-    setTempFilters({ ...tempFilters, [key]: value });
+    setTempFilters((prev) => {
+      const updated = { ...prev, [key]: value };
+      return updated;
+    });
   };
 
-  const handleApplyFilters = () => {
-    setFilters(tempFilters);
+  const handleApplyFilters = (updatedFilters = null) => {
+    // Accept optional updatedFilters parameter to handle slider values
+    const filtersToApply = updatedFilters || tempFilters;
+
+    // Create a completely new object to ensure React detects the change
+    const newFilters = {
+      brand: filtersToApply.brand || '',
+      type: filtersToApply.type || '',
+      transmission: filtersToApply.transmission || '',
+      fuelType: filtersToApply.fuelType || '',
+      minSeats: filtersToApply.minSeats || '',
+      minPrice: filtersToApply.minPrice || '',
+      maxPrice: filtersToApply.maxPrice || '',
+    };
+    
+    console.log('HomeScreen - newFilters to set:', JSON.stringify(newFilters, null, 2));
+    setFilters(newFilters); // Create a new object to ensure state update
+    setTempFilters(newFilters); // Sync tempFilters as well
     setCurrentPage(1); // Reset to first page when filters change
     setCars([]); // Clear cars when filters change
   };

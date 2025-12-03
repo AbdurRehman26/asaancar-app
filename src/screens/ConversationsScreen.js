@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   RefreshControl,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
@@ -46,6 +47,14 @@ const ConversationsScreen = () => {
           conversationsData = data.conversations;
         } else if (data.data?.data && Array.isArray(data.data.data)) {
           conversationsData = data.data.data;
+        }
+      }
+      
+      // Debug: Log conversation structure to understand API response
+      if (conversationsData.length > 0) {
+        console.log('Sample conversation:', JSON.stringify(conversationsData[0], null, 2));
+        if (conversationsData[0].last_message) {
+          console.log('Last message structure:', JSON.stringify(conversationsData[0].last_message, null, 2));
         }
       }
       
@@ -99,10 +108,11 @@ const ConversationsScreen = () => {
   };
 
   const getLastMessage = (conversation) => {
-    // Try different possible field names for last message
+    // The API uses last_message field
     if (conversation.last_message) {
       return conversation.last_message;
     }
+    // Fallback to other possible field names
     if (conversation.lastMessage) {
       return conversation.lastMessage;
     }
@@ -176,8 +186,8 @@ const ConversationsScreen = () => {
                otherUser?.username || 
                otherUser?.user?.name ||
                otherUser?.user?.username ||
-               conversation.user_name ||
-               conversation.username ||
+               item.user_name ||
+               item.username ||
                'Unknown User'}
             </Text>
             {lastMessage && (
@@ -186,29 +196,43 @@ const ConversationsScreen = () => {
               </Text>
             )}
           </View>
-          {lastMessage && (
-            <View style={styles.lastMessageRow}>
+          <View style={styles.lastMessageRow}>
+            {lastMessage ? (
+              <>
+                <Text
+                  style={[
+                    styles.lastMessage,
+                    { color: theme.colors.textSecondary },
+                    isUnread && { color: theme.colors.text, fontWeight: '500' },
+                  ]}
+                  numberOfLines={1}
+                >
+                  {lastMessage.message || 
+                   lastMessage.content || 
+                   lastMessage.text ||
+                   lastMessage.body ||
+                   lastMessage.message_text ||
+                   (typeof lastMessage === 'string' ? lastMessage : '') ||
+                   ''}
+                </Text>
+                {isUnread && (
+                  <View style={[styles.unreadBadge, { backgroundColor: theme.colors.primary }]}>
+                    <Text style={styles.unreadBadgeText}>{unreadCount > 99 ? '99+' : unreadCount}</Text>
+                  </View>
+                )}
+              </>
+            ) : (
               <Text
                 style={[
                   styles.lastMessage,
-                  { color: theme.colors.textSecondary },
-                  isUnread && { color: theme.colors.text, fontWeight: '500' },
+                  { color: theme.colors.textSecondary, fontStyle: 'italic' },
                 ]}
                 numberOfLines={1}
               >
-                {lastMessage.message || 
-                 lastMessage.content || 
-                 lastMessage.text ||
-                 lastMessage.body ||
-                 ''}
+                No messages yet
               </Text>
-              {isUnread && (
-                <View style={[styles.unreadBadge, { backgroundColor: theme.colors.primary }]}>
-                  <Text style={styles.unreadBadgeText}>{unreadCount > 99 ? '99+' : unreadCount}</Text>
-                </View>
-              )}
-            </View>
-          )}
+            )}
+          </View>
         </View>
       </TouchableOpacity>
     );
@@ -216,14 +240,14 @@ const ConversationsScreen = () => {
 
   if (loading && !refreshing) {
     return (
-      <View style={[styles.loadingContainer, { backgroundColor: theme.colors.backgroundTertiary }]}>
+      <SafeAreaView style={[styles.loadingContainer, { backgroundColor: theme.colors.backgroundTertiary }]} edges={['top']}>
         <ActivityIndicator size="large" color={theme.colors.primary} />
-      </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.backgroundTertiary }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.backgroundTertiary }]} edges={['top']}>
       <View style={[styles.header, { backgroundColor: theme.colors.cardBackground }]}>
         <TouchableOpacity onPress={() => navigation.navigate('SettingsMain')} style={styles.backButton}>
           <Icon name="arrow-back" size={24} color={theme.colors.text} />
@@ -262,7 +286,7 @@ const ConversationsScreen = () => {
         onClose={() => setShowErrorModal(false)}
         message={errorMessage}
       />
-    </View>
+    </SafeAreaView>
   );
 };
 

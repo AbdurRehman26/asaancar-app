@@ -18,19 +18,19 @@ const SplashScreen = ({ onFinish }) => {
         toValue: 1,
         duration: 800,
         easing: Easing.out(Easing.ease),
-        useNativeDriver: true,
+        useNativeDriver: false, // Disabled to avoid native module warning
       }),
       Animated.spring(scaleAnim, {
         toValue: 1,
         tension: 50,
         friction: 7,
-        useNativeDriver: true,
+        useNativeDriver: false, // Disabled to avoid native module warning
       }),
       Animated.timing(slideAnim, {
         toValue: 0,
         duration: 800,
         easing: Easing.out(Easing.ease),
-        useNativeDriver: true,
+        useNativeDriver: false, // Disabled to avoid native module warning
       }),
     ]).start();
 
@@ -43,13 +43,13 @@ const SplashScreen = ({ onFinish }) => {
             toValue: 1,
             duration: 600,
             easing: Easing.inOut(Easing.ease),
-            useNativeDriver: true,
+            useNativeDriver: false, // Disabled to avoid native module warning
           }),
           Animated.timing(animValue, {
             toValue: 0.7,
             duration: 600,
             easing: Easing.inOut(Easing.ease),
-            useNativeDriver: true,
+            useNativeDriver: false, // Disabled to avoid native module warning
           }),
         ])
       );

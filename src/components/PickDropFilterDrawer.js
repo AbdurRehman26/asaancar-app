@@ -10,8 +10,11 @@ import {
   Dimensions,
   TextInput,
 } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/context/ThemeContext';
+import { locationAPI } from '@/services/api';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import SearchableDropdown from '@/components/SearchableDropdown';
 
 const { width, height } = Dimensions.get('window');
 
@@ -24,30 +27,68 @@ const PickDropFilterDrawer = ({
   onApply 
 }) => {
   const { theme } = useTheme();
-  const [slideAnim] = React.useState(new Animated.Value(height));
+  const insets = useSafeAreaInsets();
+  const [slideAnim] = React.useState(new Animated.Value(0));
+  const [locations, setLocations] = React.useState([]);
+  const [loadingLocations, setLoadingLocations] = React.useState(false);
 
   React.useEffect(() => {
     if (visible) {
-      Animated.spring(slideAnim, {
-        toValue: 0,
-        useNativeDriver: true,
-        tension: 50,
-        friction: 7,
-      }).start();
+      // Immediately set drawer to visible position (no animation delay)
+      slideAnim.setValue(0);
+      // Load locations when drawer opens
+      loadLocations();
     } else {
       Animated.timing(slideAnim, {
         toValue: height,
         duration: 250,
-        useNativeDriver: true,
+        useNativeDriver: false, // Disabled to avoid native module warning
       }).start();
     }
   }, [visible]);
+
+  const loadLocations = async (search = '') => {
+    try {
+      setLoadingLocations(true);
+      const data = await locationAPI.getAreas(197, search);
+      let locationsData = [];
+      
+      // Handle different response structures
+      if (data) {
+        if (Array.isArray(data.data)) {
+          locationsData = data.data;
+        } else if (Array.isArray(data)) {
+          locationsData = data;
+        } else if (data.areas && Array.isArray(data.areas)) {
+          locationsData = data.areas;
+        }
+      }
+      
+      // Transform to dropdown format
+      const formattedLocations = locationsData.map((location) => ({
+        value: location.id || location.value || location.name,
+        label: location.name || location.label || location.value,
+        id: location.id,
+      }));
+      
+      setLocations(formattedLocations);
+    } catch (error) {
+      console.error('Error loading locations:', error);
+      setLocations([]);
+    } finally {
+      setLoadingLocations(false);
+    }
+  };
+
+  const handleLocationSearch = (searchQuery) => {
+    loadLocations(searchQuery);
+  };
 
   const handleClose = () => {
     Animated.timing(slideAnim, {
       toValue: height,
       duration: 250,
-      useNativeDriver: true,
+      useNativeDriver: false, // Disabled to avoid native module warning
     }).start(() => {
       onClose();
     });
@@ -86,9 +127,11 @@ const PickDropFilterDrawer = ({
   return (
     <Modal
       visible={visible}
-      transparent
+      transparent={true}
       animationType="none"
       onRequestClose={handleClose}
+      statusBarTranslucent={true}
+      hardwareAccelerated={true}
     >
       <View style={styles.overlay}>
         <TouchableOpacity
@@ -119,78 +162,38 @@ const PickDropFilterDrawer = ({
             showsVerticalScrollIndicator={true}
           >
             {/* Start Location Filter */}
-            <FilterSection title="Start Location">
-              <FilterChip
-                label="Any Location"
-                value=""
-                selected={!filters.startLocation}
-                onPress={() => onFilterChange('startLocation', '')}
+            <View style={styles.section}>
+              <SearchableDropdown
+                label="Start Location"
+                options={[
+                  { value: '', label: 'Any Location' },
+                  ...locations,
+                ]}
+                value={filters.startLocation}
+                onSelect={(value) => onFilterChange('startLocation', value || '')}
+                placeholder="Select start location"
+                searchable={true}
+                onSearch={handleLocationSearch}
+                loading={loadingLocations}
               />
-              <FilterChip
-                label="North Nazimabad"
-                value="north-nazimabad"
-                selected={filters.startLocation === 'north-nazimabad'}
-                onPress={() => onFilterChange('startLocation', 'north-nazimabad')}
-              />
-              <FilterChip
-                label="Yaseenabad"
-                value="yaseenabad"
-                selected={filters.startLocation === 'yaseenabad'}
-                onPress={() => onFilterChange('startLocation', 'yaseenabad')}
-              />
-              <FilterChip
-                label="Saadabad"
-                value="saadabad"
-                selected={filters.startLocation === 'saadabad'}
-                onPress={() => onFilterChange('startLocation', 'saadabad')}
-              />
-              <FilterChip
-                label="Clifton"
-                value="clifton"
-                selected={filters.startLocation === 'clifton'}
-                onPress={() => onFilterChange('startLocation', 'clifton')}
-              />
-              <FilterChip
-                label="Bahria Town"
-                value="bahria-town"
-                selected={filters.startLocation === 'bahria-town'}
-                onPress={() => onFilterChange('startLocation', 'bahria-town')}
-              />
-            </FilterSection>
+            </View>
 
             {/* End Location Filter */}
-            <FilterSection title="End Location">
-              <FilterChip
-                label="Any Location"
-                value=""
-                selected={!filters.endLocation}
-                onPress={() => onFilterChange('endLocation', '')}
+            <View style={styles.section}>
+              <SearchableDropdown
+                label="End Location"
+                options={[
+                  { value: '', label: 'Any Location' },
+                  ...locations,
+                ]}
+                value={filters.endLocation}
+                onSelect={(value) => onFilterChange('endLocation', value || '')}
+                placeholder="Select end location"
+                searchable={true}
+                onSearch={handleLocationSearch}
+                loading={loadingLocations}
               />
-              <FilterChip
-                label="Al-Jadeed Greens"
-                value="al-jadeed-greens"
-                selected={filters.endLocation === 'al-jadeed-greens'}
-                onPress={() => onFilterChange('endLocation', 'al-jadeed-greens')}
-              />
-              <FilterChip
-                label="Bahria Town Karachi"
-                value="bahria-town-karachi"
-                selected={filters.endLocation === 'bahria-town-karachi'}
-                onPress={() => onFilterChange('endLocation', 'bahria-town-karachi')}
-              />
-              <FilterChip
-                label="Blue Sky Residency"
-                value="blue-sky-residency"
-                selected={filters.endLocation === 'blue-sky-residency'}
-                onPress={() => onFilterChange('endLocation', 'blue-sky-residency')}
-              />
-              <FilterChip
-                label="Gulistan-e-Zafar"
-                value="gulistan-e-zafar"
-                selected={filters.endLocation === 'gulistan-e-zafar'}
-                onPress={() => onFilterChange('endLocation', 'gulistan-e-zafar')}
-              />
-            </FilterSection>
+            </View>
 
             {/* Driver Gender Filter */}
             <FilterSection title="Driver Gender">
@@ -249,25 +252,28 @@ const PickDropFilterDrawer = ({
             </View>
           </ScrollView>
 
-          <View style={styles.drawerFooter}>
-            <TouchableOpacity
-              style={[styles.clearButton, { backgroundColor: '#f0f0f0' }]}
-              onPress={onClearAll}
-            >
-              <Text style={[styles.clearButtonText, { color: theme.colors.text }]}>
-                Clear All
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.applyButton, { backgroundColor: theme.colors.primary }]}
-              onPress={() => {
-                onApply();
-                handleClose();
-              }}
-            >
-              <Text style={styles.applyButtonText}>Apply Filters</Text>
-            </TouchableOpacity>
-          </View>
+          <SafeAreaView edges={['bottom']} style={{ backgroundColor: theme.colors.background }}>
+            <View style={[styles.drawerFooter, { paddingBottom: Math.max(insets.bottom, 16) }]}>
+              <TouchableOpacity
+                style={[styles.clearButton, { backgroundColor: '#f0f0f0' }]}
+                onPress={onClearAll}
+              >
+                <Text style={[styles.clearButtonText, { color: theme.colors.text }]}>
+                  Clear All
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.applyButton, { backgroundColor: theme.colors.primary }]}
+                onPress={() => {
+                  // Pass current filters directly to onApply to avoid state timing issues
+                  onApply(filters);
+                  handleClose();
+                }}
+              >
+                <Text style={styles.applyButtonText}>Apply Filters</Text>
+              </TouchableOpacity>
+            </View>
+          </SafeAreaView>
         </Animated.View>
       </View>
     </Modal>
@@ -278,6 +284,8 @@ const styles = StyleSheet.create({
   overlay: {
     flex: 1,
     justifyContent: 'flex-end',
+    position: 'relative',
+    zIndex: 999,
   },
   backdrop: {
     ...StyleSheet.absoluteFillObject,
@@ -289,6 +297,10 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     shadowColor: '#000',
+    position: 'absolute',
+    bottom: 0,
+    elevation: 10,
+    zIndex: 1000,
     shadowOffset: {
       width: 0,
       height: -2,
@@ -356,7 +368,8 @@ const styles = StyleSheet.create({
   },
   drawerFooter: {
     flexDirection: 'row',
-    padding: 20,
+    paddingHorizontal: 20,
+    paddingTop: 20,
     borderTopWidth: 1,
     borderTopColor: '#e0e0e0',
     gap: 12,

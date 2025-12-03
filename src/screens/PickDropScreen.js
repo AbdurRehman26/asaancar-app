@@ -110,7 +110,6 @@ const PickDropScreen = () => {
         return;
       }
     } catch (error) {
-      console.log('WhatsApp not available, trying SMS');
     }
 
     // Fallback to SMS
@@ -223,7 +222,10 @@ const PickDropScreen = () => {
   };
 
   const handleFilterChange = (key, value) => {
-    setTempFilters({ ...tempFilters, [key]: value });
+    setTempFilters((prev) => {
+      const updated = { ...prev, [key]: value };
+      return updated;
+    });
   };
 
   const clearFilters = () => {
@@ -238,8 +240,21 @@ const PickDropScreen = () => {
     setTempFilters(emptyFilters);
   };
 
-  const handleApplyFilters = () => {
-    setFilters(tempFilters);
+  const handleApplyFilters = (updatedFilters = null) => {
+    // Accept optional updatedFilters parameter to handle direct filter updates
+    const filtersToApply = updatedFilters || tempFilters;
+
+    // Create a completely new object to ensure React detects the change
+    const newFilters = {
+      startLocation: filtersToApply.startLocation || '',
+      endLocation: filtersToApply.endLocation || '',
+      driverGender: filtersToApply.driverGender || '',
+      departureTime: filtersToApply.departureTime || '',
+      departureDate: filtersToApply.departureDate || '',
+    };
+    
+    setFilters(newFilters);
+    setTempFilters(newFilters);
     setCurrentPage(1); // Reset to first page when filters change
   };
 

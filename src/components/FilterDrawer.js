@@ -9,6 +9,8 @@ import {
   Animated,
   Dimensions,
 } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import Slider from '@react-native-community/slider';
 import { useTheme } from '@/context/ThemeContext';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
@@ -16,21 +18,39 @@ const { width, height } = Dimensions.get('window');
 
 const FilterDrawer = ({ visible, onClose, filters, onFilterChange, onClearAll, onApply, brands, types }) => {
   const { theme } = useTheme();
-  const [slideAnim] = React.useState(new Animated.Value(height));
+  const insets = useSafeAreaInsets();
+  // Initialize at 0 so drawer is visible by default when modal opens
+  const [slideAnim] = React.useState(new Animated.Value(0));
+  
+  // Price slider state
+  const [minPriceValue, setMinPriceValue] = React.useState(0);
+  const [maxPriceValue, setMaxPriceValue] = React.useState(50000);
+  
+  // Price range constants
+  const MIN_PRICE = 0;
+  const MAX_PRICE = 50000;
+  const STEP = 1000;
 
   React.useEffect(() => {
     if (visible) {
-      Animated.spring(slideAnim, {
-        toValue: 0,
-        useNativeDriver: true,
-        tension: 50,
-        friction: 7,
-      }).start();
+      // Initialize slider values from filters first
+      const minPrice = filters.minPrice ? parseInt(filters.minPrice, 10) : MIN_PRICE;
+      const maxPrice = filters.maxPrice ? parseInt(filters.maxPrice, 10) : MAX_PRICE;
+      
+      // Ensure valid range
+      const validMinPrice = Math.max(MIN_PRICE, Math.min(MAX_PRICE, minPrice || MIN_PRICE));
+      const validMaxPrice = Math.max(validMinPrice, Math.min(MAX_PRICE, maxPrice || MAX_PRICE));
+      
+      setMinPriceValue(validMinPrice);
+      setMaxPriceValue(validMaxPrice);
+      
+      // Immediately set drawer to visible position (no animation delay)
+      slideAnim.setValue(0);
     } else {
       Animated.timing(slideAnim, {
         toValue: height,
         duration: 250,
-        useNativeDriver: true,
+        useNativeDriver: false,
       }).start();
     }
   }, [visible]);
@@ -39,7 +59,7 @@ const FilterDrawer = ({ visible, onClose, filters, onFilterChange, onClearAll, o
     Animated.timing(slideAnim, {
       toValue: height,
       duration: 250,
-      useNativeDriver: true,
+      useNativeDriver: false, // Disabled to avoid native module warning
     }).start(() => {
       onClose();
     });
@@ -75,12 +95,55 @@ const FilterDrawer = ({ visible, onClose, filters, onFilterChange, onClearAll, o
     </View>
   );
 
+  const formatPrice = (price) => {
+    if (price === 0) return 'Any';
+    return `${price.toLocaleString()} PKR`;
+  };
+
+  const handleMinPriceChange = (value) => {
+    const newValue = Math.round(value / STEP) * STEP;
+    const clampedValue = Math.max(MIN_PRICE, Math.min(maxPriceValue, newValue));
+    setMinPriceValue(clampedValue);
+    // Update tempFilters immediately
+    const priceValue = clampedValue === MIN_PRICE ? '' : clampedValue.toString();
+    onFilterChange('minPrice', priceValue);
+  };
+
+  const handleMaxPriceChange = (value) => {
+    const newValue = Math.round(value / STEP) * STEP;
+    const clampedValue = Math.max(minPriceValue, Math.min(MAX_PRICE, newValue));
+    setMaxPriceValue(clampedValue);
+    // Update tempFilters immediately
+    const priceValue = clampedValue === MAX_PRICE ? '' : clampedValue.toString();
+    onFilterChange('maxPrice', priceValue);
+  };
+
+  const handleMinPriceComplete = (value) => {
+    const newValue = Math.round(value / STEP) * STEP;
+    const clampedValue = Math.max(MIN_PRICE, Math.min(maxPriceValue, newValue));
+    setMinPriceValue(clampedValue);
+    // Ensure value is synced on slide complete (important for mobile)
+    const priceValue = clampedValue === MIN_PRICE ? '' : clampedValue.toString();
+    onFilterChange('minPrice', priceValue);
+  };
+
+  const handleMaxPriceComplete = (value) => {
+    const newValue = Math.round(value / STEP) * STEP;
+    const clampedValue = Math.max(minPriceValue, Math.min(MAX_PRICE, newValue));
+    setMaxPriceValue(clampedValue);
+    // Ensure value is synced on slide complete (important for mobile)
+    const priceValue = clampedValue === MAX_PRICE ? '' : clampedValue.toString();
+    onFilterChange('maxPrice', priceValue);
+  };
+
   return (
     <Modal
       visible={visible}
-      transparent
+      transparent={true}
       animationType="none"
       onRequestClose={handleClose}
+      statusBarTranslucent={true}
+      hardwareAccelerated={true}
     >
       <View style={styles.overlay}>
         <TouchableOpacity
@@ -234,142 +297,120 @@ const FilterDrawer = ({ visible, onClose, filters, onFilterChange, onClearAll, o
               />
             </FilterSection>
 
-            {/* Min Price Filter */}
-            <FilterSection title="Minimum Price">
-              <FilterChip
-                label="Any Price"
-                value=""
-                selected={!filters.minPrice}
-                onPress={() => onFilterChange('minPrice', '')}
-              />
-              <FilterChip
-                label="1,000 PKR"
-                value="1000"
-                selected={filters.minPrice === '1000'}
-                onPress={() => onFilterChange('minPrice', '1000')}
-              />
-              <FilterChip
-                label="3,000 PKR"
-                value="3000"
-                selected={filters.minPrice === '3000'}
-                onPress={() => onFilterChange('minPrice', '3000')}
-              />
-              <FilterChip
-                label="5,000 PKR"
-                value="5000"
-                selected={filters.minPrice === '5000'}
-                onPress={() => onFilterChange('minPrice', '5000')}
-              />
-              <FilterChip
-                label="10,000 PKR"
-                value="10000"
-                selected={filters.minPrice === '10000'}
-                onPress={() => onFilterChange('minPrice', '10000')}
-              />
-              <FilterChip
-                label="15,000 PKR"
-                value="15000"
-                selected={filters.minPrice === '15000'}
-                onPress={() => onFilterChange('minPrice', '15000')}
-              />
-              <FilterChip
-                label="20,000 PKR"
-                value="20000"
-                selected={filters.minPrice === '20000'}
-                onPress={() => onFilterChange('minPrice', '20000')}
-              />
-              <FilterChip
-                label="25,000 PKR"
-                value="25000"
-                selected={filters.minPrice === '25000'}
-                onPress={() => onFilterChange('minPrice', '25000')}
-              />
-              <FilterChip
-                label="30,000 PKR"
-                value="30000"
-                selected={filters.minPrice === '30000'}
-                onPress={() => onFilterChange('minPrice', '30000')}
-              />
-            </FilterSection>
+            {/* Price Range Filter */}
+            <View style={styles.section}>
+              <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
+                Price Range
+              </Text>
+              
+              {/* Min Price Slider */}
+              <View style={styles.sliderContainer}>
+                <View style={styles.sliderHeader}>
+                  <Text style={[styles.sliderLabel, { color: theme.colors.text }]}>
+                    Minimum Price
+                  </Text>
+                  <Text style={[styles.sliderValue, { color: theme.colors.primary }]}>
+                    {formatPrice(minPriceValue)}
+                  </Text>
+                </View>
+                <Slider
+                  style={styles.slider}
+                  minimumValue={MIN_PRICE}
+                  maximumValue={maxPriceValue}
+                  value={minPriceValue}
+                  step={STEP}
+                  onValueChange={handleMinPriceChange}
+                  onSlidingComplete={handleMinPriceComplete}
+                  minimumTrackTintColor={theme.colors.primary}
+                  maximumTrackTintColor="#d3d3d3"
+                  thumbTintColor={theme.colors.primary}
+                />
+                <View style={styles.sliderRange}>
+                  <Text style={[styles.rangeText, { color: theme.colors.textSecondary }]}>
+                    {formatPrice(MIN_PRICE)}
+                  </Text>
+                  <Text style={[styles.rangeText, { color: theme.colors.textSecondary }]}>
+                    {formatPrice(maxPriceValue)}
+                  </Text>
+                </View>
+              </View>
 
-            {/* Max Price Filter */}
-            <FilterSection title="Maximum Price">
-              <FilterChip
-                label="Any Price"
-                value=""
-                selected={!filters.maxPrice}
-                onPress={() => onFilterChange('maxPrice', '')}
-              />
-              <FilterChip
-                label="3,000 PKR"
-                value="3000"
-                selected={filters.maxPrice === '3000'}
-                onPress={() => onFilterChange('maxPrice', '3000')}
-              />
-              <FilterChip
-                label="6,000 PKR"
-                value="6000"
-                selected={filters.maxPrice === '6000'}
-                onPress={() => onFilterChange('maxPrice', '6000')}
-              />
-              <FilterChip
-                label="10,000 PKR"
-                value="10000"
-                selected={filters.maxPrice === '10000'}
-                onPress={() => onFilterChange('maxPrice', '10000')}
-              />
-              <FilterChip
-                label="15,000 PKR"
-                value="15000"
-                selected={filters.maxPrice === '15000'}
-                onPress={() => onFilterChange('maxPrice', '15000')}
-              />
-              <FilterChip
-                label="20,000 PKR"
-                value="20000"
-                selected={filters.maxPrice === '20000'}
-                onPress={() => onFilterChange('maxPrice', '20000')}
-              />
-              <FilterChip
-                label="25,000 PKR"
-                value="25000"
-                selected={filters.maxPrice === '25000'}
-                onPress={() => onFilterChange('maxPrice', '25000')}
-              />
-              <FilterChip
-                label="30,000 PKR"
-                value="30000"
-                selected={filters.maxPrice === '30000'}
-                onPress={() => onFilterChange('maxPrice', '30000')}
-              />
-              <FilterChip
-                label="50,000 PKR"
-                value="50000"
-                selected={filters.maxPrice === '50000'}
-                onPress={() => onFilterChange('maxPrice', '50000')}
-              />
-            </FilterSection>
+              {/* Max Price Slider */}
+              <View style={styles.sliderContainer}>
+                <View style={styles.sliderHeader}>
+                  <Text style={[styles.sliderLabel, { color: theme.colors.text }]}>
+                    Maximum Price
+                  </Text>
+                  <Text style={[styles.sliderValue, { color: theme.colors.primary }]}>
+                    {formatPrice(maxPriceValue)}
+                  </Text>
+                </View>
+                <Slider
+                  style={styles.slider}
+                  minimumValue={minPriceValue}
+                  maximumValue={MAX_PRICE}
+                  value={maxPriceValue}
+                  step={STEP}
+                  onValueChange={handleMaxPriceChange}
+                  onSlidingComplete={handleMaxPriceComplete}
+                  minimumTrackTintColor={theme.colors.primary}
+                  maximumTrackTintColor="#d3d3d3"
+                  thumbTintColor={theme.colors.primary}
+                />
+                <View style={styles.sliderRange}>
+                  <Text style={[styles.rangeText, { color: theme.colors.textSecondary }]}>
+                    {formatPrice(minPriceValue)}
+                  </Text>
+                  <Text style={[styles.rangeText, { color: theme.colors.textSecondary }]}>
+                    {formatPrice(MAX_PRICE)}
+                  </Text>
+                </View>
+              </View>
+            </View>
           </ScrollView>
 
-          <View style={styles.drawerFooter}>
-            <TouchableOpacity
-              style={[styles.clearButton, { backgroundColor: '#f0f0f0' }]}
-              onPress={onClearAll}
-            >
-              <Text style={[styles.clearButtonText, { color: theme.colors.text }]}>
-                Clear All
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.applyButton, { backgroundColor: theme.colors.primary }]}
-              onPress={() => {
-                onApply();
-                handleClose();
-              }}
-            >
-              <Text style={styles.applyButtonText}>Apply Filters</Text>
-            </TouchableOpacity>
-          </View>
+          <SafeAreaView edges={['bottom']} style={{ backgroundColor: theme.colors.background }}>
+            <View style={[styles.drawerFooter, { paddingBottom: Math.max(insets.bottom, 16) }]}>
+              <TouchableOpacity
+                style={[styles.clearButton, { backgroundColor: '#f0f0f0' }]}
+                onPress={() => {
+                  setMinPriceValue(MIN_PRICE);
+                  setMaxPriceValue(MAX_PRICE);
+                  onClearAll();
+                }}
+              >
+                <Text style={[styles.clearButtonText, { color: theme.colors.text }]}>
+                  Clear All
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.applyButton, { backgroundColor: theme.colors.primary }]}
+                onPress={() => {
+                  // Ensure slider values are synced before applying
+                  const minPriceStr = minPriceValue === MIN_PRICE ? '' : minPriceValue.toString();
+                  const maxPriceStr = maxPriceValue === MAX_PRICE ? '' : maxPriceValue.toString();
+
+                  // Create updated filters object with current slider values
+                  const updatedFilters = {
+                    ...filters,
+                    minPrice: minPriceStr,
+                    maxPrice: maxPriceStr,
+                  };
+                  
+                  // Update tempFilters to keep them in sync
+                  onFilterChange('minPrice', minPriceStr);
+                  onFilterChange('maxPrice', maxPriceStr);
+                  
+                  // Always pass updated filters directly to onApply to avoid state timing issues
+                  console.log('FilterDrawer - Calling onApply with updatedFilters:', JSON.stringify(updatedFilters, null, 2));
+                  onApply(updatedFilters);
+                  handleClose();
+                }}
+              >
+                <Text style={styles.applyButtonText}>Apply Filters</Text>
+              </TouchableOpacity>
+            </View>
+          </SafeAreaView>
         </Animated.View>
       </View>
     </Modal>
@@ -380,6 +421,8 @@ const styles = StyleSheet.create({
   overlay: {
     flex: 1,
     justifyContent: 'flex-end',
+    position: 'relative',
+    zIndex: 999,
   },
   backdrop: {
     ...StyleSheet.absoluteFillObject,
@@ -397,7 +440,10 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
-    elevation: 5,
+    elevation: 10,
+    zIndex: 1000,
+    position: 'absolute',
+    bottom: 0,
   },
   drawerHeader: {
     flexDirection: 'row',
@@ -445,7 +491,8 @@ const styles = StyleSheet.create({
   },
   drawerFooter: {
     flexDirection: 'row',
-    padding: 20,
+    paddingHorizontal: 20,
+    paddingTop: 20,
     borderTopWidth: 1,
     borderTopColor: '#e0e0e0',
     gap: 12,
@@ -470,6 +517,35 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
+  },
+  sliderContainer: {
+    marginBottom: 24,
+  },
+  sliderHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  sliderLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  sliderValue: {
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  slider: {
+    width: '100%',
+    height: 40,
+  },
+  sliderRange: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 4,
+  },
+  rangeText: {
+    fontSize: 12,
   },
 });
 

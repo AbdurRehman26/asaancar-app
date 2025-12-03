@@ -202,17 +202,17 @@ const PickDropDetailScreen = () => {
                 {endLocation}
               </Text>
             </View>
+            {service.driver_gender && (
+              <View style={styles.driverGenderTag}>
+                <Text style={styles.driverGenderEmoji}>
+                  {service.driver_gender === 'female' ? '♀' : '♂'}
+                </Text>
+                <Text style={styles.driverGenderText}>
+                  {service.driver_gender === 'female' ? 'Female' : 'Male'} Driver
+                </Text>
+              </View>
+            )}
           </View>
-          {service.driver_gender && (
-            <View style={styles.driverGenderBadge}>
-              <Text style={styles.driverGenderEmoji}>
-                {service.driver_gender === 'female' ? '♀' : '♂'}
-              </Text>
-              <Text style={styles.driverGenderText}>
-                {service.driver_gender === 'female' ? 'Female' : 'Male'} Driver
-              </Text>
-            </View>
-          )}
         </View>
 
         <View style={styles.contentContainer}>
@@ -652,13 +652,15 @@ const styles = StyleSheet.create({
     color: '#fff',
     flex: 1,
   },
-  driverGenderBadge: {
+  driverGenderTag: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
+    marginTop: 12,
+    alignSelf: 'flex-start',
     gap: 6,
   },
   driverGenderEmoji: {

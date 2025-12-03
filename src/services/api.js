@@ -39,14 +39,28 @@ export const carAPI = {
       params.append('per_page', filters.per_page);
     }
     
-    // Add filters
+    // Add filters - convert camelCase to snake_case for API
+    const filterMapping = {
+      brand: 'brand',
+      type: 'type',
+      transmission: 'transmission',
+      fuelType: 'fuel_type',
+      minSeats: 'min_seats',
+      minPrice: 'min_price',
+      maxPrice: 'max_price',
+    };
+    
     Object.keys(filters).forEach((key) => {
       if (filters[key] && key !== 'page' && key !== 'per_page') {
-        params.append(key, filters[key]);
+        const apiKey = filterMapping[key] || key;
+        params.append(apiKey, filters[key]);
       }
     });
     
-    const response = await api.get(`/cars?${params.toString()}`);
+    const queryString = params.toString();
+    const url = `/cars${queryString ? `?${queryString}` : ''}`;
+
+    const response = await api.get(url);
     return response.data;
   },
 
@@ -212,6 +226,20 @@ export const storeAPI = {
   },
 };
 
+export const locationAPI = {
+  // Get all areas for a city
+  getAreas: async (cityId = 197, search = '') => {
+    const params = new URLSearchParams();
+    params.append('city_id', cityId);
+    if (search) {
+      params.append('search', search);
+    }
+    const url = `/areas?${params.toString()}`;
+    const response = await api.get(url);
+    return response.data;
+  },
+};
+
 export const pickDropAPI = {
   // Get pick and drop services with filters
   getPickDropServices: async (filters = {}) => {
@@ -225,10 +253,24 @@ export const pickDropAPI = {
       params.append('per_page', filters.per_page);
     }
     
-    // Add filters
+    // Add search query if provided
+    if (filters.search) {
+      params.append('search', filters.search);
+    }
+    
+    // Add filters - convert camelCase to snake_case for API
+    const filterMapping = {
+      startLocation: 'start_location',
+      endLocation: 'end_location',
+      driverGender: 'driver_gender',
+      departureTime: 'departure_time',
+      departureDate: 'departure_date',
+    };
+    
     Object.keys(filters).forEach((key) => {
-      if (filters[key] && key !== 'page' && key !== 'per_page') {
-        params.append(key, filters[key]);
+      if (filters[key] && key !== 'page' && key !== 'per_page' && key !== 'search') {
+        const apiKey = filterMapping[key] || key;
+        params.append(apiKey, filters[key]);
       }
     });
     

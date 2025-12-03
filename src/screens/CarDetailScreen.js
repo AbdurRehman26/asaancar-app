@@ -142,7 +142,6 @@ const CarDetailScreen = () => {
       return;
     }
     // TODO: Implement inquiry API call
-    console.log('Send inquiry:', { inquiryName, inquiryContact, inquiryMessage });
   };
 
   if (loading) {
