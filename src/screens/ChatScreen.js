@@ -23,7 +23,7 @@ const ChatScreen = () => {
   const route = useRoute();
   const { user } = useAuth();
   const { theme } = useTheme();
-  const { conversationId, userId, userName } = route.params || {};
+  const { conversationId, userId, userName, type, serviceId } = route.params || {};
   
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
@@ -45,6 +45,7 @@ const ChatScreen = () => {
       } else if (userId) {
         initializeConversation();
       }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [currentConversationId, userId])
   );
 
@@ -60,7 +61,7 @@ const ChatScreen = () => {
   const initializeConversation = async () => {
     try {
       setLoading(true);
-      const response = await chatAPI.getOrCreateConversation(userId);
+      const response = await chatAPI.getOrCreateConversation(userId, type, serviceId);
       const convId = response.data?.id || response.id || response.conversation_id;
       setCurrentConversationId(convId);
       if (convId) {
@@ -155,18 +156,53 @@ const ChatScreen = () => {
 
     try {
       const response = await chatAPI.sendMessage(currentConversationId, messageText);
-      const sentMessage = response.data || response.message || response;
+      
+      // Handle different response structures
+      let sentMessage = null;
+      if (response) {
+        if (response.data) {
+          sentMessage = response.data;
+        } else if (response.message) {
+          sentMessage = response.message;
+        } else if (response.id || response.message_id) {
+          sentMessage = response;
+        } else {
+          sentMessage = response;
+        }
+      }
+      
+      // Ensure the message has required fields
+      const finalMessage = {
+        ...tempMessage,
+        ...sentMessage,
+        id: sentMessage?.id || sentMessage?.message_id || tempMessage.id,
+        message: sentMessage?.message || sentMessage?.text || messageText,
+        sender_id: sentMessage?.sender_id || sentMessage?.user_id || user?.id,
+        sender: sentMessage?.sender || sentMessage?.user || user,
+        created_at: sentMessage?.created_at || sentMessage?.created_at || tempMessage.created_at,
+        is_sent: true,
+      };
       
       // Replace temp message with actual message
-      setMessages((prev) => 
-        prev.map((msg) => 
-          msg.id === tempMessage.id ? { ...sentMessage, is_sent: true } : msg
-        )
-      );
+      setMessages((prev) => {
+        const updated = prev.map((msg) => 
+          msg.id === tempMessage.id ? finalMessage : msg
+        );
+        // If message wasn't found (shouldn't happen), add it
+        const found = updated.find(msg => msg.id === finalMessage.id);
+        if (!found) {
+          return [...updated, finalMessage];
+        }
+        return updated;
+      });
 
       // Mark as read
-      if (sentMessage.id) {
-        await chatAPI.markAsRead(currentConversationId, [sentMessage.id]);
+      if (finalMessage.id && finalMessage.id !== tempMessage.id) {
+        try {
+          await chatAPI.markAsRead(currentConversationId, [finalMessage.id]);
+        } catch (readError) {
+          console.error('Error marking as read:', readError);
+        }
       }
 
       // Scroll to bottom
@@ -175,10 +211,15 @@ const ChatScreen = () => {
       }, 100);
     } catch (error) {
       console.error('Error sending message:', error);
-      // Remove temp message on error
-      setMessages((prev) => prev.filter((msg) => msg.id !== tempMessage.id));
+      console.error('Error details:', error.response?.data);
+      // Keep the temp message but mark it as failed
+      setMessages((prev) => 
+        prev.map((msg) => 
+          msg.id === tempMessage.id ? { ...msg, is_sent: false, is_failed: true } : msg
+        )
+      );
       setNewMessage(messageText);
-      setErrorMessage('Failed to send message');
+      setErrorMessage(error.response?.data?.message || error.message || 'Failed to send message');
       setShowErrorModal(true);
     } finally {
       setSending(false);

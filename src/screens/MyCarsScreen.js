@@ -219,7 +219,7 @@ const MyCarsScreen = () => {
         <TouchableOpacity onPress={() => navigation.navigate('SettingsMain')} style={styles.backButton}>
           <Icon name="arrow-back" size={24} color={theme.colors.text} />
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: theme.colors.text }]}>My Cars</Text>
+        <View style={{ flex: 1 }} />
         <TouchableOpacity
           style={[styles.addButton, { backgroundColor: theme.colors.primary }]}
           onPress={() => {

@@ -236,6 +236,12 @@ export const pickDropAPI = {
     return response.data;
   },
 
+  // Get a single pick and drop service by ID
+  getPickDropService: async (id) => {
+    const response = await api.get(`/pick-and-drop/${id}`);
+    return response.data;
+  },
+
   // Create pick and drop service
   createPickAndDropService: async (serviceData) => {
     const response = await api.post('/pick-and-drop', serviceData);
@@ -385,10 +391,17 @@ export const chatAPI = {
   },
 
   // Create or get conversation with a user
-  getOrCreateConversation: async (userId) => {
-    const response = await api.post('/chat/conversations', {
+  getOrCreateConversation: async (userId, type = null, serviceId = null) => {
+    const payload = {
       user_id: userId,
-    });
+    };
+    if (type) {
+      payload.type = type;
+    }
+    if (type === 'pick_and_drop' && serviceId) {
+      payload.pick_and_drop_service_id = serviceId;
+    }
+    const response = await api.post('/chat/conversations', payload);
     return response.data;
   },
 

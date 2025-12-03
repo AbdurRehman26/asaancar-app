@@ -123,7 +123,8 @@ const MyPickDropServicesScreen = () => {
     const endLocation = item.end_location || item.end_area || 'N/A';
     const departureDate = item.departure_date || item.departureDate || null;
     const departureTime = item.departure_time || item.departureTime || null;
-    const everydayService = item.everyday_service || item.everydayService || false;
+    const everydayService =
+      item.is_everyday || item.everyday_service || item.everydayService || false;
     const availableSpaces = item.available_spaces || item.availableSpaces || 0;
     const driverGender = item.driver_gender || item.driverGender || 'N/A';
     const price = item.price_per_person || item.pricePerPerson || null;
@@ -220,7 +221,7 @@ const MyPickDropServicesScreen = () => {
         <TouchableOpacity onPress={() => navigation.navigate('SettingsMain')} style={styles.backButton}>
           <Icon name="arrow-back" size={24} color={theme.colors.text} />
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: theme.colors.text }]}>My Pick & Drop Services</Text>
+        <View style={{ flex: 1 }} />
         <TouchableOpacity
           style={[styles.addButton, { backgroundColor: theme.colors.primary }]}
           onPress={() => {

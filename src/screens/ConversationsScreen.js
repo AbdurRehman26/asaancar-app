@@ -67,17 +67,52 @@ const ConversationsScreen = () => {
   };
 
   const getOtherUser = (conversation) => {
-    if (!conversation.participants || !Array.isArray(conversation.participants)) {
+    // Try different possible field names for participants
+    const participants = 
+      conversation.participants ||
+      conversation.users ||
+      conversation.members ||
+      [];
+    
+    if (!Array.isArray(participants) || participants.length === 0) {
+      // Try user field directly
+      if (conversation.user) {
+        return conversation.user;
+      }
+      if (conversation.other_user) {
+        return conversation.other_user;
+      }
+      if (conversation.recipient) {
+        return conversation.recipient;
+      }
       return null;
     }
-    return conversation.participants.find((p) => p.id !== user?.id) || conversation.participants[0];
+    
+    // Find the other user (not the current user)
+    const otherUser = participants.find((p) => 
+      p.id !== user?.id && 
+      p.user_id !== user?.id &&
+      p.id !== user?.user_id
+    );
+    
+    return otherUser || participants[0] || null;
   };
 
   const getLastMessage = (conversation) => {
+    // Try different possible field names for last message
     if (conversation.last_message) {
       return conversation.last_message;
     }
-    if (conversation.messages && conversation.messages.length > 0) {
+    if (conversation.lastMessage) {
+      return conversation.lastMessage;
+    }
+    if (conversation.latest_message) {
+      return conversation.latest_message;
+    }
+    if (conversation.latestMessage) {
+      return conversation.latestMessage;
+    }
+    if (conversation.messages && Array.isArray(conversation.messages) && conversation.messages.length > 0) {
       return conversation.messages[conversation.messages.length - 1];
     }
     return null;
@@ -137,7 +172,13 @@ const ConversationsScreen = () => {
               ]}
               numberOfLines={1}
             >
-              {otherUser?.name || 'Unknown User'}
+              {otherUser?.name || 
+               otherUser?.username || 
+               otherUser?.user?.name ||
+               otherUser?.user?.username ||
+               conversation.user_name ||
+               conversation.username ||
+               'Unknown User'}
             </Text>
             {lastMessage && (
               <Text style={[styles.conversationTime, { color: theme.colors.textSecondary }]}>
@@ -155,7 +196,11 @@ const ConversationsScreen = () => {
                 ]}
                 numberOfLines={1}
               >
-                {lastMessage.message || lastMessage.content || ''}
+                {lastMessage.message || 
+                 lastMessage.content || 
+                 lastMessage.text ||
+                 lastMessage.body ||
+                 ''}
               </Text>
               {isUnread && (
                 <View style={[styles.unreadBadge, { backgroundColor: theme.colors.primary }]}>

@@ -8,6 +8,7 @@ import {
   TextInput,
   Image,
   FlatList,
+  Linking,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
@@ -17,6 +18,7 @@ import { pickDropAPI } from '@/services/api';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import ServiceTabs from '@/components/ServiceTabs';
 import PickDropFilterDrawer from '@/components/PickDropFilterDrawer';
+import ErrorModal from '@/components/ErrorModal';
 
 const PickDropScreen = () => {
   const { theme } = useTheme();
@@ -41,6 +43,92 @@ const PickDropScreen = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [totalServices, setTotalServices] = useState(0);
   const [pageSize] = useState(12);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+
+  const formatDate = (dateString) => {
+    if (!dateString) return null;
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return dateString;
+      const day = String(date.getDate()).padStart(2, '0');
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const year = date.getFullYear();
+      return `${day}/${month}/${year}`;
+    } catch (error) {
+      return dateString;
+    }
+  };
+
+  const formatTime = (timeString) => {
+    if (!timeString) return null;
+    return timeString;
+  };
+
+  // Helper function to handle phone calls
+  const handleCall = async (phoneNumber) => {
+    if (!phoneNumber) {
+      setErrorMessage('Phone number not available');
+      setShowErrorModal(true);
+      return;
+    }
+
+    const phoneUrl = `tel:${phoneNumber}`;
+    try {
+      const canOpen = await Linking.canOpenURL(phoneUrl);
+      if (canOpen) {
+        await Linking.openURL(phoneUrl);
+      } else {
+        setErrorMessage('Unable to open phone dialer');
+        setShowErrorModal(true);
+      }
+    } catch (error) {
+      console.error('Error opening phone dialer:', error);
+      setErrorMessage('Failed to make call');
+      setShowErrorModal(true);
+    }
+  };
+
+  // Helper function to handle messages (WhatsApp or SMS)
+  const handleMessage = async (phoneNumber, whatsappNumber = null) => {
+    const numberToUse = whatsappNumber || phoneNumber;
+    if (!numberToUse) {
+      setErrorMessage('Contact number not available');
+      setShowErrorModal(true);
+      return;
+    }
+
+    // Remove any non-digit characters except + for WhatsApp
+    const cleanNumber = numberToUse.replace(/[^\d+]/g, '');
+    
+    // Try WhatsApp first
+    const whatsappUrl = `https://wa.me/${cleanNumber}`;
+    try {
+      const canOpenWhatsApp = await Linking.canOpenURL(whatsappUrl);
+      if (canOpenWhatsApp) {
+        await Linking.openURL(whatsappUrl);
+        return;
+      }
+    } catch (error) {
+      console.log('WhatsApp not available, trying SMS');
+    }
+
+    // Fallback to SMS
+    const smsUrl = `sms:${phoneNumber}`;
+    try {
+      const canOpenSMS = await Linking.canOpenURL(smsUrl);
+      if (canOpenSMS) {
+        await Linking.openURL(smsUrl);
+      } else {
+        setErrorMessage('Unable to open messaging app');
+        setShowErrorModal(true);
+      }
+    } catch (error) {
+      console.error('Error opening messaging app:', error);
+      setErrorMessage('Failed to open messaging app');
+      setShowErrorModal(true);
+    }
+  };
 
   // Update active tab when screen is focused
   useFocusEffect(
@@ -258,32 +346,82 @@ const PickDropScreen = () => {
                     </Text>
                   )}
 
-                  {/* Schedule */}
-                  {service.schedule && (
-                    <View style={styles.scheduleRow}>
-                      <Icon name="calendar-today" size={14} color={theme.colors.secondary} />
-                      <Text style={[styles.scheduleText, { color: theme.colors.textSecondary }]}>
-                        {service.schedule}
-                      </Text>
-                    </View>
-                  )}
+                  {/* Schedule: Everyday vs specific date/time */}
+                  {(() => {
+                    const departureDate = service.departure_date || service.departureDate || null;
+                    const departureTime = service.departure_time || service.departureTime || null;
+                    const everydayService =
+                      service.is_everyday ||
+                      service.everyday_service ||
+                      service.everydayService ||
+                      false;
+                    const hasSchedule =
+                      everydayService || departureDate || departureTime || service.schedule;
+
+                    if (!hasSchedule) return null;
+
+                    let scheduleText = '';
+                    if (everydayService) {
+                      scheduleText = 'Everyday Service';
+                    } else if (departureDate) {
+                      scheduleText = `${formatDate(departureDate)}${
+                        departureTime ? ` at ${formatTime(departureTime)}` : ''
+                      }`;
+                    } else if (departureTime) {
+                      scheduleText = formatTime(departureTime);
+                    } else {
+                      scheduleText = service.schedule;
+                    }
+
+                    return (
+                      <View style={styles.scheduleRow}>
+                        <Icon name="calendar-today" size={14} color={theme.colors.secondary} />
+                        <Text style={[styles.scheduleText, { color: theme.colors.textSecondary }]}>
+                          {scheduleText}
+                        </Text>
+                      </View>
+                    );
+                  })()}
 
                   {/* Availability */}
-                  {service.available_seats !== undefined && (
-                    <View style={styles.availabilityRow}>
-                      <Icon name="person" size={14} color={theme.colors.textSecondary} />
-                      <Text style={[styles.availabilityText, { color: theme.colors.textSecondary }]}>
-                        {service.available_seats} space{service.available_seats !== 1 ? 's' : ''} available
-                      </Text>
-                    </View>
-                  )}
+                  {(() => {
+                    const availableSpaces = 
+                      service.available_spaces ||
+                      service.availableSpaces ||
+                      service.available_seats ||
+                      service.availableSeats ||
+                      null;
+                    
+                    if (availableSpaces === null || availableSpaces === undefined) return null;
+                    
+                    return (
+                      <View style={styles.availabilityRow}>
+                        <Icon name="person" size={14} color={theme.colors.textSecondary} />
+                        <Text style={[styles.availabilityText, { color: theme.colors.textSecondary }]}>
+                          {availableSpaces} space{availableSpaces !== 1 ? 's' : ''} available
+                        </Text>
+                      </View>
+                    );
+                  })()}
 
                   {/* Price */}
-                  {service.price && (
-                    <Text style={[styles.priceText, { color: theme.colors.primary }]}>
-                      PKR {typeof service.price === 'object' ? service.price.perPerson || service.price.amount : service.price} per person
-                    </Text>
-                  )}
+                  {(() => {
+                    const price = 
+                      service.price_per_person ||
+                      service.pricePerPerson ||
+                      (service.price && typeof service.price === 'object' ? service.price.perPerson || service.price.amount : null) ||
+                      service.price ||
+                      null;
+                    const currency = service.currency || 'PKR';
+                    
+                    if (!price) return null;
+                    
+                    return (
+                      <Text style={[styles.priceText, { color: theme.colors.primary }]}>
+                        {currency} {typeof price === 'number' ? price.toLocaleString() : price} per person
+                      </Text>
+                    );
+                  })()}
 
                   {/* Driver Gender */}
                   {service.driver_gender && (
@@ -301,7 +439,7 @@ const PickDropScreen = () => {
                     </Text>
                   )}
 
-                  {/* Stops */}
+                  {/* Stops (Everyday vs specific time) */}
                   {service.stops && service.stops.length > 0 && (
                     <View style={styles.stopsSection}>
                       <Icon name="schedule" size={14} color={theme.colors.textSecondary} />
@@ -310,13 +448,31 @@ const PickDropScreen = () => {
                       </Text>
                       {service.stops.map((stop, index) => {
                         // Handle stop object structure
-                        const stopName = stop.location || stop.name || stop.area?.name || stop.city?.name || 'Stop';
+                        const stopName =
+                          stop.location ||
+                          stop.name ||
+                          stop.area?.name ||
+                          stop.city?.name ||
+                          'Stop';
                         const stopTime = stop.stop_time || stop.time || '';
+                        const isEverydayStop =
+                          stop.is_everyday ||
+                          stop.everyday_service ||
+                          stop.everydayService ||
+                          false;
+
+                        let stopLabel = stopName;
+                        if (isEverydayStop) {
+                          stopLabel = `${stopName} (Everyday)`;
+                        } else if (stopTime) {
+                          stopLabel = `${stopName} (${stopTime})`;
+                        }
+
                         return (
                           <View key={stop.id || index} style={styles.stopItem}>
                             <View style={[styles.stopDot, { backgroundColor: theme.colors.primary }]} />
                             <Text style={[styles.stopText, { color: theme.colors.textSecondary }]}>
-                              {stopName} {stopTime ? `(${stopTime})` : ''}
+                              {stopLabel}
                             </Text>
                           </View>
                         );
@@ -331,15 +487,75 @@ const PickDropScreen = () => {
                     </Text>
                   )}
 
-                  {/* View Details Button */}
-                  <TouchableOpacity
-                    style={[styles.viewDetailsButton, { backgroundColor: theme.colors.primary }]}
-                    onPress={() => {
-                      navigation.navigate('PickDropDetail', { serviceId: service.id });
-                    }}
-                  >
-                    <Text style={styles.viewDetailsButtonText}>View Details</Text>
-                  </TouchableOpacity>
+                  {/* Action Buttons Row (Call, Message, View Details) */}
+                  {(() => {
+                    const provider =
+                      service.user ||
+                      service.provider ||
+                      service.owner ||
+                      null;
+
+                    const phoneNumber =
+                      provider?.phone_number ||
+                      provider?.phone ||
+                      provider?.contact_number ||
+                      service.contact_phone ||
+                      service.phone ||
+                      service.phone_number ||
+                      service.contact_number ||
+                      null;
+
+                    const whatsappNumber =
+                      provider?.whatsapp_number ||
+                      provider?.whatsapp ||
+                      provider?.contact_whatsapp ||
+                      service.whatsapp_number ||
+                      service.whatsapp ||
+                      service.contact_whatsapp ||
+                      phoneNumber ||
+                      null;
+
+                    return (
+                      <View style={styles.actionButtonsContainer}>
+                        {phoneNumber && (
+                          <TouchableOpacity
+                            style={[styles.iconButton, styles.callButton, { backgroundColor: theme.colors.primary }]}
+                            onPress={() => {
+                              if (!user) {
+                                navigation.navigate('Login');
+                              } else {
+                                handleCall(phoneNumber);
+                              }
+                            }}
+                          >
+                            <Icon name="phone" size={20} color="#fff" />
+                          </TouchableOpacity>
+                        )}
+                        {(whatsappNumber || phoneNumber) && (
+                          <TouchableOpacity
+                            style={[styles.iconButton, styles.messageButton, { backgroundColor: '#25D366' }]}
+                            onPress={() => {
+                              if (!user) {
+                                navigation.navigate('Login');
+                              } else {
+                                handleMessage(phoneNumber, whatsappNumber);
+                              }
+                            }}
+                          >
+                            <Text style={styles.whatsappEmoji}>💬</Text>
+                          </TouchableOpacity>
+                        )}
+                        <TouchableOpacity
+                          style={[styles.actionButton, styles.viewDetailsButton, { backgroundColor: theme.colors.primary }]}
+                          onPress={() => {
+                            navigation.navigate('PickDropDetail', { serviceId: service.id, serviceData: service });
+                          }}
+                        >
+                          <Text style={styles.actionButtonText}>View Details</Text>
+                        </TouchableOpacity>
+                      </View>
+                    );
+                  })()}
                 </View>
               ))}
           </View>
@@ -416,6 +632,13 @@ const PickDropScreen = () => {
         onFilterChange={handleFilterChange}
         onClearAll={clearFilters}
         onApply={handleApplyFilters}
+      />
+
+      {/* Error Modal */}
+      <ErrorModal
+        visible={showErrorModal}
+        onClose={() => setShowErrorModal(false)}
+        message={errorMessage}
       />
     </SafeAreaView>
   );
@@ -652,13 +875,42 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     lineHeight: 18,
   },
-  viewDetailsButton: {
-    paddingVertical: 12,
-    borderRadius: 8,
-    alignItems: 'center',
+  actionButtonsContainer: {
+    flexDirection: 'row',
+    gap: 8,
     marginTop: 8,
+    alignItems: 'center',
   },
-  viewDetailsButtonText: {
+  iconButton: {
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 8,
+  },
+  actionButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    gap: 6,
+  },
+  callButton: {
+    // backgroundColor set dynamically
+  },
+  messageButton: {
+    // backgroundColor set dynamically
+  },
+  whatsappEmoji: {
+    fontSize: 20,
+  },
+  viewDetailsButton: {
+    // backgroundColor set dynamically
+  },
+  actionButtonText: {
     color: '#fff',
     fontSize: 14,
     fontWeight: '600',

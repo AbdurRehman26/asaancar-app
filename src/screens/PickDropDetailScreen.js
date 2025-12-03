@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -6,7 +6,9 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
+  Linking,
 } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
@@ -17,58 +19,87 @@ import ErrorModal from '@/components/ErrorModal';
 const PickDropDetailScreen = () => {
   const route = useRoute();
   const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
   const { theme } = useTheme();
   const { user } = useAuth();
-  const { serviceId } = route.params;
-  const [service, setService] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const { serviceId, serviceData } = route.params || {};
+  const [service, setService] = useState(serviceData || null);
+  const [loading, setLoading] = useState(!serviceData);
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [expandedStops, setExpandedStops] = useState(false);
 
   useEffect(() => {
-    loadServiceDetails();
-  }, [serviceId]);
+    // Only fetch if we don't have service data passed from listing
+    if (!serviceData && serviceId) {
+      loadServiceDetails();
+    }
+  }, [serviceId, serviceData]);
+
+  // Debug: Log the service and provider to see the structure
+  useEffect(() => {
+    if (service) {
+      const provider =
+        service.user ||
+        service.provider ||
+        service.owner ||
+        service.created_by ||
+        null;
+    }
+  }, [service]);
+
+  useEffect(() => {
+    // Only fetch if we don't have service data passed from listing
+    if (!serviceData && serviceId) {
+      loadServiceDetails();
+    }
+  }, [serviceId, serviceData]);
 
   const loadServiceDetails = async () => {
     try {
       setLoading(true);
-      // TODO: Implement getServiceById API call
-      // const data = await pickDropAPI.getServiceById(serviceId);
-      // setService(data.data || data);
       
-      // For now, use mock data structure
-      setService({
-        id: serviceId,
-        start_location: 'North Nazimabad - Block C',
-        end_location: 'Al-Jadeed Greens',
-        city: 'Karachi',
-        driver: { name: 'Syed Abdul Rehman' },
-        driver_gender: 'male',
-        schedule: 'Everyday at 9:50 AM',
-        available_seats: 1,
-        price: { perPerson: 1495.00, currency: 'PKR' },
-        car: {
-          brand: 'Changan',
-          model: 'Altis',
-          color: 'Green',
-          seats: 7,
-          transmission: 'Automatic',
-          fuel_type: 'Hybrid',
-        },
-        stops: [
-          { location: 'Gulistan-e-Zafar', stop_time: '10:47 AM' },
-        ],
-        description: 'Well-maintained car with experienced driver. Safe and timely journey.',
-      });
+      // Fetch service details from API
+      const data = await pickDropAPI.getPickDropService(serviceId);
+      
+      // Handle different response structures
+      let serviceData = null;
+      if (data) {
+        if (data.data) {
+          serviceData = data.data;
+        } else if (Array.isArray(data) && data.length > 0) {
+          serviceData = data[0];
+        } else {
+          serviceData = data;
+        }
+      }
+      
+      if (serviceData) {
+        setService(serviceData);
+      } else {
+        setErrorMessage('Service not found');
+        setShowErrorModal(true);
+      }
     } catch (error) {
       console.error('Error loading service details:', error);
-      setErrorMessage('Failed to load service details');
+      setErrorMessage(
+        error.response?.data?.message ||
+        error.message ||
+        'Failed to load service details. Please try again.'
+      );
       setShowErrorModal(true);
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    // Only fetch if we don't have service data passed from listing
+    if (!serviceData && serviceId) {
+      loadServiceDetails();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [serviceId]);
 
   if (loading) {
     return (
@@ -90,9 +121,61 @@ const PickDropDetailScreen = () => {
   const endLocation = service.end_location || service.endLocation || 'End Location';
   const city = service.city || 'City';
 
+  const provider =
+    service.user ||
+    service.provider ||
+    service.owner ||
+    service.created_by ||
+    null;
+
+  const providerPhone =
+    provider?.phone_number ||
+    provider?.phone ||
+    provider?.contact_number ||
+    provider?.mobile ||
+    provider?.mobile_number ||
+    service.contact_phone ||
+    service.phone ||
+    service.phone_number ||
+    service.contact_number ||
+    null;
+
+  const providerWhatsApp =
+    provider?.whatsapp_number ||
+    provider?.whatsapp ||
+    provider?.contact_whatsapp ||
+    provider?.whatsapp_contact ||
+    service.whatsapp_number ||
+    service.whatsapp ||
+    service.contact_whatsapp ||
+    providerPhone ||
+    null;
+
+  const handleCallProvider = () => {
+    if (!providerPhone) return;
+    const phoneUrl = `tel:${providerPhone}`;
+    Linking.openURL(phoneUrl).catch(() => {
+      setErrorMessage('Unable to open phone dialer on this device.');
+      setShowErrorModal(true);
+    });
+  };
+
+  const handleMessageProvider = () => {
+    if (!providerWhatsApp) return;
+    const numericWhatsApp = providerWhatsApp.replace(/[^0-9]/g, '');
+    const whatsappUrl = `https://wa.me/${numericWhatsApp}`;
+    Linking.openURL(whatsappUrl).catch(() => {
+      const smsUrl = `sms:${providerWhatsApp}`;
+      Linking.openURL(smsUrl).catch(() => {
+        setErrorMessage('Unable to open messaging app on this device.');
+        setShowErrorModal(true);
+      });
+    });
+  };
+
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <ScrollView>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom + 24 }}>
         {/* Back Button */}
         <TouchableOpacity
           style={styles.backButton}
@@ -107,11 +190,18 @@ const PickDropDetailScreen = () => {
         {/* Header Banner */}
         <View style={[styles.headerBanner, { backgroundColor: theme.colors.primary }]}>
           <View style={styles.bannerContent}>
-            <Text style={styles.bannerTitle}>
-              {startLocation} → {endLocation}
-            </Text>
-            <Text style={styles.bannerSubtitle}>{city} to {city}</Text>
-            <Text style={styles.bannerRoute}>{startLocation} → {endLocation}</Text>
+            <View style={styles.bannerLocationRow}>
+              <Icon name="location-on" size={16} color="#fff" style={{ marginRight: 6 }} />
+              <Text style={styles.bannerTitle}>
+                {startLocation}
+              </Text>
+            </View>
+            <View style={styles.bannerLocationRow}>
+              <Icon name="send" size={16} color="#fff" style={{ marginRight: 6 }} />
+              <Text style={styles.bannerRoute}>
+                {endLocation}
+              </Text>
+            </View>
           </View>
           {service.driver_gender && (
             <View style={styles.driverGenderBadge}>
@@ -148,12 +238,11 @@ const PickDropDetailScreen = () => {
                 <Text style={[styles.boldText, { color: theme.colors.text }]}>
                   {startLocation}
                 </Text>
-                <Text style={[styles.text, { color: theme.colors.textSecondary }]}>
-                  {city}
-                </Text>
-                <Text style={[styles.text, { color: theme.colors.textSecondary }]}>
-                  Area: {startLocation}
-                </Text>
+                {city && city !== 'City' && city.toLowerCase() !== 'karachi' && (
+                  <Text style={[styles.text, { color: theme.colors.textSecondary }]}>
+                    {city}
+                  </Text>
+                )}
               </View>
 
               {/* Stops */}
@@ -212,12 +301,11 @@ const PickDropDetailScreen = () => {
                 <Text style={[styles.boldText, { color: theme.colors.text }]}>
                   {endLocation}
                 </Text>
-                <Text style={[styles.text, { color: theme.colors.textSecondary }]}>
-                  {city}
-                </Text>
-                <Text style={[styles.text, { color: theme.colors.textSecondary }]}>
-                  Area: {endLocation}
-                </Text>
+                {city && city !== 'City' && city.toLowerCase() !== 'karachi' && (
+                  <Text style={[styles.text, { color: theme.colors.textSecondary }]}>
+                    {city}
+                  </Text>
+                )}
               </View>
             </View>
 
@@ -235,7 +323,37 @@ const PickDropDetailScreen = () => {
                   </Text>
                 </View>
                 <Text style={[styles.boldText, { color: theme.colors.text }]}>
-                  {service.schedule || 'N/A'}
+                  {(() => {
+                    const departureTime = 
+                      service.departure_time ||
+                      service.departureTime ||
+                      null;
+                    const departureDate = 
+                      service.departure_date ||
+                      service.departureDate ||
+                      null;
+                    const isEveryday = 
+                      service.is_everyday ||
+                      service.everyday_service ||
+                      service.everydayService ||
+                      false;
+                    
+                    if (isEveryday) {
+                      return departureTime ? `Everyday at ${departureTime}` : 'Everyday Service';
+                    } else if (departureDate && departureTime) {
+                      // Format date if needed
+                      const date = new Date(departureDate);
+                      const formattedDate = date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                      return `${formattedDate} at ${departureTime}`;
+                    } else if (departureTime) {
+                      return departureTime;
+                    } else if (departureDate) {
+                      const date = new Date(departureDate);
+                      return date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                    }
+                    
+                    return service.schedule || 'N/A';
+                  })()}
                 </Text>
               </View>
 
@@ -247,8 +365,15 @@ const PickDropDetailScreen = () => {
                   </Text>
                 </View>
                 <Text style={[styles.boldText, { color: theme.colors.text }]}>
-                  {service.available_seats || service.availableSeats || 0} space
-                  {service.available_seats !== 1 ? 's' : ''}
+                  {(() => {
+                    const availableSpaces = 
+                      service.available_spaces ||
+                      service.availableSpaces ||
+                      service.available_seats ||
+                      service.availableSeats ||
+                      0;
+                    return `${availableSpaces} space${availableSpaces !== 1 ? 's' : ''}`;
+                  })()}
                 </Text>
               </View>
 
@@ -257,75 +382,96 @@ const PickDropDetailScreen = () => {
                   Price Per Person:
                 </Text>
                 <Text style={[styles.priceText, { color: theme.colors.primary }]}>
-                  PKR {typeof service.price === 'object' 
-                    ? service.price.perPerson || service.price.amount || '0' 
-                    : service.price || '0'}
+                  {(() => {
+                    const price = 
+                      service.price_per_person ||
+                      service.pricePerPerson ||
+                      (service.price && typeof service.price === 'object' ? service.price.perPerson || service.price.amount : null) ||
+                      service.price ||
+                      '0';
+                    const currency = service.currency || 'PKR';
+                    const formattedPrice = typeof price === 'number' ? price.toLocaleString() : price;
+                    return `${currency} ${formattedPrice}`;
+                  })()}
                 </Text>
               </View>
             </View>
 
             {/* Car Information Card */}
-            {service.car && (
-              <View style={[styles.card, { backgroundColor: theme.colors.background }]}>
-                <View style={styles.cardHeader}>
-                  <Icon name="directions-car" size={20} color={theme.colors.primary} />
-                  <Text style={[styles.cardTitle, { color: theme.colors.primary }]}>
-                    Car Information
-                  </Text>
-                </View>
+            {(() => {
+              const hasCarDetails = 
+                service.car ||
+                service.car_brand ||
+                service.car_model ||
+                service.car_color ||
+                service.car_seats;
+              
+              if (!hasCarDetails) return null;
+              
+              return (
+                <View style={[styles.card, { backgroundColor: theme.colors.background }]}>
+                  <View style={styles.cardHeader}>
+                    <Icon name="directions-car" size={20} color={theme.colors.primary} />
+                    <Text style={[styles.cardTitle, { color: theme.colors.primary }]}>
+                      Car Information
+                    </Text>
+                  </View>
 
-                <View style={styles.carInfoGrid}>
-                  <View style={styles.carInfoItem}>
-                    <Text style={[styles.carInfoLabel, { color: theme.colors.textSecondary }]}>
-                      Brand:
-                    </Text>
-                    <Text style={[styles.carInfoValue, { color: theme.colors.text }]}>
-                      {service.car.brand || service.car.name || 'N/A'}
-                    </Text>
-                  </View>
-                  <View style={styles.carInfoItem}>
-                    <Text style={[styles.carInfoLabel, { color: theme.colors.textSecondary }]}>
-                      Model:
-                    </Text>
-                    <Text style={[styles.carInfoValue, { color: theme.colors.text }]}>
-                      {service.car.model || 'N/A'}
-                    </Text>
-                  </View>
-                  <View style={styles.carInfoItem}>
-                    <Text style={[styles.carInfoLabel, { color: theme.colors.textSecondary }]}>
-                      Color:
-                    </Text>
-                    <Text style={[styles.carInfoValue, { color: theme.colors.text }]}>
-                      {service.car.color || 'N/A'}
-                    </Text>
-                  </View>
-                  <View style={styles.carInfoItem}>
-                    <Text style={[styles.carInfoLabel, { color: theme.colors.textSecondary }]}>
-                      Seats:
-                    </Text>
-                    <Text style={[styles.carInfoValue, { color: theme.colors.text }]}>
-                      {service.car.seats || service.seats || 'N/A'}
-                    </Text>
-                  </View>
-                  <View style={styles.carInfoItem}>
-                    <Text style={[styles.carInfoLabel, { color: theme.colors.textSecondary }]}>
-                      Transmission:
-                    </Text>
-                    <Text style={[styles.carInfoValue, { color: theme.colors.text }]}>
-                      {service.car.transmission || 'N/A'}
-                    </Text>
-                  </View>
-                  <View style={styles.carInfoItem}>
-                    <Text style={[styles.carInfoLabel, { color: theme.colors.textSecondary }]}>
-                      Fuel Type:
-                    </Text>
-                    <Text style={[styles.carInfoValue, { color: theme.colors.text }]}>
-                      {service.car.fuel_type || service.car.fuelType || 'N/A'}
-                    </Text>
+                  <View style={styles.carInfoGrid}>
+                    {service.car && (
+                      <View style={styles.carInfoItem}>
+                        <Text style={[styles.carInfoLabel, { color: theme.colors.textSecondary }]}>
+                          Car:
+                        </Text>
+                        <Text style={[styles.carInfoValue, { color: theme.colors.text }]}>
+                          {service.car}
+                        </Text>
+                      </View>
+                    )}
+                    {service.car_brand && (
+                      <View style={styles.carInfoItem}>
+                        <Text style={[styles.carInfoLabel, { color: theme.colors.textSecondary }]}>
+                          Brand:
+                        </Text>
+                        <Text style={[styles.carInfoValue, { color: theme.colors.text }]}>
+                          {service.car_brand}
+                        </Text>
+                      </View>
+                    )}
+                    {service.car_model && (
+                      <View style={styles.carInfoItem}>
+                        <Text style={[styles.carInfoLabel, { color: theme.colors.textSecondary }]}>
+                          Model:
+                        </Text>
+                        <Text style={[styles.carInfoValue, { color: theme.colors.text }]}>
+                          {service.car_model}
+                        </Text>
+                      </View>
+                    )}
+                    {service.car_color && (
+                      <View style={styles.carInfoItem}>
+                        <Text style={[styles.carInfoLabel, { color: theme.colors.textSecondary }]}>
+                          Color:
+                        </Text>
+                        <Text style={[styles.carInfoValue, { color: theme.colors.text }]}>
+                          {service.car_color}
+                        </Text>
+                      </View>
+                    )}
+                    {service.car_seats && (
+                      <View style={styles.carInfoItem}>
+                        <Text style={[styles.carInfoLabel, { color: theme.colors.textSecondary }]}>
+                          Seats:
+                        </Text>
+                        <Text style={[styles.carInfoValue, { color: theme.colors.text }]}>
+                          {service.car_seats}
+                        </Text>
+                      </View>
+                    )}
                   </View>
                 </View>
-              </View>
-            )}
+              );
+            })()}
 
             {/* Description Card */}
             {service.description && (
@@ -351,16 +497,79 @@ const PickDropDetailScreen = () => {
                 </Text>
               </View>
               <Text style={[styles.providerName, { color: theme.colors.text }]}>
-                {service.driver?.name || service.driver || 'N/A'}
+                {provider?.name || 
+                 provider?.user?.name || 
+                 provider?.username ||
+                 service.driver?.name || 
+                 service.driver || 
+                 service.user?.name ||
+                 service.provider?.name ||
+                 'N/A'}
               </Text>
-              {!user && (
-                <Text style={[styles.contactHint, { color: theme.colors.textSecondary }]}>
-                  Please log in to view contact information
-                </Text>
-              )}
+
+              {/* Call / In-App Chat / WhatsApp icon buttons - always show */}
+              <View style={styles.contactButtonsRow}>
+                {/* Call Button */}
+                <TouchableOpacity
+                  style={[styles.contactIconButton, { backgroundColor: theme.colors.primary }]}
+                  onPress={() => {
+                    if (!user) {
+                      navigation.navigate('Login');
+                    } else if (providerPhone) {
+                      handleCallProvider();
+                    } else {
+                      setErrorMessage('Phone number not available');
+                      setShowErrorModal(true);
+                    }
+                  }}
+                >
+                  <Icon name="call" size={20} color="#fff" />
+                </TouchableOpacity>
+                
+                {/* In-App Chat Button */}
+                <TouchableOpacity
+                  style={[styles.contactIconButton, { backgroundColor: theme.colors.secondary }]}
+                  onPress={() => {
+                    if (!user) {
+                      navigation.navigate('Login');
+                    } else if (provider?.id || provider?.user_id) {
+                      const providerUserId = provider.id || provider.user_id;
+                      const providerName = provider.name || provider.user?.name || service.driver?.name || service.driver || 'Provider';
+                      navigation.navigate('Chat', {
+                        userId: providerUserId,
+                        userName: providerName,
+                        type: 'pick_and_drop',
+                        serviceId: service.id || serviceId,
+                      });
+                    } else {
+                      setErrorMessage('Provider information not available');
+                      setShowErrorModal(true);
+                    }
+                  }}
+                >
+                  <Icon name="forum" size={20} color="#fff" />
+                </TouchableOpacity>
+                
+                {/* WhatsApp Button */}
+                <TouchableOpacity
+                  style={[styles.contactIconButton, { backgroundColor: '#25D366' }]}
+                  onPress={() => {
+                    if (!user) {
+                      navigation.navigate('Login');
+                    } else if (providerWhatsApp) {
+                      handleMessageProvider();
+                    } else {
+                      setErrorMessage('WhatsApp number not available');
+                      setShowErrorModal(true);
+                    }
+                  }}
+                >
+                  <Text style={styles.whatsappEmoji}>💬</Text>
+                </TouchableOpacity>
+              </View>
             </View>
 
-            {/* Contact Service Provider Card */}
+            {/* Contact Service Provider Card for guests */}
             {!user && (
               <View style={[styles.card, { backgroundColor: theme.colors.background }]}>
                 <Text style={[styles.contactText, { color: theme.colors.textSecondary }]}>
@@ -391,7 +600,7 @@ const PickDropDetailScreen = () => {
         onClose={() => setShowErrorModal(false)}
         message={errorMessage}
       />
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -426,22 +635,22 @@ const styles = StyleSheet.create({
   bannerContent: {
     flex: 1,
   },
-  bannerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#fff',
-    marginBottom: 8,
-  },
-  bannerSubtitle: {
-    fontSize: 16,
-    color: '#fff',
-    opacity: 0.9,
+  bannerLocationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 4,
   },
-  bannerRoute: {
-    fontSize: 14,
+  bannerTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
     color: '#fff',
-    opacity: 0.8,
+    flex: 1,
+  },
+  bannerRoute: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#fff',
+    flex: 1,
   },
   driverGenderBadge: {
     flexDirection: 'row',
@@ -581,6 +790,23 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginBottom: 16,
     textAlign: 'center',
+  },
+  contactButtonsRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+    marginTop: 12,
+    gap: 8,
+  },
+  contactIconButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  whatsappEmoji: {
+    fontSize: 20,
   },
   loginButton: {
     paddingVertical: 14,
