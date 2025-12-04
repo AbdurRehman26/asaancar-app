@@ -14,6 +14,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
 import { pickDropAPI } from '@/services/api';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import ErrorModal from '@/components/ErrorModal';
 
 const PickDropDetailScreen = () => {
@@ -564,7 +565,7 @@ const PickDropDetailScreen = () => {
                     }
                   }}
                 >
-                  <Text style={styles.whatsappEmoji}>💬</Text>
+                  <FontAwesome name="whatsapp" size={20} color="#fff" />
                 </TouchableOpacity>
               </View>
             </View>
@@ -806,9 +807,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  whatsappEmoji: {
-    fontSize: 20,
   },
   loginButton: {
     paddingVertical: 14,

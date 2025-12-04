@@ -11,6 +11,7 @@ import {
   Platform,
   RefreshControl,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
@@ -61,7 +62,9 @@ const ChatScreen = () => {
   const initializeConversation = async () => {
     try {
       setLoading(true);
-      const response = await chatAPI.getOrCreateConversation(userId, type, serviceId);
+      // For pick_and_drop type, recipient_user_id is required (current logged-in user)
+      const recipientUserId = type === 'pick_and_drop' && user?.id ? user.id : null;
+      const response = await chatAPI.getOrCreateConversation(userId, type, serviceId, recipientUserId);
       const convId = response.data?.id || response.id || response.conversation_id;
       setCurrentConversationId(convId);
       if (convId) {
@@ -273,101 +276,106 @@ const ChatScreen = () => {
 
   if (loading && messages.length === 0) {
     return (
-      <View style={[styles.loadingContainer, { backgroundColor: theme.colors.background }]}>
+      <SafeAreaView style={[styles.loadingContainer, { backgroundColor: theme.colors.background }]} edges={['top']}>
         <ActivityIndicator size="large" color={theme.colors.primary} />
-      </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <KeyboardAvoidingView
-      style={[styles.container, { backgroundColor: theme.colors.background }]}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
-    >
-      {/* Header */}
-      <View style={[styles.header, { backgroundColor: theme.colors.cardBackground }]}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Icon name="arrow-back" size={24} color={theme.colors.text} />
-        </TouchableOpacity>
-        <View style={styles.headerInfo}>
-          <Text style={[styles.headerTitle, { color: theme.colors.text }]}>
-            {userName || 'Chat'}
-          </Text>
-        </View>
-        <View style={styles.placeholder} />
-      </View>
-
-      {/* Messages List */}
-      <FlatList
-        ref={flatListRef}
-        data={messages}
-        renderItem={renderMessage}
-        keyExtractor={(item) => item.id?.toString() || Math.random().toString()}
-        contentContainerStyle={styles.messagesList}
-        inverted={false}
-        onEndReached={loadMore}
-        onEndReachedThreshold={0.5}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            tintColor={theme.colors.primary}
-          />
-        }
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Icon name="chat-bubble-outline" size={64} color={theme.colors.border} />
-            <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>
-              No messages yet
-            </Text>
-            <Text style={[styles.emptySubtext, { color: theme.colors.textSecondary }]}>
-              Start the conversation by sending a message
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]} edges={['top']}>
+      <KeyboardAvoidingView
+        style={styles.keyboardView}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+      >
+        {/* Header */}
+        <View style={[styles.header, { backgroundColor: theme.colors.cardBackground }]}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+            <Icon name="arrow-back" size={24} color={theme.colors.text} />
+          </TouchableOpacity>
+          <View style={styles.headerInfo}>
+            <Text style={[styles.headerTitle, { color: theme.colors.text }]}>
+              {userName || 'Chat'}
             </Text>
           </View>
-        }
-      />
+          <View style={styles.placeholder} />
+        </View>
 
-      {/* Input Area */}
-      <View style={[styles.inputContainer, { backgroundColor: theme.colors.cardBackground }]}>
-        <TextInput
-          style={[styles.input, { color: theme.colors.text, borderColor: theme.colors.border }]}
-          value={newMessage}
-          onChangeText={setNewMessage}
-          placeholder="Type a message..."
-          placeholderTextColor={theme.colors.placeholder}
-          multiline
-          maxLength={1000}
+        {/* Messages List */}
+        <FlatList
+          ref={flatListRef}
+          data={messages}
+          renderItem={renderMessage}
+          keyExtractor={(item) => item.id?.toString() || Math.random().toString()}
+          contentContainerStyle={styles.messagesList}
+          inverted={false}
+          onEndReached={loadMore}
+          onEndReachedThreshold={0.5}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={theme.colors.primary}
+            />
+          }
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Icon name="chat-bubble-outline" size={64} color={theme.colors.border} />
+              <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>
+                No messages yet
+              </Text>
+              <Text style={[styles.emptySubtext, { color: theme.colors.textSecondary }]}>
+                Start the conversation by sending a message
+              </Text>
+            </View>
+          }
         />
-        <View style={{ width: 8 }} />
-        <TouchableOpacity
-          style={[
-            styles.sendButton,
-            { backgroundColor: theme.colors.primary },
-            (!newMessage.trim() || sending) && styles.sendButtonDisabled,
-          ]}
-          onPress={handleSendMessage}
-          disabled={!newMessage.trim() || sending}
-        >
-          {sending ? (
-            <ActivityIndicator color="#fff" size="small" />
-          ) : (
-            <Icon name="send" size={20} color="#fff" />
-          )}
-        </TouchableOpacity>
-      </View>
 
-      <ErrorModal
-        visible={showErrorModal}
-        onClose={() => setShowErrorModal(false)}
-        message={errorMessage}
-      />
-    </KeyboardAvoidingView>
+        {/* Input Area */}
+        <View style={[styles.inputContainer, { backgroundColor: theme.colors.cardBackground }]}>
+          <TextInput
+            style={[styles.input, { color: theme.colors.text, borderColor: theme.colors.border }]}
+            value={newMessage}
+            onChangeText={setNewMessage}
+            placeholder="Type a message..."
+            placeholderTextColor={theme.colors.placeholder}
+            multiline
+            maxLength={1000}
+          />
+          <View style={{ width: 8 }} />
+          <TouchableOpacity
+            style={[
+              styles.sendButton,
+              { backgroundColor: theme.colors.primary },
+              (!newMessage.trim() || sending) && styles.sendButtonDisabled,
+            ]}
+            onPress={handleSendMessage}
+            disabled={!newMessage.trim() || sending}
+          >
+            {sending ? (
+              <ActivityIndicator color="#fff" size="small" />
+            ) : (
+              <Icon name="send" size={20} color="#fff" />
+            )}
+          </TouchableOpacity>
+        </View>
+
+        <ErrorModal
+          visible={showErrorModal}
+          onClose={() => setShowErrorModal(false)}
+          message={errorMessage}
+        />
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
+  },
+  keyboardView: {
     flex: 1,
   },
   loadingContainer: {

@@ -15,6 +15,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { chatAPI } from '@/services/api';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import ErrorModal from '@/components/ErrorModal';
+import ConfirmModal from '@/components/ConfirmModal';
 
 const ConversationsScreen = () => {
   const navigation = useNavigation();
@@ -25,6 +26,9 @@ const ConversationsScreen = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [conversationToDelete, setConversationToDelete] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -56,6 +60,9 @@ const ConversationsScreen = () => {
         if (conversationsData[0].last_message) {
           console.log('Last message structure:', JSON.stringify(conversationsData[0].last_message, null, 2));
         }
+        if (conversationsData[0].recipientUser || conversationsData[0].recipient_user) {
+          console.log('Recipient user:', JSON.stringify(conversationsData[0].recipientUser || conversationsData[0].recipient_user, null, 2));
+        }
       }
       
       setConversations(conversationsData);
@@ -76,6 +83,14 @@ const ConversationsScreen = () => {
   };
 
   const getOtherUser = (conversation) => {
+    // First check for recipientUser (new field from API)
+    if (conversation.recipientUser) {
+      return conversation.recipientUser;
+    }
+    if (conversation.recipient_user) {
+      return conversation.recipient_user;
+    }
+    
     // Try different possible field names for participants
     const participants = 
       conversation.participants ||
@@ -158,6 +173,40 @@ const ConversationsScreen = () => {
     });
   };
 
+  const handleDeletePress = (conversation, event) => {
+    event?.stopPropagation?.();
+    setConversationToDelete(conversation);
+    setShowDeleteModal(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!conversationToDelete) return;
+
+    try {
+      setDeleting(true);
+      await chatAPI.deleteConversation(conversationToDelete.id);
+      
+      // Remove the conversation from the list
+      setConversations((prev) => 
+        prev.filter((conv) => conv.id !== conversationToDelete.id)
+      );
+      
+      setShowDeleteModal(false);
+      setConversationToDelete(null);
+    } catch (error) {
+      console.error('Error deleting conversation:', error);
+      setErrorMessage(
+        error.response?.data?.message || 
+        error.message || 
+        'Failed to delete conversation'
+      );
+      setShowErrorModal(true);
+      setShowDeleteModal(false);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   const renderConversationItem = ({ item }) => {
     const otherUser = getOtherUser(item);
     const lastMessage = getLastMessage(item);
@@ -165,76 +214,86 @@ const ConversationsScreen = () => {
     const isUnread = unreadCount > 0;
 
     return (
-      <TouchableOpacity
-        style={[styles.conversationItem, { backgroundColor: theme.colors.cardBackground }]}
-        onPress={() => handleConversationPress(item)}
-      >
-        <View style={styles.avatarContainer}>
-          <Icon name="person" size={32} color={theme.colors.primary} />
-        </View>
-        <View style={styles.conversationInfo}>
-          <View style={styles.conversationHeader}>
-            <Text
-              style={[
-                styles.conversationName,
-                { color: theme.colors.text },
-                isUnread && styles.unreadText,
-              ]}
-              numberOfLines={1}
-            >
-              {otherUser?.name || 
-               otherUser?.username || 
-               otherUser?.user?.name ||
-               otherUser?.user?.username ||
-               item.user_name ||
-               item.username ||
-               'Unknown User'}
-            </Text>
-            {lastMessage && (
-              <Text style={[styles.conversationTime, { color: theme.colors.textSecondary }]}>
-                {formatTime(lastMessage.created_at || lastMessage.createdAt)}
-              </Text>
-            )}
+      <View style={[styles.conversationItemContainer, { backgroundColor: theme.colors.cardBackground }]}>
+        <TouchableOpacity
+          style={styles.conversationItem}
+          onPress={() => handleConversationPress(item)}
+          activeOpacity={0.7}
+        >
+          <View style={styles.avatarContainer}>
+            <Icon name="person" size={32} color={theme.colors.primary} />
           </View>
-          <View style={styles.lastMessageRow}>
-            {lastMessage ? (
-              <>
-                <Text
-                  style={[
-                    styles.lastMessage,
-                    { color: theme.colors.textSecondary },
-                    isUnread && { color: theme.colors.text, fontWeight: '500' },
-                  ]}
-                  numberOfLines={1}
-                >
-                  {lastMessage.message || 
-                   lastMessage.content || 
-                   lastMessage.text ||
-                   lastMessage.body ||
-                   lastMessage.message_text ||
-                   (typeof lastMessage === 'string' ? lastMessage : '') ||
-                   ''}
-                </Text>
-                {isUnread && (
-                  <View style={[styles.unreadBadge, { backgroundColor: theme.colors.primary }]}>
-                    <Text style={styles.unreadBadgeText}>{unreadCount > 99 ? '99+' : unreadCount}</Text>
-                  </View>
-                )}
-              </>
-            ) : (
+          <View style={styles.conversationInfo}>
+            <View style={styles.conversationHeader}>
               <Text
                 style={[
-                  styles.lastMessage,
-                  { color: theme.colors.textSecondary, fontStyle: 'italic' },
+                  styles.conversationName,
+                  { color: theme.colors.text },
+                  isUnread && styles.unreadText,
                 ]}
                 numberOfLines={1}
               >
-                No messages yet
+                {otherUser?.name || 
+                 otherUser?.username || 
+                 otherUser?.user?.name ||
+                 otherUser?.user?.username ||
+                 item.user_name ||
+                 item.username ||
+                 'Unknown User'}
               </Text>
-            )}
+              {lastMessage && (
+                <Text style={[styles.conversationTime, { color: theme.colors.textSecondary }]}>
+                  {formatTime(lastMessage.created_at || lastMessage.createdAt)}
+                </Text>
+              )}
+            </View>
+            <View style={styles.lastMessageRow}>
+              {lastMessage ? (
+                <>
+                  <Text
+                    style={[
+                      styles.lastMessage,
+                      { color: theme.colors.textSecondary },
+                      isUnread && { color: theme.colors.text, fontWeight: '500' },
+                    ]}
+                    numberOfLines={1}
+                  >
+                    {lastMessage.message || 
+                     lastMessage.content || 
+                     lastMessage.text ||
+                     lastMessage.body ||
+                     lastMessage.message_text ||
+                     (typeof lastMessage === 'string' ? lastMessage : '') ||
+                     ''}
+                  </Text>
+                  {isUnread && (
+                    <View style={[styles.unreadBadge, { backgroundColor: theme.colors.primary }]}>
+                      <Text style={styles.unreadBadgeText}>{unreadCount > 99 ? '99+' : unreadCount}</Text>
+                    </View>
+                  )}
+                </>
+              ) : (
+                <Text
+                  style={[
+                    styles.lastMessage,
+                    { color: theme.colors.textSecondary, fontStyle: 'italic' },
+                  ]}
+                  numberOfLines={1}
+                >
+                  No messages yet
+                </Text>
+              )}
+            </View>
           </View>
-        </View>
-      </TouchableOpacity>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.deleteButton}
+          onPress={(e) => handleDeletePress(item, e)}
+          activeOpacity={0.7}
+        >
+          <Icon name="delete" size={20} color="#ff4444" />
+        </TouchableOpacity>
+      </View>
     );
   };
 
@@ -286,6 +345,21 @@ const ConversationsScreen = () => {
         onClose={() => setShowErrorModal(false)}
         message={errorMessage}
       />
+
+      <ConfirmModal
+        visible={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false);
+          setConversationToDelete(null);
+        }}
+        title="Delete Conversation"
+        message="Are you sure you want to delete this conversation? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        onConfirm={handleDeleteConfirm}
+        confirmColor="#ff4444"
+        destructive={true}
+      />
     </SafeAreaView>
   );
 };
@@ -322,9 +396,8 @@ const styles = StyleSheet.create({
   listContainer: {
     padding: 16,
   },
-  conversationItem: {
+  conversationItemContainer: {
     flexDirection: 'row',
-    padding: 16,
     borderRadius: 12,
     marginBottom: 12,
     shadowColor: '#000',
@@ -332,6 +405,18 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+    overflow: 'hidden',
+  },
+  conversationItem: {
+    flexDirection: 'row',
+    padding: 16,
+    flex: 1,
+  },
+  deleteButton: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    backgroundColor: 'rgba(255, 68, 68, 0.1)',
   },
   avatarContainer: {
     width: 50,

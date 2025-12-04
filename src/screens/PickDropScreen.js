@@ -16,6 +16,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
 import { pickDropAPI } from '@/services/api';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import ServiceTabs from '@/components/ServiceTabs';
 import PickDropFilterDrawer from '@/components/PickDropFilterDrawer';
 import ErrorModal from '@/components/ErrorModal';
@@ -502,7 +503,7 @@ const PickDropScreen = () => {
                     </Text>
                   )}
 
-                  {/* Action Buttons Row (Call, Message, View Details) */}
+                  {/* Action Buttons Row (Call, Message, Chat, View Details) */}
                   {(() => {
                     const provider =
                       service.user ||
@@ -529,6 +530,9 @@ const PickDropScreen = () => {
                       service.contact_whatsapp ||
                       phoneNumber ||
                       null;
+
+                    const providerUserId = provider?.id || provider?.user_id || null;
+                    const providerName = provider?.name || provider?.user?.name || service.driver?.name || service.driver || 'Provider';
 
                     return (
                       <View style={styles.actionButtonsContainer}>
@@ -557,7 +561,26 @@ const PickDropScreen = () => {
                               }
                             }}
                           >
-                            <Text style={styles.whatsappEmoji}>💬</Text>
+                            <FontAwesome name="whatsapp" size={20} color="#fff" />
+                          </TouchableOpacity>
+                        )}
+                        {providerUserId && (
+                          <TouchableOpacity
+                            style={[styles.iconButton, styles.chatButton, { backgroundColor: theme.colors.secondary }]}
+                            onPress={() => {
+                              if (!user) {
+                                navigation.navigate('Login');
+                              } else {
+                                navigation.navigate('Chat', {
+                                  userId: providerUserId,
+                                  userName: providerName,
+                                  type: 'pick_and_drop',
+                                  serviceId: service.id,
+                                });
+                              }
+                            }}
+                          >
+                            <Icon name="forum" size={20} color="#fff" />
                           </TouchableOpacity>
                         )}
                         <TouchableOpacity
@@ -919,8 +942,8 @@ const styles = StyleSheet.create({
   messageButton: {
     // backgroundColor set dynamically
   },
-  whatsappEmoji: {
-    fontSize: 20,
+  chatButton: {
+    // backgroundColor set dynamically
   },
   viewDetailsButton: {
     // backgroundColor set dynamically

@@ -52,7 +52,7 @@ const ContactUsScreen = () => {
     try {
       await contactAPI.sendContactMessage({
         name: name.trim(),
-        contact_information: contactInfo.trim(),
+        contact_info: contactInfo.trim(),
         message: message.trim(),
       });
       
@@ -109,49 +109,43 @@ const ContactUsScreen = () => {
           {/* Name Field */}
           <View style={styles.fieldContainer}>
             <Text style={[styles.label, { color: theme.colors.text }]}>Name</Text>
-            <View style={[styles.inputWrapper, { borderColor: theme.colors.border }]}>
-              <TextInput
-                style={[styles.input, { color: theme.colors.text }]}
-                placeholder="Enter your name"
-                placeholderTextColor={theme.colors.placeholder}
-                value={name}
-                onChangeText={setName}
-                autoCapitalize="words"
-              />
-            </View>
+            <TextInput
+              style={[styles.input, { color: theme.colors.text, borderColor: theme.colors.border }]}
+              placeholder="Enter your name"
+              placeholderTextColor={theme.colors.placeholder}
+              value={name}
+              onChangeText={setName}
+              autoCapitalize="words"
+            />
           </View>
 
           {/* Contact Information Field */}
           <View style={styles.fieldContainer}>
             <Text style={[styles.label, { color: theme.colors.text }]}>Contact Information</Text>
-            <View style={[styles.inputWrapper, { borderColor: theme.colors.border }]}>
-              <TextInput
-                style={[styles.input, { color: theme.colors.text }]}
-                placeholder="Email or phone number"
-                placeholderTextColor={theme.colors.placeholder}
-                value={contactInfo}
-                onChangeText={setContactInfo}
-                keyboardType="email-address"
-                autoCapitalize="none"
-              />
-            </View>
+            <TextInput
+              style={[styles.input, { color: theme.colors.text, borderColor: theme.colors.border }]}
+              placeholder="Email or phone number"
+              placeholderTextColor={theme.colors.placeholder}
+              value={contactInfo}
+              onChangeText={setContactInfo}
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
           </View>
 
           {/* Message Field */}
           <View style={styles.fieldContainer}>
             <Text style={[styles.label, { color: theme.colors.text }]}>Message</Text>
-            <View style={[styles.textAreaWrapper, { borderColor: theme.colors.border }]}>
-              <TextInput
-                style={[styles.textArea, { color: theme.colors.text }]}
-                placeholder="Enter your message"
-                placeholderTextColor={theme.colors.placeholder}
-                value={message}
-                onChangeText={setMessage}
-                multiline
-                numberOfLines={6}
-                textAlignVertical="top"
-              />
-            </View>
+            <TextInput
+              style={[styles.textArea, { color: theme.colors.text, borderColor: theme.colors.border }]}
+              placeholder="Enter your message"
+              placeholderTextColor={theme.colors.placeholder}
+              value={message}
+              onChangeText={setMessage}
+              multiline
+              numberOfLines={6}
+              textAlignVertical="top"
+            />
           </View>
 
           {/* Send Button */}
@@ -242,7 +236,7 @@ const styles = StyleSheet.create({
   },
   formCard: {
     borderRadius: 12,
-    padding: 20,
+    padding: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -250,36 +244,31 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   fieldContainer: {
-    marginBottom: 20,
+    marginBottom: 16,
   },
   label: {
     fontSize: 14,
     fontWeight: '600',
-    marginBottom: 8,
-  },
-  inputWrapper: {
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: '#fff',
+    marginBottom: 6,
   },
   input: {
     fontSize: 16,
-    padding: 0,
-  },
-  textAreaWrapper: {
     borderWidth: 1,
     borderRadius: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
     backgroundColor: '#fff',
-    minHeight: 120,
+    margin: 0,
   },
   textArea: {
     fontSize: 16,
-    padding: 0,
-    minHeight: 100,
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    backgroundColor: '#fff',
+    minHeight: 120,
+    margin: 0,
   },
   sendButton: {
     paddingVertical: 16,
@@ -299,6 +288,7 @@ const styles = StyleSheet.create({
 });
 
 export default ContactUsScreen;
+
 
 
 

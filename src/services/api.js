@@ -433,7 +433,7 @@ export const chatAPI = {
   },
 
   // Create or get conversation with a user
-  getOrCreateConversation: async (userId, type = null, serviceId = null) => {
+  getOrCreateConversation: async (userId, type = null, serviceId = null, recipientUserId = null) => {
     const payload = {
       user_id: userId,
     };
@@ -442,6 +442,9 @@ export const chatAPI = {
     }
     if (type === 'pick_and_drop' && serviceId) {
       payload.pick_and_drop_service_id = serviceId;
+      if (recipientUserId) {
+        payload.recipient_user_id = recipientUserId;
+      }
     }
     const response = await api.post('/chat/conversations', payload);
     return response.data;
@@ -454,12 +457,18 @@ export const chatAPI = {
     });
     return response.data;
   },
+
+  // Delete a conversation
+  deleteConversation: async (conversationId) => {
+    const response = await api.delete(`/chat/conversations/${conversationId}`);
+    return response.data;
+  },
 };
 
 export const contactAPI = {
   // Send contact message
   sendContactMessage: async (contactData) => {
-    const response = await api.post('/contact-messages', contactData);
+    const response = await api.post('/contact', contactData);
     return response.data;
   },
 };
