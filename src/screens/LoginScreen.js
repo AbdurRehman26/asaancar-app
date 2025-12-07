@@ -449,7 +449,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginBottom: 8,
     paddingHorizontal: 20,
-    paddingVertical: 12,
+    paddingVertical: 4,
     borderWidth: 1,
     minHeight: 56,
   },
@@ -496,7 +496,7 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     fontSize: 16,
-    paddingVertical: 12,
+    paddingVertical: 4,
     paddingHorizontal: 0,
   },
   passwordInput: {
