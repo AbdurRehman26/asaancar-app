@@ -10,11 +10,13 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
+import { useTheme } from '@/context/ThemeContext';
 import { bookingAPI } from '@/services/api';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
 const MyBookingsScreen = () => {
   const navigation = useNavigation();
+  const { theme } = useTheme();
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -81,14 +83,14 @@ const MyBookingsScreen = () => {
   };
 
   const renderBookingItem = ({ item }) => (
-    <TouchableOpacity style={styles.bookingCard}>
+    <TouchableOpacity style={[styles.bookingCard, { backgroundColor: theme.colors.cardBackground, borderColor: theme.colors.border }]}>
       <View style={styles.bookingHeader}>
         <View>
-          <Text style={styles.carName}>
+          <Text style={[styles.carName, { color: theme.colors.text }]}>
             {item.car?.brand?.name || 'Brand'}{' '}
             {item.car?.name || 'Car Name'}
           </Text>
-          <Text style={styles.bookingId}>Booking #{item.id}</Text>
+          <Text style={[styles.bookingId, { color: theme.colors.textSecondary }]}>Booking #{item.id}</Text>
         </View>
         <View
           style={[
@@ -109,27 +111,27 @@ const MyBookingsScreen = () => {
 
       <View style={styles.bookingDetails}>
         <View style={styles.detailRow}>
-          <Icon name="calendar-today" size={16} color="#666" />
-          <Text style={styles.detailText}>
+          <Icon name="calendar-today" size={16} color={theme.colors.textSecondary} />
+          <Text style={[styles.detailText, { color: theme.colors.textSecondary }]}>
             {formatDate(item.startDate)} - {formatDate(item.endDate)}
           </Text>
         </View>
         <View style={styles.detailRow}>
-          <Icon name="location-on" size={16} color="#666" />
-          <Text style={styles.detailText}>
+          <Icon name="location-on" size={16} color={theme.colors.textSecondary} />
+          <Text style={[styles.detailText, { color: theme.colors.textSecondary }]}>
             {item.pickupLocation || 'N/A'}
           </Text>
         </View>
         {item.withDriver && (
           <View style={styles.detailRow}>
-            <Icon name="person" size={16} color="#666" />
-            <Text style={styles.detailText}>With Driver</Text>
+            <Icon name="person" size={16} color={theme.colors.textSecondary} />
+            <Text style={[styles.detailText, { color: theme.colors.textSecondary }]}>With Driver</Text>
           </View>
         )}
       </View>
 
-      <View style={styles.bookingFooter}>
-        <Text style={styles.totalAmount}>
+      <View style={[styles.bookingFooter, { borderTopColor: theme.colors.border }]}>
+        <Text style={[styles.totalAmount, { color: theme.colors.primary }]}>
           PKR {item.totalAmount || item.total || '0'}
         </Text>
       </View>
@@ -138,16 +140,16 @@ const MyBookingsScreen = () => {
 
   if (loading && !refreshing) {
     return (
-      <SafeAreaView style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#7e246c" />
+      <SafeAreaView style={[styles.loadingContainer, { backgroundColor: theme.colors.background }]}>
+        <ActivityIndicator size="large" color={theme.colors.primary} />
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>My Bookings</Text>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <View style={[styles.header, { backgroundColor: theme.colors.cardBackground, borderBottomColor: theme.colors.border }]}>
+        <Text style={[styles.headerTitle, { color: theme.colors.text }]}>My Bookings</Text>
       </View>
 
       <FlatList
@@ -159,14 +161,14 @@ const MyBookingsScreen = () => {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor="#7e246c"
+            tintColor={theme.colors.primary}
           />
         }
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Icon name="book" size={64} color="#ccc" />
-            <Text style={styles.emptyText}>No bookings found</Text>
-            <Text style={styles.emptySubtext}>
+            <Icon name="book" size={64} color={theme.colors.textLight} />
+            <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>No bookings found</Text>
+            <Text style={[styles.emptySubtext, { color: theme.colors.textLight }]}>
               Start by booking a car from the home screen
             </Text>
           </View>
@@ -179,7 +181,6 @@ const MyBookingsScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
   },
   loadingContainer: {
     flex: 1,
@@ -188,23 +189,20 @@ const styles = StyleSheet.create({
   },
   header: {
     padding: 16,
-    backgroundColor: '#fff',
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
   },
   headerTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#333',
   },
   listContainer: {
     padding: 16,
   },
   bookingCard: {
-    backgroundColor: '#fff',
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
+    borderWidth: 1,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -220,12 +218,10 @@ const styles = StyleSheet.create({
   carName: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#333',
     marginBottom: 4,
   },
   bookingId: {
     fontSize: 12,
-    color: '#666',
   },
   statusBadge: {
     paddingHorizontal: 12,
@@ -247,18 +243,15 @@ const styles = StyleSheet.create({
   },
   detailText: {
     fontSize: 14,
-    color: '#666',
   },
   bookingFooter: {
     borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
     paddingTop: 12,
     alignItems: 'flex-end',
   },
   totalAmount: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#7e246c',
   },
   emptyContainer: {
     flex: 1,
@@ -268,13 +261,11 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 18,
-    color: '#999',
     marginTop: 16,
     fontWeight: '600',
   },
   emptySubtext: {
     fontSize: 14,
-    color: '#999',
     marginTop: 8,
     textAlign: 'center',
   },

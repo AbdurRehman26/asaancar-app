@@ -19,7 +19,7 @@ import ErrorModal from '@/components/ErrorModal';
 
 const RegisterScreen = () => {
   const navigation = useNavigation();
-  const { theme } = useTheme();
+  const { theme, isDark, toggleTheme } = useTheme();
   const { register } = useAuth();
   const [formData, setFormData] = useState({
     name: '',
@@ -70,12 +70,24 @@ const RegisterScreen = () => {
             <Icon name="location-on" size={20} color="#ff69b4" style={styles.locationIcon} />
             <Text style={[styles.logoText, { color: theme.colors.primary }]}>AsaanCar</Text>
           </View>
-          <TouchableOpacity
-            onPress={() => navigation.navigate('RentalCars')}
-            style={styles.homeButton}
-          >
-            <Icon name="home" size={24} color={theme.colors.primary} />
-          </TouchableOpacity>
+          <View style={styles.headerActions}>
+            <TouchableOpacity
+              onPress={toggleTheme}
+              style={styles.themeToggleButton}
+            >
+              <Icon 
+                name={isDark ? 'light-mode' : 'dark-mode'} 
+                size={24} 
+                color={theme.colors.primary} 
+              />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => navigation.navigate('RentalCars')}
+              style={styles.homeButton}
+            >
+              <Icon name="home" size={24} color={theme.colors.primary} />
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Main Content */}
@@ -91,7 +103,7 @@ const RegisterScreen = () => {
           <View style={styles.labelContainer}>
             <Text style={[styles.label, { color: theme.colors.text }]}>Name</Text>
           </View>
-          <View style={[styles.inputContainer, { borderColor: theme.colors.border }]}>
+          <View style={[styles.inputContainer, { borderColor: theme.colors.border, backgroundColor: theme.colors.inputBackground }]}>
             <TextInput
               style={[styles.input, styles.inputNoBorder, { color: theme.colors.text }]}
               placeholder="Enter your name"
@@ -108,12 +120,12 @@ const RegisterScreen = () => {
           <View style={styles.labelContainer}>
             <Text style={[styles.label, { color: theme.colors.text }]}>Phone Number</Text>
           </View>
-          <View style={[styles.phoneInputContainer, { borderColor: theme.colors.border }]}>
+          <View style={[styles.phoneInputContainer, { borderColor: theme.colors.border, backgroundColor: theme.colors.inputBackground }]}>
             <View style={styles.countryCodeContainer}>
               <Text style={styles.flag}>🇵🇰</Text>
               <Text style={[styles.countryCode, { color: theme.colors.text }]}>+92</Text>
             </View>
-            <View style={styles.phoneInputDivider} />
+            <View style={[styles.phoneInputDivider, { backgroundColor: theme.colors.border }]} />
             <TextInput
               style={[styles.phoneInput, styles.phoneInputNoBorder, { color: theme.colors.text }]}
               placeholder="3001234567"
@@ -188,6 +200,14 @@ const styles = StyleSheet.create({
     marginBottom: 32,
     marginTop: 16,
   },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  themeToggleButton: {
+    padding: 4,
+  },
   homeButton: {
     padding: 4,
   },
@@ -227,7 +247,6 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
     borderRadius: 12,
     marginBottom: 16,
     paddingHorizontal: 16,
@@ -237,7 +256,6 @@ const styles = StyleSheet.create({
   phoneInputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
     borderRadius: 12,
     marginBottom: 8,
     paddingHorizontal: 16,
@@ -259,7 +277,6 @@ const styles = StyleSheet.create({
   phoneInputDivider: {
     width: 1,
     height: 24,
-    backgroundColor: '#e0e0e0',
     marginHorizontal: 12,
   },
   phoneInput: {

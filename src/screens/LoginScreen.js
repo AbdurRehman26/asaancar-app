@@ -20,7 +20,7 @@ import { authAPI } from '@/services/api';
 
 const LoginScreen = () => {
   const navigation = useNavigation();
-  const { theme } = useTheme();
+  const { theme, isDark, toggleTheme } = useTheme();
   const { login, loginWithOtp, setUserFromStorage } = useAuth();
   const [authMethod, setAuthMethod] = useState('otp'); // 'otp' or 'password'
   const [phone, setPhone] = useState('');
@@ -137,12 +137,24 @@ const LoginScreen = () => {
             <Icon name="location-on" size={20} color="#ff69b4" style={styles.locationIcon} />
             <Text style={[styles.logoText, { color: theme.colors.primary }]}>AsaanCar</Text>
           </View>
-          <TouchableOpacity
-            onPress={() => navigation.navigate('RentalCars')}
-            style={styles.homeButton}
-          >
-            <Icon name="home" size={24} color={theme.colors.primary} />
-          </TouchableOpacity>
+          <View style={styles.headerActions}>
+            <TouchableOpacity
+              onPress={toggleTheme}
+              style={styles.themeToggleButton}
+            >
+              <Icon 
+                name={isDark ? 'light-mode' : 'dark-mode'} 
+                size={24} 
+                color={theme.colors.primary} 
+              />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => navigation.navigate('RentalCars')}
+              style={styles.homeButton}
+            >
+              <Icon name="home" size={24} color={theme.colors.primary} />
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Main Content */}
@@ -180,9 +192,9 @@ const LoginScreen = () => {
                 styles.authMethodButton,
                 authMethod === 'password' && { backgroundColor: theme.colors.primary },
                 authMethod !== 'password' && {
-                  backgroundColor: '#fff',
+                  backgroundColor: theme.colors.background,
                   borderWidth: 1,
-                  borderColor: '#e0e0e0',
+                  borderColor: theme.colors.border,
                 },
               ]}
               onPress={() => {
@@ -209,12 +221,12 @@ const LoginScreen = () => {
               <View style={styles.labelContainer}>
                 <Text style={[styles.label, { color: theme.colors.text }]}>Phone Number</Text>
               </View>
-              <View style={[styles.phoneInputContainer, { borderColor: theme.colors.border }]}>
+              <View style={[styles.phoneInputContainer, { borderColor: theme.colors.border, backgroundColor: theme.colors.inputBackground }]}>
                 <View style={styles.countryCodeContainer}>
                   <Text style={styles.flag}>🇵🇰</Text>
                   <Text style={[styles.countryCode, { color: theme.colors.text }]}>+92</Text>
                 </View>
-                <View style={styles.phoneInputDivider} />
+                <View style={[styles.phoneInputDivider, { backgroundColor: theme.colors.border }]} />
                 <TextInput
                   style={[styles.phoneInput, styles.phoneInputNoBorder, { color: theme.colors.text }]}
                   placeholder="3001234567"
@@ -241,20 +253,20 @@ const LoginScreen = () => {
                   <View style={styles.labelContainer}>
                     <Text style={[styles.label, { color: theme.colors.text }]}>Enter OTP</Text>
                   </View>
-                  <View style={[styles.inputContainer, { borderColor: theme.colors.border }]}>
-                    <TextInput
-                      style={[styles.input, { color: theme.colors.text }]}
-                      placeholder="Enter 6-digit OTP"
-                      placeholderTextColor={theme.colors.placeholder}
-                      value={otp}
-                      onChangeText={setOtp}
-                      keyboardType="number-pad"
-                      maxLength={6}
-                    />
-                    <View style={styles.inputIcons}>
-                      <Icon name="lock" size={16} color={theme.colors.textSecondary} />
-                    </View>
-                  </View>
+              <View style={[styles.inputContainer, { borderColor: theme.colors.border, backgroundColor: theme.colors.inputBackground }]}>
+                <TextInput
+                  style={[styles.input, { color: theme.colors.text }]}
+                  placeholder="Enter 6-digit OTP"
+                  placeholderTextColor={theme.colors.placeholder}
+                  value={otp}
+                  onChangeText={setOtp}
+                  keyboardType="number-pad"
+                  maxLength={6}
+                />
+                <View style={styles.inputIcons}>
+                  <Icon name="lock" size={16} color={theme.colors.textSecondary} />
+                </View>
+              </View>
                   <TouchableOpacity
                     onPress={handleSendOTP}
                     style={styles.resendButton}
@@ -274,12 +286,12 @@ const LoginScreen = () => {
               <View style={styles.labelContainer}>
                 <Text style={[styles.label, { color: theme.colors.text }]}>Phone Number</Text>
               </View>
-              <View style={[styles.phoneInputContainer, { borderColor: theme.colors.border }]}>
+              <View style={[styles.phoneInputContainer, { borderColor: theme.colors.border, backgroundColor: theme.colors.inputBackground }]}>
                 <View style={styles.countryCodeContainer}>
                   <Text style={styles.flag}>🇵🇰</Text>
                   <Text style={[styles.countryCode, { color: theme.colors.text }]}>+92</Text>
                 </View>
-                <View style={styles.phoneInputDivider} />
+                <View style={[styles.phoneInputDivider, { backgroundColor: theme.colors.border }]} />
                 <TextInput
                   style={[styles.phoneInput, styles.phoneInputNoBorder, { color: theme.colors.text }]}
                   placeholder="3001234567"
@@ -304,7 +316,7 @@ const LoginScreen = () => {
               <View style={styles.labelContainer}>
                 <Text style={[styles.label, { color: theme.colors.text }]}>Password</Text>
               </View>
-              <View style={[styles.inputContainer, { borderColor: theme.colors.border }]}>
+              <View style={[styles.inputContainer, { borderColor: theme.colors.border, backgroundColor: theme.colors.inputBackground }]}>
                 <TextInput
                   style={[styles.input, styles.passwordInput, { color: theme.colors.text }]}
                   placeholder="Enter your password"
@@ -390,6 +402,14 @@ const styles = StyleSheet.create({
     marginBottom: 32,
     marginTop: 16,
   },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  themeToggleButton: {
+    padding: 4,
+  },
   homeButton: {
     padding: 4,
   },
@@ -445,7 +465,6 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
     borderRadius: 12,
     marginBottom: 8,
     paddingHorizontal: 20,
@@ -456,7 +475,6 @@ const styles = StyleSheet.create({
   phoneInputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
     borderRadius: 12,
     marginBottom: 8,
     paddingHorizontal: 20,
@@ -480,7 +498,6 @@ const styles = StyleSheet.create({
   phoneInputDivider: {
     width: 1,
     height: 24,
-    backgroundColor: '#e0e0e0',
     marginHorizontal: 12,
   },
   phoneInput: {

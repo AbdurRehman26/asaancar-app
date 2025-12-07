@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, CommonActions } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useAuth } from '@/context/AuthContext';
@@ -126,7 +126,9 @@ const MainStack = () => {
 // Settings stack (nested inside tabs)
 const SettingsStack = () => {
   return (
-    <Stack.Navigator>
+    <Stack.Navigator
+      initialRouteName="SettingsMain"
+    >
       <Stack.Screen
         name="SettingsMain"
         component={SettingsScreen}
@@ -223,7 +225,29 @@ const AuthenticatedTabs = () => {
     >
       <Tab.Screen name="Home" component={MainStack} />
       <Tab.Screen name="Bookings" component={MyBookingsScreen} />
-      <Tab.Screen name="Dashboard" component={SettingsStack} />
+      <Tab.Screen 
+        name="Dashboard" 
+        component={SettingsStack}
+        listeners={({ navigation }) => ({
+          tabPress: (e) => {
+            // Always navigate to SettingsMain when Dashboard tab is pressed
+            // This ensures we always go to the default dashboard state
+            const state = navigation.getState();
+            const dashboardTab = state.routes.find(r => r.name === 'Dashboard');
+            
+            if (dashboardTab?.state) {
+              const stackState = dashboardTab.state;
+              // If we're not on SettingsMain, navigate to it
+              if (stackState.index > 0 || stackState.routes[stackState.index]?.name !== 'SettingsMain') {
+                e.preventDefault();
+                navigation.navigate('Dashboard', {
+                  screen: 'SettingsMain',
+                });
+              }
+            }
+          },
+        })}
+      />
     </Tab.Navigator>
   );
 };

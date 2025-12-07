@@ -356,7 +356,7 @@ const AddCarScreen = () => {
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.backgroundTertiary }]}>
-      <View style={[styles.header, { backgroundColor: theme.colors.cardBackground }]}>
+      <View style={[styles.header, { backgroundColor: theme.colors.cardBackground, borderBottomColor: theme.colors.border }]}>
         <TouchableOpacity onPress={() => navigation.navigate('SettingsMain')} style={styles.backButton}>
           <Icon name="arrow-back" size={24} color={theme.colors.text} />
         </TouchableOpacity>
@@ -369,7 +369,7 @@ const AddCarScreen = () => {
         <View style={styles.inputGroup}>
           <Text style={[styles.label, { color: theme.colors.text }]}>Name (optional)</Text>
           <TextInput
-            style={[styles.input, { borderColor: theme.colors.border, color: theme.colors.text }]}
+            style={[styles.input, { borderColor: theme.colors.border, color: theme.colors.text, backgroundColor: theme.colors.inputBackground }]}
             value={name}
             onChangeText={setName}
             placeholder="Enter car name"
@@ -381,7 +381,7 @@ const AddCarScreen = () => {
         <View style={styles.inputGroup}>
           <Text style={[styles.label, { color: theme.colors.text }]}>Store</Text>
           <TouchableOpacity
-            style={[styles.input, { borderColor: theme.colors.border }]}
+            style={[styles.input, { borderColor: theme.colors.border, backgroundColor: theme.colors.inputBackground }]}
             onPress={() => setShowStoreDropdown(true)}
           >
             <Text style={[styles.inputText, { color: store ? theme.colors.text : theme.colors.placeholder }]}>
@@ -395,7 +395,7 @@ const AddCarScreen = () => {
         <View style={styles.inputGroup}>
           <Text style={[styles.label, { color: theme.colors.text }]}>Type</Text>
           <TouchableOpacity
-            style={[styles.input, { borderColor: theme.colors.border }]}
+            style={[styles.input, { borderColor: theme.colors.border, backgroundColor: theme.colors.inputBackground }]}
             onPress={() => setShowTypeDropdown(true)}
           >
             <Text style={[styles.inputText, { color: type ? theme.colors.text : theme.colors.placeholder }]}>
@@ -409,7 +409,7 @@ const AddCarScreen = () => {
         <View style={styles.inputGroup}>
           <Text style={[styles.label, { color: theme.colors.text }]}>Brand</Text>
           <TouchableOpacity
-            style={[styles.input, { borderColor: theme.colors.border }]}
+            style={[styles.input, { borderColor: theme.colors.border, backgroundColor: theme.colors.inputBackground }]}
             onPress={() => setShowBrandDropdown(true)}
           >
             <Text style={[styles.inputText, { color: brand ? theme.colors.text : theme.colors.placeholder }]}>
@@ -422,7 +422,7 @@ const AddCarScreen = () => {
         {/* Model */}
         <View style={styles.inputGroup}>
           <Text style={[styles.label, { color: theme.colors.text }]}>Model</Text>
-          <View style={[styles.input, { borderColor: theme.colors.border, flexDirection: 'row', alignItems: 'center' }]}>
+          <View style={[styles.input, { borderColor: theme.colors.border, flexDirection: 'row', alignItems: 'center', backgroundColor: theme.colors.inputBackground }]}>
             <TouchableOpacity
               style={{ flex: 1 }}
               onPress={() => setShowModelDropdown(true)}
@@ -448,7 +448,7 @@ const AddCarScreen = () => {
         <View style={styles.inputGroup}>
           <Text style={[styles.label, { color: theme.colors.text }]}>Year</Text>
           <TouchableOpacity
-            style={[styles.input, { borderColor: theme.colors.border }]}
+            style={[styles.input, { borderColor: theme.colors.border, backgroundColor: theme.colors.inputBackground }]}
             onPress={() => setShowYearDropdown(true)}
           >
             <Text style={[styles.inputText, { color: year ? theme.colors.text : theme.colors.placeholder }]}>
@@ -462,7 +462,7 @@ const AddCarScreen = () => {
         <View style={styles.inputGroup}>
           <Text style={[styles.label, { color: theme.colors.text }]}>Color</Text>
           <TouchableOpacity
-            style={[styles.input, { borderColor: theme.colors.border }]}
+            style={[styles.input, { borderColor: theme.colors.border, backgroundColor: theme.colors.inputBackground }]}
             onPress={() => setShowColorDropdown(true)}
           >
             <Text style={[styles.inputText, { color: color ? theme.colors.text : theme.colors.placeholder }]}>
@@ -476,7 +476,7 @@ const AddCarScreen = () => {
         <View style={styles.inputGroup}>
           <Text style={[styles.label, { color: theme.colors.text }]}>Number of Seats</Text>
           <TextInput
-            style={[styles.input, { borderColor: theme.colors.border, color: theme.colors.text }]}
+            style={[styles.input, { borderColor: theme.colors.border, color: theme.colors.text, backgroundColor: theme.colors.inputBackground }]}
             value={seats}
             onChangeText={setSeats}
             keyboardType="numeric"
@@ -489,7 +489,7 @@ const AddCarScreen = () => {
         <View style={styles.inputGroup}>
           <Text style={[styles.label, { color: theme.colors.text }]}>Transmission</Text>
           <TouchableOpacity
-            style={[styles.input, { borderColor: theme.colors.border }]}
+            style={[styles.input, { borderColor: theme.colors.border, backgroundColor: theme.colors.inputBackground }]}
             onPress={() => setShowTransmissionDropdown(true)}
           >
             <Text style={[styles.inputText, { color: transmission ? theme.colors.text : theme.colors.placeholder }]}>
@@ -503,7 +503,7 @@ const AddCarScreen = () => {
         <View style={styles.inputGroup}>
           <Text style={[styles.label, { color: theme.colors.text }]}>Fuel Type</Text>
           <TouchableOpacity
-            style={[styles.input, { borderColor: theme.colors.border }]}
+            style={[styles.input, { borderColor: theme.colors.border, backgroundColor: theme.colors.inputBackground }]}
             onPress={() => setShowFuelTypeDropdown(true)}
           >
             <Text style={[styles.inputText, { color: fuelType ? theme.colors.text : theme.colors.placeholder }]}>
@@ -514,13 +514,13 @@ const AddCarScreen = () => {
         </View>
 
         {/* Rate Details Section */}
-        <View style={[styles.rateSection, { backgroundColor: '#F5F5F5' }]}>
+        <View style={[styles.rateSection, { backgroundColor: theme.colors.cardBackground, borderColor: theme.colors.border }]}>
           <Text style={[styles.rateSectionTitle, { color: theme.colors.text }]}>Rate Details</Text>
           
           <View style={styles.inputGroup}>
             <Text style={[styles.label, { color: theme.colors.text }]}>With Driver (10 hrs/day)</Text>
             <TextInput
-              style={[styles.input, { borderColor: theme.colors.border, color: theme.colors.text }]}
+              style={[styles.input, { borderColor: theme.colors.border, color: theme.colors.text, backgroundColor: theme.colors.inputBackground }]}
               value={withDriver}
               onChangeText={setWithDriver}
               keyboardType="numeric"
@@ -532,7 +532,7 @@ const AddCarScreen = () => {
           <View style={styles.inputGroup}>
             <Text style={[styles.label, { color: theme.colors.text }]}>Without Driver (24 hrs/day)</Text>
             <TextInput
-              style={[styles.input, { borderColor: theme.colors.border, color: theme.colors.text }]}
+              style={[styles.input, { borderColor: theme.colors.border, color: theme.colors.text, backgroundColor: theme.colors.inputBackground }]}
               value={withoutDriver}
               onChangeText={setWithoutDriver}
               keyboardType="numeric"
@@ -555,7 +555,7 @@ const AddCarScreen = () => {
         <View style={styles.inputGroup}>
           <Text style={[styles.label, { color: theme.colors.text }]}>Description</Text>
           <TextInput
-            style={[styles.textArea, { borderColor: theme.colors.border, color: theme.colors.text }]}
+            style={[styles.textArea, { borderColor: theme.colors.border, color: theme.colors.text, backgroundColor: theme.colors.inputBackground }]}
             value={description}
             onChangeText={setDescription}
             multiline
@@ -573,7 +573,7 @@ const AddCarScreen = () => {
           </Text>
           
           <TouchableOpacity
-            style={[styles.uploadArea, { borderColor: theme.colors.border }]}
+            style={[styles.uploadArea, { borderColor: theme.colors.border, backgroundColor: theme.colors.backgroundSecondary }]}
             onPress={handleImageUpload}
           >
             <Icon name="cloud-upload" size={48} color={theme.colors.textSecondary} />
@@ -612,7 +612,7 @@ const AddCarScreen = () => {
                       style={styles.imageButton}
                       onPress={() => removeImage(index)}
                     >
-                      <Icon name="delete" size={20} color="#ff4444" />
+                      <Icon name="delete" size={20} color={theme.colors.error} />
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -676,7 +676,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
   },
   backButton: {
     padding: 4,
@@ -712,7 +711,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 12,
-    backgroundColor: '#fff',
   },
   inputText: {
     fontSize: 16,
@@ -726,6 +724,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
+    borderWidth: 1,
   },
   rateSectionTitle: {
     fontSize: 18,
@@ -746,7 +745,6 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     minHeight: 100,
     textAlignVertical: 'top',
-    backgroundColor: '#fff',
   },
   uploadArea: {
     borderWidth: 2,
@@ -755,7 +753,6 @@ const styles = StyleSheet.create({
     padding: 32,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FAFAFA',
     marginTop: 8,
   },
   uploadText: {
@@ -786,7 +783,6 @@ const styles = StyleSheet.create({
     height: 100,
     borderRadius: 8,
     overflow: 'hidden',
-    backgroundColor: '#f0f0f0',
   },
   thumbnail: {
     width: '100%',

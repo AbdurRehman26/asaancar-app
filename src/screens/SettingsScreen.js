@@ -8,7 +8,7 @@ import {
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
 import Icon from 'react-native-vector-icons/MaterialIcons';
@@ -17,8 +17,20 @@ import ConfirmModal from '@/components/ConfirmModal';
 const SettingsScreen = () => {
   const navigation = useNavigation();
   const { user, logout } = useAuth();
-  const { theme } = useTheme();
+  const { theme, isDark, toggleTheme } = useTheme();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+
+  // Ensure we're on the SettingsMain screen when this screen is focused
+  // This is a backup to ensure the dashboard always shows the default state
+  useFocusEffect(
+    React.useCallback(() => {
+      // Screen is focused, ensure we're on the main settings screen
+      // This helps when navigating back from nested screens
+      return () => {
+        // Screen is unfocused (optional cleanup)
+      };
+    }, [])
+  );
 
   const handleLogout = async () => {
     await logout();
@@ -73,6 +85,13 @@ const SettingsScreen = () => {
       icon: 'info',
       onPress: () => navigation.navigate('AboutUs'),
     },
+    {
+      id: 'darkMode',
+      title: 'Dark Mode',
+      icon: isDark ? 'dark-mode' : 'light-mode',
+      onPress: toggleTheme,
+      isToggle: true,
+    },
   ];
 
   return (
@@ -98,7 +117,7 @@ const SettingsScreen = () => {
         {settingsOptions.map((option) => (
           <TouchableOpacity
             key={option.id}
-            style={styles.settingsItem}
+            style={[styles.settingsItem, { borderBottomColor: theme.colors.border }]}
             onPress={option.onPress}
           >
             <View style={styles.settingsItemLeft}>
@@ -107,7 +126,20 @@ const SettingsScreen = () => {
                 {option.title}
               </Text>
             </View>
-            <Icon name="chevron-right" size={24} color={theme.colors.border} />
+            {option.isToggle ? (
+              <View style={[
+                styles.toggle,
+                { backgroundColor: isDark ? theme.colors.primary : theme.colors.border }
+              ]}>
+                <View style={[
+                  styles.toggleThumb,
+                  { backgroundColor: theme.colors.background },
+                  isDark && styles.toggleThumbActive
+                ]} />
+              </View>
+            ) : (
+              <Icon name="chevron-right" size={24} color={theme.colors.border} />
+            )}
           </TouchableOpacity>
         ))}
       </View>
@@ -190,7 +222,22 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+  },
+  toggle: {
+    width: 50,
+    height: 28,
+    borderRadius: 14,
+    padding: 2,
+    justifyContent: 'center',
+  },
+  toggleThumb: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    alignSelf: 'flex-start',
+  },
+  toggleThumbActive: {
+    alignSelf: 'flex-end',
   },
   settingsItemLeft: {
     flexDirection: 'row',

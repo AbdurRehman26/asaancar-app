@@ -22,7 +22,7 @@ import PickDropFilterDrawer from '@/components/PickDropFilterDrawer';
 import ErrorModal from '@/components/ErrorModal';
 
 const PickDropScreen = () => {
-  const { theme } = useTheme();
+  const { theme, isDark, toggleTheme } = useTheme();
   const { user } = useAuth();
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
@@ -275,6 +275,16 @@ const PickDropScreen = () => {
           <View style={styles.headerTitleSection}>
           </View>
           <View style={styles.headerActions}>
+            <TouchableOpacity
+              onPress={toggleTheme}
+              style={styles.themeToggleButton}
+            >
+              <Icon 
+                name={isDark ? 'light-mode' : 'dark-mode'} 
+                size={24} 
+                color={theme.colors.primary} 
+              />
+            </TouchableOpacity>
           </View>
         </View>
         <ServiceTabs
@@ -338,7 +348,7 @@ const PickDropScreen = () => {
         ) : services.length > 0 ? (
           <View style={styles.servicesContainer}>
             {services.map((service) => (
-              <View key={service.id} style={[styles.serviceCard, { backgroundColor: theme.colors.background }]}>
+              <View key={service.id} style={[styles.serviceCard, { backgroundColor: theme.colors.cardBackground, borderColor: theme.colors.border }]}>
                   {/* Route */}
                   <View style={styles.routeSection}>
                     <View style={styles.locationRow}>
@@ -725,6 +735,9 @@ const styles = StyleSheet.create({
     gap: 8,
     flexShrink: 0,
   },
+  themeToggleButton: {
+    padding: 4,
+  },
   loginButton: {
     paddingHorizontal: 16,
     paddingVertical: 8,
@@ -817,6 +830,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     padding: 16,
     borderRadius: 12,
+    borderWidth: 1,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,

@@ -99,7 +99,7 @@ const PickDropFilterDrawer = ({
       style={[
         styles.chip,
         {
-          backgroundColor: selected ? theme.colors.primary : '#f0f0f0',
+          backgroundColor: selected ? theme.colors.primary : theme.colors.backgroundSecondary,
         },
       ]}
       onPress={onPress}
@@ -148,7 +148,7 @@ const PickDropFilterDrawer = ({
             },
           ]}
         >
-          <View style={styles.drawerHeader}>
+          <View style={[styles.drawerHeader, { borderBottomColor: theme.colors.border }]}>
             <Text style={[styles.drawerTitle, { color: theme.colors.text }]}>
               Filters
             </Text>
@@ -256,9 +256,9 @@ const PickDropFilterDrawer = ({
           </ScrollView>
 
           <SafeAreaView edges={['bottom']} style={{ backgroundColor: theme.colors.background }}>
-            <View style={[styles.drawerFooter, { paddingBottom: Math.max(insets.bottom, 16) }]}>
+            <View style={[styles.drawerFooter, { borderTopColor: theme.colors.border, paddingBottom: Math.max(insets.bottom, 16) }]}>
               <TouchableOpacity
-                style={[styles.clearButton, { backgroundColor: '#f0f0f0' }]}
+                style={[styles.clearButton, { backgroundColor: theme.colors.backgroundSecondary }]}
                 onPress={() => {
                   // Create empty filters object
                   const emptyFilters = {
@@ -334,7 +334,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
   },
   drawerTitle: {
     fontSize: 24,
@@ -396,7 +395,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 20,
     borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
     gap: 12,
   },
   clearButton: {

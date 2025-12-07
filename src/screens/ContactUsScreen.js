@@ -80,7 +80,7 @@ const ContactUsScreen = () => {
       keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
     >
       {/* Header */}
-      <View style={[styles.header, { backgroundColor: theme.colors.cardBackground }]}>
+      <View style={[styles.header, { backgroundColor: theme.colors.cardBackground, borderBottomColor: theme.colors.border }]}>
         <TouchableOpacity
           onPress={() => navigation.goBack()}
           style={styles.backButton}
@@ -105,12 +105,12 @@ const ContactUsScreen = () => {
         </View>
 
         {/* Form Card */}
-        <View style={[styles.formCard, { backgroundColor: theme.colors.cardBackground }]}>
+        <View style={[styles.formCard, { backgroundColor: theme.colors.cardBackground, borderWidth: 1, borderColor: theme.colors.border }]}>
           {/* Name Field */}
           <View style={styles.fieldContainer}>
             <Text style={[styles.label, { color: theme.colors.text }]}>Name</Text>
             <TextInput
-              style={[styles.input, { color: theme.colors.text, borderColor: theme.colors.border }]}
+              style={[styles.input, { color: theme.colors.text, borderColor: theme.colors.border, backgroundColor: theme.colors.inputBackground }]}
               placeholder="Enter your name"
               placeholderTextColor={theme.colors.placeholder}
               value={name}
@@ -123,7 +123,7 @@ const ContactUsScreen = () => {
           <View style={styles.fieldContainer}>
             <Text style={[styles.label, { color: theme.colors.text }]}>Contact Information</Text>
             <TextInput
-              style={[styles.input, { color: theme.colors.text, borderColor: theme.colors.border }]}
+              style={[styles.input, { color: theme.colors.text, borderColor: theme.colors.border, backgroundColor: theme.colors.inputBackground }]}
               placeholder="Email or phone number"
               placeholderTextColor={theme.colors.placeholder}
               value={contactInfo}
@@ -137,7 +137,7 @@ const ContactUsScreen = () => {
           <View style={styles.fieldContainer}>
             <Text style={[styles.label, { color: theme.colors.text }]}>Message</Text>
             <TextInput
-              style={[styles.textArea, { color: theme.colors.text, borderColor: theme.colors.border }]}
+              style={[styles.textArea, { color: theme.colors.text, borderColor: theme.colors.border, backgroundColor: theme.colors.inputBackground }]}
               placeholder="Enter your message"
               placeholderTextColor={theme.colors.placeholder}
               value={message}
@@ -196,7 +196,6 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingTop: Platform.OS === 'ios' ? 50 : 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -257,7 +256,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 10,
     paddingVertical: 8,
-    backgroundColor: '#fff',
     margin: 0,
   },
   textArea: {
@@ -266,7 +264,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 10,
     paddingVertical: 8,
-    backgroundColor: '#fff',
     minHeight: 120,
     margin: 0,
   },

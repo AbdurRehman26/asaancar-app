@@ -24,7 +24,7 @@ import FilterDrawer from '@/components/FilterDrawer';
 const HomeScreen = () => {
   const navigation = useNavigation();
   const { user } = useAuth();
-  const { theme } = useTheme();
+  const { theme, isDark, toggleTheme } = useTheme();
   const insets = useSafeAreaInsets();
   const [cars, setCars] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -297,10 +297,10 @@ const HomeScreen = () => {
   const renderCarItem = ({ item }) => {
     return (
     <TouchableOpacity
-      style={[styles.carCard, { borderColor: theme.colors.primary }]}
+      style={[styles.carCard, { borderColor: theme.colors.primary, backgroundColor: theme.colors.cardBackground }]}
       onPress={() => navigation.navigate('CarDetail', { carId: item.id })}
     >
-      <View style={styles.imageContainer}>
+      <View style={[styles.imageContainer, { backgroundColor: theme.colors.border }]}>
         <Image
           source={{
             uri: getCarImageUrl(item),
@@ -310,10 +310,10 @@ const HomeScreen = () => {
         />
       </View>
       <View style={styles.carInfo}>
-        <Text style={styles.carName}>
+        <Text style={[styles.carName, { color: theme.colors.text }]}>
           {item.name || 'Car Name'}
         </Text>
-        <Text style={styles.carBrand}>
+        <Text style={[styles.carBrand, { color: theme.colors.textSecondary }]}>
           {item.brand?.name || 'Brand'}
         </Text>
         <View style={styles.priceContainer}>
@@ -326,7 +326,7 @@ const HomeScreen = () => {
         </View>
         {(item.store || item.dealer) && (
           <>
-            <View style={styles.divider} />
+            <View style={[styles.divider, { backgroundColor: theme.colors.border }]} />
             <TouchableOpacity
               style={styles.dealerInfo}
               onPress={() => {
@@ -336,9 +336,9 @@ const HomeScreen = () => {
                 }
               }}
             >
-              <Icon name="store" size={16} color="#666" />
+              <Icon name="store" size={16} color={theme.colors.textSecondary} />
               <View style={styles.dealerDetails}>
-                <Text style={styles.rentalProvider}>
+                <Text style={[styles.rentalProvider, { color: theme.colors.text }]}>
                   {item.store?.name || item.dealer?.name || 'N/A'}
                 </Text>
               </View>
@@ -364,11 +364,21 @@ const HomeScreen = () => {
 
   return (
     <SafeAreaView style={[styles.container, dynamicStyles.container]} edges={['top']}>
-      <View style={[styles.header, dynamicStyles.header]}>
+      <View style={[styles.header, dynamicStyles.header, { borderBottomColor: theme.colors.border }]}>
         <View style={styles.headerTop}>
           <View style={styles.headerTitleSection}>
           </View>
           <View style={styles.headerActions}>
+            <TouchableOpacity
+              onPress={toggleTheme}
+              style={styles.themeToggleButton}
+            >
+              <Icon 
+                name={isDark ? 'light-mode' : 'dark-mode'} 
+                size={24} 
+                color={theme.colors.primary} 
+              />
+            </TouchableOpacity>
           </View>
         </View>
         
@@ -379,9 +389,9 @@ const HomeScreen = () => {
       </View>
 
       {/* Filter Button and Info Banner */}
-      <View style={styles.filterSection}>
+      <View style={[styles.filterSection, { backgroundColor: theme.colors.background, borderBottomColor: theme.colors.border }]}>
         <TouchableOpacity
-          style={[styles.filterButton, { borderColor: theme.colors.primary }]}
+          style={[styles.filterButton, { borderColor: theme.colors.primary, backgroundColor: theme.colors.background }]}
           onPress={openFilters}
         >
           <Icon name="tune" size={20} color={theme.colors.primary} />
@@ -430,8 +440,8 @@ const HomeScreen = () => {
           }
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
-              <Icon name="directions-car" size={64} color="#ccc" />
-              <Text style={styles.emptyText}>No cars found</Text>
+              <Icon name="directions-car" size={64} color={theme.colors.textLight} />
+              <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>No cars found</Text>
             </View>
           }
         />
@@ -503,12 +513,9 @@ const HomeScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
   },
   header: {
-    backgroundColor: '#fff',
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
   },
   headerTop: {
     flexDirection: 'row',
@@ -542,15 +549,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
   },
+  themeToggleButton: {
+    padding: 4,
+  },
   filterSection: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 8,
     paddingVertical: 6,
-    backgroundColor: '#fff',
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
   },
   filterButton: {
     width: 40,
@@ -559,7 +567,6 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#fff',
   },
   infoBanner: {
     flexDirection: 'row',
@@ -596,7 +603,6 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   carCard: {
-    backgroundColor: '#fff',
     borderRadius: 12,
     marginBottom: 12,
     overflow: 'hidden',
@@ -614,7 +620,6 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     borderTopLeftRadius: 8,
     borderTopRightRadius: 8,
-    backgroundColor: '#e0e0e0',
     position: 'relative',
   },
   carImage: {
@@ -627,17 +632,14 @@ const styles = StyleSheet.create({
   carName: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#333',
     marginBottom: 4,
   },
   carBrand: {
     fontSize: 13,
-    color: '#666',
     marginBottom: 12,
   },
   divider: {
     height: 1,
-    backgroundColor: '#e0e0e0',
     marginVertical: 12,
   },
   dealerInfo: {
@@ -650,7 +652,6 @@ const styles = StyleSheet.create({
   },
   rentalProvider: {
     fontSize: 12,
-    color: '#1a1a1a',
     marginBottom: 4,
     fontWeight: '500',
   },
@@ -695,7 +696,6 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 16,
-    color: '#999',
     marginTop: 16,
   },
   infoBanner: {

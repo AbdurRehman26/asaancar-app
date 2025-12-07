@@ -220,7 +220,7 @@ const PickDropDetailScreen = () => {
           {/* Left Column - Main Content */}
           <View style={styles.mainContent}>
             {/* Route Details Card */}
-            <View style={[styles.card, { backgroundColor: theme.colors.background }]}>
+            <View style={[styles.card, { backgroundColor: theme.colors.cardBackground, borderColor: theme.colors.border }]}>
               <View style={styles.cardHeader}>
                 <Icon name="send" size={20} color={theme.colors.primary} />
                 <Text style={[styles.cardTitle, { color: theme.colors.primary }]}>
@@ -311,7 +311,7 @@ const PickDropDetailScreen = () => {
             </View>
 
             {/* Service Details Card */}
-            <View style={[styles.card, { backgroundColor: theme.colors.background }]}>
+            <View style={[styles.card, { backgroundColor: theme.colors.cardBackground, borderColor: theme.colors.border }]}>
               <Text style={[styles.cardTitle, { color: theme.colors.primary }]}>
                 Service Details
               </Text>
@@ -410,7 +410,7 @@ const PickDropDetailScreen = () => {
               if (!hasCarDetails) return null;
               
               return (
-                <View style={[styles.card, { backgroundColor: theme.colors.background }]}>
+                <View style={[styles.card, { backgroundColor: theme.colors.cardBackground, borderColor: theme.colors.border }]}>
                   <View style={styles.cardHeader}>
                     <Icon name="directions-car" size={20} color={theme.colors.primary} />
                     <Text style={[styles.cardTitle, { color: theme.colors.primary }]}>
@@ -420,7 +420,7 @@ const PickDropDetailScreen = () => {
 
                   <View style={styles.carInfoGrid}>
                     {service.car && (
-                      <View style={styles.carInfoItem}>
+                      <View style={[styles.carInfoItem, { borderBottomColor: theme.colors.border }]}>
                         <Text style={[styles.carInfoLabel, { color: theme.colors.textSecondary }]}>
                           Car:
                         </Text>
@@ -430,7 +430,7 @@ const PickDropDetailScreen = () => {
                       </View>
                     )}
                     {service.car_brand && (
-                      <View style={styles.carInfoItem}>
+                      <View style={[styles.carInfoItem, { borderBottomColor: theme.colors.border }]}>
                         <Text style={[styles.carInfoLabel, { color: theme.colors.textSecondary }]}>
                           Brand:
                         </Text>
@@ -440,7 +440,7 @@ const PickDropDetailScreen = () => {
                       </View>
                     )}
                     {service.car_model && (
-                      <View style={styles.carInfoItem}>
+                      <View style={[styles.carInfoItem, { borderBottomColor: theme.colors.border }]}>
                         <Text style={[styles.carInfoLabel, { color: theme.colors.textSecondary }]}>
                           Model:
                         </Text>
@@ -450,7 +450,7 @@ const PickDropDetailScreen = () => {
                       </View>
                     )}
                     {service.car_color && (
-                      <View style={styles.carInfoItem}>
+                      <View style={[styles.carInfoItem, { borderBottomColor: theme.colors.border }]}>
                         <Text style={[styles.carInfoLabel, { color: theme.colors.textSecondary }]}>
                           Color:
                         </Text>
@@ -460,7 +460,7 @@ const PickDropDetailScreen = () => {
                       </View>
                     )}
                     {service.car_seats && (
-                      <View style={styles.carInfoItem}>
+                      <View style={[styles.carInfoItem, { borderBottomColor: theme.colors.border }]}>
                         <Text style={[styles.carInfoLabel, { color: theme.colors.textSecondary }]}>
                           Seats:
                         </Text>
@@ -476,7 +476,7 @@ const PickDropDetailScreen = () => {
 
             {/* Description Card */}
             {service.description && (
-              <View style={[styles.card, { backgroundColor: theme.colors.background }]}>
+              <View style={[styles.card, { backgroundColor: theme.colors.cardBackground, borderColor: theme.colors.border }]}>
                 <Text style={[styles.cardTitle, { color: theme.colors.primary }]}>
                   Description
                 </Text>
@@ -490,7 +490,7 @@ const PickDropDetailScreen = () => {
           {/* Right Sidebar */}
           <View style={styles.sidebar}>
             {/* Service Provider Card */}
-            <View style={[styles.card, { backgroundColor: theme.colors.background }]}>
+            <View style={[styles.card, { backgroundColor: theme.colors.cardBackground, borderColor: theme.colors.border }]}>
               <View style={styles.cardHeader}>
                 <Icon name="person" size={20} color={theme.colors.primary} />
                 <Text style={[styles.cardTitle, { color: theme.colors.primary }]}>
@@ -572,7 +572,7 @@ const PickDropDetailScreen = () => {
 
             {/* Contact Service Provider Card for guests */}
             {!user && (
-              <View style={[styles.card, { backgroundColor: theme.colors.background }]}>
+              <View style={[styles.card, { backgroundColor: theme.colors.cardBackground, borderColor: theme.colors.border }]}>
                 <Text style={[styles.contactText, { color: theme.colors.textSecondary }]}>
                   Please login to contact the service provider
                 </Text>
@@ -688,6 +688,7 @@ const styles = StyleSheet.create({
   card: {
     borderRadius: 12,
     padding: 20,
+    borderWidth: 1,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -764,7 +765,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingBottom: 8,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
   },
   carInfoLabel: {
     fontSize: 14,

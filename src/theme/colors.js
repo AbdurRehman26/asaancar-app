@@ -63,25 +63,25 @@ export const darkColors = {
   secondaryDark: '#5d1a4f',
   secondaryLight: '#9d3a85',
   
-  // Background colors
-  background: '#1a1a1a',
-  backgroundSecondary: '#2d2d2d',
-  backgroundTertiary: '#333333',
-  backgroundDark: '#1a1a1a',
-  backgroundDarkSecondary: '#2d2d2d',
+  // Background colors - matching website dark mode (#1A1A2E and #21213A)
+  background: '#1a1a2e',
+  backgroundSecondary: '#21213a',
+  backgroundTertiary: '#1a1a2e',
+  backgroundDark: '#1a1a2e',
+  backgroundDarkSecondary: '#21213a',
   
   // Text colors
   text: '#ffffff',
-  textSecondary: '#cccccc',
-  textLight: '#999999',
+  textSecondary: '#d0d0d0',
+  textLight: '#b0b0b0',
   textDark: '#ffffff',
   textOnPrimary: '#ffffff',
   textOnSecondary: '#1a1a1a',
   
   // Border colors
-  border: '#404040',
-  borderLight: '#333333',
-  borderDark: '#555555',
+  border: '#3a3a5a',
+  borderLight: '#21213a',
+  borderDark: '#4a4a6a',
   
   // Status colors (same)
   success: '#7e246c',
@@ -89,15 +89,15 @@ export const darkColors = {
   warning: '#ffa500',
   info: '#2196f3',
   
-  // Card colors
-  cardBackground: '#2d2d2d',
-  cardShadow: 'rgba(0, 0, 0, 0.3)',
+  // Card colors - matching website dark purple-blue
+  cardBackground: '#21213a',
+  cardShadow: 'rgba(0, 0, 0, 0.5)',
   
   // Input colors
-  inputBackground: '#2d2d2d',
-  inputBorder: '#404040',
+  inputBackground: '#21213a',
+  inputBorder: '#3a3a5a',
   inputFocus: '#7e246c',
-  placeholder: '#999999',
+  placeholder: '#b0b0b0',
   
   // Button colors
   buttonPrimary: '#7e246c',

@@ -165,12 +165,12 @@ const CarDetailScreen = () => {
   const carName = `${car.brand?.name || 'Brand'} ${car.name || 'Car Name'}`;
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: '#f5f5f5' }]}>
+    <ScrollView style={[styles.container, { backgroundColor: theme.colors.backgroundTertiary }]}>
       <View style={styles.contentContainer}>
         {/* Left Panel */}
         <View style={styles.leftPanel}>
           {/* Car Image */}
-          <View style={styles.imageContainer}>
+          <View style={[styles.imageContainer, { backgroundColor: theme.colors.border }]}>
             <Image
               source={{ uri: getCarImageUrl(car) }}
               style={styles.carImage}
@@ -184,10 +184,10 @@ const CarDetailScreen = () => {
           </Text>
 
           {/* Rate Details */}
-          <View style={[styles.card, { backgroundColor: theme.colors.background }]}>
+          <View style={[styles.card, { backgroundColor: theme.colors.cardBackground, borderColor: theme.colors.border }]}>
             <Text style={[styles.cardTitle, { color: theme.colors.text }]}>Rate Details</Text>
-            <View style={styles.rateTable}>
-              <View style={styles.tableHeader}>
+            <View style={[styles.rateTable, { borderColor: theme.colors.border }]}>
+              <View style={[styles.tableHeader, { backgroundColor: theme.colors.backgroundSecondary, borderBottomColor: theme.colors.border }]}>
                 <Text style={[styles.tableHeaderText, { color: theme.colors.text }]}>
                   Hours/Day
                 </Text>
@@ -207,7 +207,7 @@ const CarDetailScreen = () => {
           </View>
 
           {/* Additional Terms and Conditions */}
-          <View style={[styles.infoCard, { backgroundColor: '#e3f2fd' }]}>
+          <View style={[styles.infoCard, { backgroundColor: theme.colors.backgroundSecondary, borderColor: theme.colors.border }]}>
             <Icon name="info" size={20} color={theme.colors.primary} />
             <Text style={[styles.infoText, { color: theme.colors.text }]}>
               Additional terms and conditions including fuel charges, overtime rates, and other service details will be discussed verbally with the store owner upon booking confirmation. Please contact the store directly for any specific requirements or questions.
@@ -217,7 +217,7 @@ const CarDetailScreen = () => {
           {/* Store Information */}
           {car.store && (
             <TouchableOpacity
-              style={[styles.card, styles.clickableCard, { backgroundColor: theme.colors.background }]}
+              style={[styles.card, styles.clickableCard, { backgroundColor: theme.colors.cardBackground, borderColor: theme.colors.border }]}
               onPress={() => {
                 const storeId = car.store?.id || car.store_id;
                 if (storeId) {
@@ -272,7 +272,7 @@ const CarDetailScreen = () => {
         {/* Right Panel */}
         <View style={styles.rightPanel}>
           {/* Pick-up & Drop-off Details */}
-          <View style={[styles.card, { backgroundColor: theme.colors.background }]}>
+          <View style={[styles.card, { backgroundColor: theme.colors.cardBackground, borderColor: theme.colors.border }]}>
             <Text style={[styles.cardTitle, { color: theme.colors.text }]}>
               Pick-up & Drop-off Details
             </Text>
@@ -286,7 +286,7 @@ const CarDetailScreen = () => {
                 </Text>
               </View>
 
-              <View style={[styles.inputContainer, { borderColor: theme.colors.border }]}>
+              <View style={[styles.inputContainer, { borderColor: theme.colors.border, backgroundColor: theme.colors.inputBackground }]}>
                 <TextInput
                   style={[styles.input, { color: theme.colors.text }]}
                   placeholder="Pick-up address"
@@ -297,7 +297,7 @@ const CarDetailScreen = () => {
                 <Icon name="location-on" size={20} color={theme.colors.textSecondary} />
               </View>
 
-              <View style={[styles.inputContainer, { borderColor: theme.colors.border }]}>
+              <View style={[styles.inputContainer, { borderColor: theme.colors.border, backgroundColor: theme.colors.inputBackground }]}>
                 <Icon name="access-time" size={20} color={theme.colors.textSecondary} />
                 <TextInput
                   style={[styles.input, { color: theme.colors.text }]}
@@ -309,7 +309,7 @@ const CarDetailScreen = () => {
                 <Icon name="access-time" size={20} color={theme.colors.textSecondary} />
               </View>
 
-              <View style={[styles.inputContainer, { borderColor: theme.colors.border }]}>
+              <View style={[styles.inputContainer, { borderColor: theme.colors.border, backgroundColor: theme.colors.inputBackground }]}>
                 <Icon name="calendar-today" size={20} color={theme.colors.textSecondary} />
                 <TextInput
                   style={[styles.input, { color: theme.colors.text }]}
@@ -321,7 +321,7 @@ const CarDetailScreen = () => {
                 <Icon name="calendar-today" size={20} color={theme.colors.textSecondary} />
               </View>
 
-              <View style={[styles.textAreaContainer, { borderColor: theme.colors.border }]}>
+              <View style={[styles.textAreaContainer, { borderColor: theme.colors.border, backgroundColor: theme.colors.inputBackground }]}>
                 <TextInput
                   style={[styles.textArea, { color: theme.colors.text }]}
                   placeholder="Notes (optional)"
@@ -337,7 +337,7 @@ const CarDetailScreen = () => {
             {/* No. of Days */}
             <View style={styles.daysSection}>
               <Text style={[styles.label, { color: theme.colors.text }]}>No. of Days</Text>
-              <View style={[styles.inputContainer, { borderColor: theme.colors.border }]}>
+              <View style={[styles.inputContainer, { borderColor: theme.colors.border, backgroundColor: theme.colors.inputBackground }]}>
                 <TextInput
                   style={[styles.input, { color: theme.colors.text }]}
                   value={numberOfDays}
@@ -349,7 +349,7 @@ const CarDetailScreen = () => {
           </View>
 
           {/* Total Amount */}
-          <View style={[styles.totalCard, { backgroundColor: theme.colors.background }]}>
+          <View style={[styles.totalCard, { backgroundColor: theme.colors.cardBackground, borderColor: theme.colors.border }]}>
             <Text style={[styles.totalLabel, { color: theme.colors.text }]}>Total Amount</Text>
             <Text style={[styles.totalAmount, { color: theme.colors.primary }]}>
               {currency} {totalAmount}
@@ -357,7 +357,7 @@ const CarDetailScreen = () => {
           </View>
 
           {/* Booking Options */}
-          <View style={[styles.card, { backgroundColor: theme.colors.background }]}>
+          <View style={[styles.card, { backgroundColor: theme.colors.cardBackground, borderColor: theme.colors.border }]}>
             <TouchableOpacity
               style={styles.checkboxContainer}
               onPress={() => setBookAsGuest(!bookAsGuest)}
@@ -392,12 +392,12 @@ const CarDetailScreen = () => {
           </View>
 
           {/* Send an Inquiry */}
-          <View style={[styles.card, { backgroundColor: theme.colors.background }]}>
+          <View style={[styles.card, { backgroundColor: theme.colors.cardBackground, borderColor: theme.colors.border }]}>
             <Text style={[styles.cardTitle, { color: theme.colors.text }]}>
               Send an Inquiry to Store Owner
             </Text>
 
-            <View style={[styles.inputContainer, { borderColor: theme.colors.border }]}>
+            <View style={[styles.inputContainer, { borderColor: theme.colors.border, backgroundColor: theme.colors.inputBackground }]}>
               <TextInput
                 style={[styles.input, { color: theme.colors.text }]}
                 placeholder="Your Name"
@@ -408,7 +408,7 @@ const CarDetailScreen = () => {
               <Icon name="lock" size={16} color={theme.colors.textSecondary} />
             </View>
 
-            <View style={[styles.inputContainer, { borderColor: theme.colors.border }]}>
+            <View style={[styles.inputContainer, { borderColor: theme.colors.border, backgroundColor: theme.colors.inputBackground }]}>
               <TextInput
                 style={[styles.input, { color: theme.colors.text }]}
                 placeholder="Phone Number"
@@ -424,7 +424,7 @@ const CarDetailScreen = () => {
               <Icon name="lock" size={16} color={theme.colors.textSecondary} />
             </View>
 
-            <View style={[styles.textAreaContainer, { borderColor: theme.colors.border }]}>
+            <View style={[styles.textAreaContainer, { borderColor: theme.colors.border, backgroundColor: theme.colors.inputBackground }]}>
               <TextInput
                 style={[styles.textArea, { color: theme.colors.text }]}
                 placeholder="Your Message"
@@ -482,7 +482,6 @@ const styles = StyleSheet.create({
     height: 300,
     borderRadius: 12,
     overflow: 'hidden',
-    backgroundColor: '#e0e0e0',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -498,6 +497,7 @@ const styles = StyleSheet.create({
   card: {
     borderRadius: 12,
     padding: 20,
+    borderWidth: 1,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -505,8 +505,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   clickableCard: {
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
+    // borderWidth and borderColor applied dynamically
   },
   storeHeader: {
     flexDirection: 'row',
@@ -521,17 +520,14 @@ const styles = StyleSheet.create({
   },
   rateTable: {
     borderWidth: 1,
-    borderColor: '#e0e0e0',
     borderRadius: 8,
     overflow: 'hidden',
   },
   tableHeader: {
     flexDirection: 'row',
-    backgroundColor: '#f5f5f5',
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
   },
   tableHeaderText: {
     flex: 1,
@@ -551,6 +547,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     padding: 16,
     borderRadius: 12,
+    borderWidth: 1,
     gap: 12,
     alignItems: 'flex-start',
   },
@@ -599,7 +596,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     marginBottom: 12,
     height: 50,
-    backgroundColor: '#fff',
   },
   input: {
     flex: 1,
@@ -611,7 +607,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     marginBottom: 12,
-    backgroundColor: '#fff',
     minHeight: 100,
   },
   textArea: {
@@ -630,6 +625,7 @@ const styles = StyleSheet.create({
   totalCard: {
     borderRadius: 12,
     padding: 20,
+    borderWidth: 1,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,

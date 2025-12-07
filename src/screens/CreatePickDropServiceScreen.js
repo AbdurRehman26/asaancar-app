@@ -229,7 +229,7 @@ const CreatePickDropServiceScreen = () => {
   );
 
   const renderSection = (title, icon, children) => (
-    <View style={[styles.section, { backgroundColor: theme.colors.cardBackground }]}>
+    <View style={[styles.section, { backgroundColor: theme.colors.cardBackground, borderColor: theme.colors.border }]}>
       <View style={styles.sectionHeader}>
         <Icon name={icon} size={20} color={theme.colors.primary} />
         <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>{title}</Text>
@@ -240,7 +240,7 @@ const CreatePickDropServiceScreen = () => {
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.backgroundTertiary }]}>
-      <View style={[styles.header, { backgroundColor: theme.colors.cardBackground }]}>
+      <View style={[styles.header, { backgroundColor: theme.colors.cardBackground, borderBottomColor: theme.colors.border }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <Icon name="arrow-back" size={24} color={theme.colors.text} />
         </TouchableOpacity>
@@ -252,9 +252,9 @@ const CreatePickDropServiceScreen = () => {
 
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
         {/* Info Banner */}
-        <View style={[styles.infoBanner, { backgroundColor: '#E3F2FD' }]}>
-          <Icon name="info" size={20} color="#1976D2" />
-          <Text style={[styles.infoText, { color: '#1976D2' }]}>
+        <View style={[styles.infoBanner, { backgroundColor: theme.colors.backgroundSecondary, borderColor: theme.colors.border }]}>
+          <Icon name="info" size={20} color={theme.colors.primary} />
+          <Text style={[styles.infoText, { color: theme.colors.text }]}>
             Currently available in Karachi only. We'll be expanding to other cities soon!
           </Text>
         </View>
@@ -265,7 +265,7 @@ const CreatePickDropServiceScreen = () => {
             <View style={styles.inputGroup}>
               <Text style={[styles.label, { color: theme.colors.text }]}>Start Area *</Text>
               <TouchableOpacity
-                style={[styles.input, { borderColor: theme.colors.border }]}
+                style={[styles.input, { borderColor: theme.colors.border, backgroundColor: theme.colors.inputBackground }]}
                 onPress={() => setShowStartAreaDropdown(true)}
               >
                 <Text style={[styles.inputText, { color: startArea ? theme.colors.text : theme.colors.placeholder }]}>
@@ -278,7 +278,7 @@ const CreatePickDropServiceScreen = () => {
             <View style={styles.inputGroup}>
               <Text style={[styles.label, { color: theme.colors.text }]}>End Area *</Text>
               <TouchableOpacity
-                style={[styles.input, { borderColor: theme.colors.border }]}
+                style={[styles.input, { borderColor: theme.colors.border, backgroundColor: theme.colors.inputBackground }]}
                 onPress={() => setShowEndAreaDropdown(true)}
               >
                 <Text style={[styles.inputText, { color: endArea ? theme.colors.text : theme.colors.placeholder }]}>
@@ -292,7 +292,7 @@ const CreatePickDropServiceScreen = () => {
               style={styles.checkboxRow}
               onPress={() => setEverydayService(!everydayService)}
             >
-              <View style={[styles.checkbox, everydayService && { backgroundColor: theme.colors.primary }]}>
+              <View style={[styles.checkbox, { borderColor: theme.colors.primary }, everydayService && { backgroundColor: theme.colors.primary }]}>
                 {everydayService && <Icon name="check" size={16} color="#fff" />}
               </View>
               <Text style={[styles.checkboxLabel, { color: theme.colors.text }]}>
@@ -304,7 +304,7 @@ const CreatePickDropServiceScreen = () => {
               <View style={styles.inputGroup}>
                 <Text style={[styles.label, { color: theme.colors.text }]}>Departure Date *</Text>
                 <TouchableOpacity
-                  style={[styles.input, { borderColor: theme.colors.border }]}
+                  style={[styles.input, { borderColor: theme.colors.border, backgroundColor: theme.colors.inputBackground }]}
                   onPress={() => setShowDatePicker(true)}
                 >
                   <Text style={[styles.inputText, { color: theme.colors.text }]}>
@@ -318,7 +318,7 @@ const CreatePickDropServiceScreen = () => {
             <View style={styles.inputGroup}>
               <Text style={[styles.label, { color: theme.colors.text }]}>Departure Time *</Text>
               <TouchableOpacity
-                style={[styles.input, { borderColor: theme.colors.border }]}
+                style={[styles.input, { borderColor: theme.colors.border, backgroundColor: theme.colors.inputBackground }]}
                 onPress={() => setShowTimePicker(true)}
               >
                 <Text style={[styles.inputText, { color: theme.colors.text }]}>
@@ -336,18 +336,19 @@ const CreatePickDropServiceScreen = () => {
             <View style={styles.inputGroup}>
               <Text style={[styles.label, { color: theme.colors.text }]}>Available Spaces *</Text>
               <TextInput
-                style={[styles.input, { borderColor: theme.colors.border, color: theme.colors.text }]}
+                style={[styles.input, { borderColor: theme.colors.border, color: theme.colors.text, backgroundColor: theme.colors.inputBackground }]}
                 value={availableSpaces}
                 onChangeText={setAvailableSpaces}
                 keyboardType="numeric"
                 placeholder="1"
+                placeholderTextColor={theme.colors.placeholder}
               />
             </View>
 
             <View style={styles.inputGroup}>
               <Text style={[styles.label, { color: theme.colors.text }]}>Driver Gender *</Text>
               <TouchableOpacity
-                style={[styles.input, { borderColor: theme.colors.border }]}
+                style={[styles.input, { borderColor: theme.colors.border, backgroundColor: theme.colors.inputBackground }]}
                 onPress={() => setShowDriverGenderDropdown(true)}
               >
                 <Text style={[styles.inputText, { color: theme.colors.text }]}>
@@ -360,7 +361,7 @@ const CreatePickDropServiceScreen = () => {
             <View style={styles.inputGroup}>
               <Text style={[styles.label, { color: theme.colors.text }]}>Price Per Person</Text>
               <View style={styles.priceRow}>
-                <View style={[styles.priceInput, { borderColor: theme.colors.border }]}>
+                <View style={[styles.priceInput, { borderColor: theme.colors.border, backgroundColor: theme.colors.inputBackground }]}>
                   <Icon name="lock" size={16} color={theme.colors.textSecondary} style={styles.priceIcon} />
                   <TextInput
                     style={[styles.priceInputText, { color: theme.colors.text }]}
@@ -368,10 +369,11 @@ const CreatePickDropServiceScreen = () => {
                     onChangeText={setPricePerPerson}
                     keyboardType="decimal-pad"
                     placeholder="0.00"
+                    placeholderTextColor={theme.colors.placeholder}
                   />
                 </View>
                 <TouchableOpacity
-                  style={[styles.currencyButton, { borderColor: theme.colors.border }]}
+                  style={[styles.currencyButton, { borderColor: theme.colors.border, backgroundColor: theme.colors.inputBackground }]}
                   onPress={() => setShowCurrencyDropdown(true)}
                 >
                   <Text style={[styles.currencyText, { color: theme.colors.text }]}>{currency}</Text>
@@ -384,7 +386,7 @@ const CreatePickDropServiceScreen = () => {
               style={styles.checkboxRow}
               onPress={() => setActive(!active)}
             >
-              <View style={[styles.checkbox, active && { backgroundColor: theme.colors.primary }]}>
+              <View style={[styles.checkbox, { borderColor: theme.colors.primary }, active && { backgroundColor: theme.colors.primary }]}>
                 {active && <Icon name="check" size={16} color="#fff" />}
               </View>
               <Text style={[styles.checkboxLabel, { color: theme.colors.text }]}>Active</Text>
@@ -393,7 +395,7 @@ const CreatePickDropServiceScreen = () => {
             <View style={styles.inputGroup}>
               <Text style={[styles.label, { color: theme.colors.text }]}>Description</Text>
               <TextInput
-                style={[styles.textArea, { borderColor: theme.colors.border, color: theme.colors.text }]}
+                style={[styles.textArea, { borderColor: theme.colors.border, color: theme.colors.text, backgroundColor: theme.colors.inputBackground }]}
                 value={description}
                 onChangeText={setDescription}
                 multiline
@@ -411,7 +413,7 @@ const CreatePickDropServiceScreen = () => {
             <View style={styles.inputGroup}>
               <Text style={[styles.label, { color: theme.colors.text }]}>Car Brand</Text>
               <TextInput
-                style={[styles.input, { borderColor: theme.colors.border, color: theme.colors.text }]}
+                style={[styles.input, { borderColor: theme.colors.border, color: theme.colors.text, backgroundColor: theme.colors.inputBackground }]}
                 value={carBrand}
                 onChangeText={setCarBrand}
                 placeholder="Enter car brand"
@@ -422,7 +424,7 @@ const CreatePickDropServiceScreen = () => {
             <View style={styles.inputGroup}>
               <Text style={[styles.label, { color: theme.colors.text }]}>Car Model</Text>
               <TextInput
-                style={[styles.input, { borderColor: theme.colors.border, color: theme.colors.text }]}
+                style={[styles.input, { borderColor: theme.colors.border, color: theme.colors.text, backgroundColor: theme.colors.inputBackground }]}
                 value={carModel}
                 onChangeText={setCarModel}
                 placeholder="Enter car model"
@@ -433,7 +435,7 @@ const CreatePickDropServiceScreen = () => {
             <View style={styles.inputGroup}>
               <Text style={[styles.label, { color: theme.colors.text }]}>Car Color</Text>
               <TextInput
-                style={[styles.input, { borderColor: theme.colors.border, color: theme.colors.text }]}
+                style={[styles.input, { borderColor: theme.colors.border, color: theme.colors.text, backgroundColor: theme.colors.inputBackground }]}
                 value={carColor}
                 onChangeText={setCarColor}
                 placeholder="Enter car color"
@@ -444,7 +446,7 @@ const CreatePickDropServiceScreen = () => {
             <View style={styles.inputGroup}>
               <Text style={[styles.label, { color: theme.colors.text }]}>Seats</Text>
               <TextInput
-                style={[styles.input, { borderColor: theme.colors.border, color: theme.colors.text }]}
+                style={[styles.input, { borderColor: theme.colors.border, color: theme.colors.text, backgroundColor: theme.colors.inputBackground }]}
                 value={seats}
                 onChangeText={setSeats}
                 keyboardType="numeric"
@@ -456,7 +458,7 @@ const CreatePickDropServiceScreen = () => {
             <View style={styles.inputGroup}>
               <Text style={[styles.label, { color: theme.colors.text }]}>Transmission</Text>
               <TouchableOpacity
-                style={[styles.input, { borderColor: theme.colors.border }]}
+                style={[styles.input, { borderColor: theme.colors.border, backgroundColor: theme.colors.inputBackground }]}
                 onPress={() => setShowTransmissionDropdown(true)}
               >
                 <Text style={[styles.inputText, { color: transmission ? theme.colors.text : theme.colors.placeholder }]}>
@@ -469,7 +471,7 @@ const CreatePickDropServiceScreen = () => {
             <View style={styles.inputGroup}>
               <Text style={[styles.label, { color: theme.colors.text }]}>Fuel Type</Text>
               <TouchableOpacity
-                style={[styles.input, { borderColor: theme.colors.border }]}
+                style={[styles.input, { borderColor: theme.colors.border, backgroundColor: theme.colors.inputBackground }]}
                 onPress={() => setShowFuelTypeDropdown(true)}
               >
                 <Text style={[styles.inputText, { color: fuelType ? theme.colors.text : theme.colors.placeholder }]}>
@@ -490,7 +492,7 @@ const CreatePickDropServiceScreen = () => {
               </Text>
             ) : (
               stops.map((stop) => (
-                <View key={stop.id} style={styles.stopItem}>
+                <View key={stop.id} style={[styles.stopItem, { backgroundColor: theme.colors.backgroundSecondary }]}>
                   <View style={styles.stopInfo}>
                     <Text style={[styles.stopLocation, { color: theme.colors.text }]}>
                       {stop.location}
@@ -503,7 +505,7 @@ const CreatePickDropServiceScreen = () => {
                     onPress={() => handleRemoveStop(stop.id)}
                     style={styles.removeStopButton}
                   >
-                    <Icon name="close" size={20} color="#ff4444" />
+                    <Icon name="close" size={20} color={theme.colors.error} />
                   </TouchableOpacity>
                 </View>
               ))
@@ -536,7 +538,7 @@ const CreatePickDropServiceScreen = () => {
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.cancelButton, { backgroundColor: '#E0E0E0' }]}
+            style={[styles.cancelButton, { backgroundColor: theme.colors.backgroundSecondary }]}
             onPress={() => navigation.goBack()}
             disabled={loading}
           >
@@ -596,7 +598,7 @@ const CreatePickDropServiceScreen = () => {
             <View style={styles.inputGroup}>
               <Text style={[styles.label, { color: theme.colors.text }]}>Location</Text>
               <TextInput
-                style={[styles.input, { borderColor: theme.colors.border, color: theme.colors.text }]}
+                style={[styles.input, { borderColor: theme.colors.border, color: theme.colors.text, backgroundColor: theme.colors.inputBackground }]}
                 value={newStop.location}
                 onChangeText={(text) => setNewStop({ ...newStop, location: text })}
                 placeholder="Enter stop location"
@@ -606,7 +608,7 @@ const CreatePickDropServiceScreen = () => {
             <View style={styles.inputGroup}>
               <Text style={[styles.label, { color: theme.colors.text }]}>Stop Time</Text>
               <TextInput
-                style={[styles.input, { borderColor: theme.colors.border, color: theme.colors.text }]}
+                style={[styles.input, { borderColor: theme.colors.border, color: theme.colors.text, backgroundColor: theme.colors.inputBackground }]}
                 value={newStop.stop_time}
                 onChangeText={(text) => setNewStop({ ...newStop, stop_time: text })}
                 placeholder="e.g., 10:47 AM"
@@ -615,7 +617,7 @@ const CreatePickDropServiceScreen = () => {
             </View>
             <View style={styles.modalButtons}>
               <TouchableOpacity
-                style={[styles.modalButton, { backgroundColor: '#E0E0E0' }]}
+                style={[styles.modalButton, { backgroundColor: theme.colors.backgroundSecondary }]}
                 onPress={() => {
                   setShowStopModal(false);
                   setNewStop({ location: '', stop_time: '' });
@@ -660,7 +662,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
   },
   backButton: {
     padding: 4,
@@ -685,6 +686,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 12,
     borderRadius: 8,
+    borderWidth: 1,
     marginBottom: 16,
     gap: 8,
   },
@@ -696,6 +698,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
+    borderWidth: 1,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -728,7 +731,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 12,
-    backgroundColor: '#fff',
   },
   inputText: {
     fontSize: 16,
@@ -746,7 +748,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 12,
-    backgroundColor: '#fff',
   },
   priceIcon: {
     marginRight: 8,
@@ -762,7 +763,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 12,
-    backgroundColor: '#fff',
     minWidth: 80,
     justifyContent: 'space-between',
   },
@@ -780,7 +780,6 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderWidth: 2,
-    borderColor: '#7e246c',
     borderRadius: 4,
     alignItems: 'center',
     justifyContent: 'center',
@@ -796,7 +795,6 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     minHeight: 100,
     textAlignVertical: 'top',
-    backgroundColor: '#fff',
   },
   stopItem: {
     flexDirection: 'row',
@@ -804,7 +802,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     padding: 12,
     borderRadius: 8,
-    backgroundColor: '#f5f5f5',
     marginBottom: 8,
   },
   stopInfo: {
@@ -917,6 +914,7 @@ const styles = StyleSheet.create({
 });
 
 export default CreatePickDropServiceScreen;
+
 
 
 

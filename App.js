@@ -2,9 +2,19 @@ import React, { useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { View } from 'react-native';
 import { AuthProvider } from '@/context/AuthContext';
-import { ThemeProvider } from '@/context/ThemeContext';
+import { ThemeProvider, useTheme } from '@/context/ThemeContext';
 import AppNavigator from '@/navigation/AppNavigator';
 import SplashScreen from '@/components/SplashScreen';
+
+const AppContent = () => {
+  const { isDark } = useTheme();
+  return (
+    <>
+      <StatusBar style={isDark ? "light" : "dark"} />
+      <AppNavigator />
+    </>
+  );
+};
 
 export default function App() {
   const [isSplashVisible, setIsSplashVisible] = useState(true);
@@ -25,8 +35,7 @@ export default function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <StatusBar style="auto" />
-        <AppNavigator />
+        <AppContent />
       </AuthProvider>
     </ThemeProvider>
   );
