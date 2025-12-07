@@ -359,8 +359,7 @@ const StoreProfileScreen = () => {
             data={cars}
             renderItem={renderCarItem}
             keyExtractor={(item) => item.id?.toString() || Math.random().toString()}
-            numColumns={2}
-            columnWrapperStyle={styles.carRow}
+            numColumns={1}
             scrollEnabled={false}
             contentContainerStyle={styles.carsList}
           />
@@ -487,12 +486,8 @@ const styles = StyleSheet.create({
   carsList: {
     gap: 16,
   },
-  carRow: {
-    justifyContent: 'space-between',
-    gap: 16,
-  },
   carCard: {
-    flex: 1,
+    width: '100%',
     borderRadius: 12,
     overflow: 'hidden',
     borderWidth: 1,
@@ -501,7 +496,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
-    maxWidth: '48%',
   },
   imageContainer: {
     width: '100%',

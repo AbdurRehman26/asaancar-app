@@ -159,6 +159,7 @@ const PickDropFilterDrawer = ({
 
           <ScrollView
             style={styles.drawerContent}
+            contentContainerStyle={styles.drawerContentContainer}
             showsVerticalScrollIndicator={true}
           >
             {/* Start Location Filter */}
@@ -175,6 +176,7 @@ const PickDropFilterDrawer = ({
                 searchable={true}
                 onSearch={handleLocationSearch}
                 loading={loadingLocations}
+                style={styles.dropdownStyle}
               />
             </View>
 
@@ -192,6 +194,7 @@ const PickDropFilterDrawer = ({
                 searchable={true}
                 onSearch={handleLocationSearch}
                 loading={loadingLocations}
+                style={styles.dropdownStyle}
               />
             </View>
 
@@ -256,7 +259,23 @@ const PickDropFilterDrawer = ({
             <View style={[styles.drawerFooter, { paddingBottom: Math.max(insets.bottom, 16) }]}>
               <TouchableOpacity
                 style={[styles.clearButton, { backgroundColor: '#f0f0f0' }]}
-                onPress={onClearAll}
+                onPress={() => {
+                  // Create empty filters object
+                  const emptyFilters = {
+                    startLocation: '',
+                    endLocation: '',
+                    driverGender: '',
+                    departureTime: '',
+                    departureDate: '',
+                  };
+                  
+                  // Clear filters in parent component
+                  onClearAll();
+                  
+                  // Apply empty filters and close drawer
+                  onApply(emptyFilters);
+                  handleClose();
+                }}
               >
                 <Text style={[styles.clearButtonText, { color: theme.colors.text }]}>
                   Clear All
@@ -307,7 +326,7 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
-    elevation: 5,
+    flexDirection: 'column',
   },
   drawerHeader: {
     flexDirection: 'row',
@@ -326,11 +345,17 @@ const styles = StyleSheet.create({
   },
   drawerContent: {
     flex: 1,
+  },
+  drawerContentContainer: {
     paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 20,
   },
   section: {
-    marginTop: 24,
-    marginBottom: 8,
+    marginBottom: 20,
+  },
+  dropdownStyle: {
+    marginBottom: 0,
   },
   sectionTitle: {
     fontSize: 18,

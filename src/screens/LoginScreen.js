@@ -216,7 +216,7 @@ const LoginScreen = () => {
                 </View>
                 <View style={styles.phoneInputDivider} />
                 <TextInput
-                  style={[styles.phoneInput, { color: theme.colors.text }]}
+                  style={[styles.phoneInput, styles.phoneInputNoBorder, { color: theme.colors.text }]}
                   placeholder="3001234567"
                   placeholderTextColor={theme.colors.placeholder}
                   value={phone}
@@ -281,7 +281,7 @@ const LoginScreen = () => {
                 </View>
                 <View style={styles.phoneInputDivider} />
                 <TextInput
-                  style={[styles.phoneInput, { color: theme.colors.text }]}
+                  style={[styles.phoneInput, styles.phoneInputNoBorder, { color: theme.colors.text }]}
                   placeholder="3001234567"
                   placeholderTextColor={theme.colors.placeholder}
                   value={phone}
@@ -306,7 +306,7 @@ const LoginScreen = () => {
               </View>
               <View style={[styles.inputContainer, { borderColor: theme.colors.border }]}>
                 <TextInput
-                  style={[styles.input, { color: theme.colors.text }]}
+                  style={[styles.input, styles.passwordInput, { color: theme.colors.text }]}
                   placeholder="Enter your password"
                   placeholderTextColor={theme.colors.placeholder}
                   value={password}
@@ -449,7 +449,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginBottom: 8,
     paddingHorizontal: 20,
-    paddingVertical: 4,
+    paddingVertical: 12,
     borderWidth: 1,
     minHeight: 56,
   },
@@ -489,9 +489,19 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 8,
   },
+  phoneInputNoBorder: {
+    borderWidth: 0,
+    outlineStyle: 'none',
+  },
   input: {
     flex: 1,
     fontSize: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 0,
+  },
+  passwordInput: {
+    borderWidth: 0,
+    outlineStyle: 'none',
   },
   inputIcons: {
     flexDirection: 'row',

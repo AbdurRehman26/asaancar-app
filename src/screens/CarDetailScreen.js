@@ -174,7 +174,7 @@ const CarDetailScreen = () => {
             <Image
               source={{ uri: getCarImageUrl(car) }}
               style={styles.carImage}
-              resizeMode="cover"
+              resizeMode="contain"
             />
           </View>
 
@@ -483,6 +483,8 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     overflow: 'hidden',
     backgroundColor: '#e0e0e0',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   carImage: {
     width: '100%',

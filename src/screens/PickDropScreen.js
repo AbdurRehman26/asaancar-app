@@ -378,7 +378,9 @@ const PickDropScreen = () => {
 
                     let scheduleText = '';
                     if (everydayService) {
-                      scheduleText = 'Everyday Service';
+                      scheduleText = departureTime 
+                        ? `Everyday Service at ${formatTime(departureTime)}`
+                        : 'Everyday Service';
                     } else if (departureDate) {
                       scheduleText = `${formatDate(departureDate)}${
                         departureTime ? ` at ${formatTime(departureTime)}` : ''

@@ -29,13 +29,6 @@ const RegisterScreen = () => {
   const [loading, setLoading] = useState(false);
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-  const [showRoleDropdown, setShowRoleDropdown] = useState(false);
-
-  const roles = [
-    { label: 'User', value: 'user' },
-    { label: 'Driver', value: 'driver' },
-    { label: 'Business', value: 'business' },
-  ];
 
   const handleSendOTP = async () => {
     if (!formData.name) {
@@ -100,7 +93,7 @@ const RegisterScreen = () => {
           </View>
           <View style={[styles.inputContainer, { borderColor: theme.colors.border }]}>
             <TextInput
-              style={[styles.input, { color: theme.colors.text }]}
+              style={[styles.input, styles.inputNoBorder, { color: theme.colors.text }]}
               placeholder="Enter your name"
               placeholderTextColor={theme.colors.placeholder}
               value={formData.name}
@@ -122,7 +115,7 @@ const RegisterScreen = () => {
             </View>
             <View style={styles.phoneInputDivider} />
             <TextInput
-              style={[styles.phoneInput, { color: theme.colors.text }]}
+              style={[styles.phoneInput, styles.phoneInputNoBorder, { color: theme.colors.text }]}
               placeholder="3001234567"
               placeholderTextColor={theme.colors.placeholder}
               value={formData.phone}
@@ -141,20 +134,6 @@ const RegisterScreen = () => {
           <Text style={[styles.helperText, { color: theme.colors.textSecondary }]}>
             Enter your 10-digit phone number without the country code
           </Text>
-
-          {/* Role Dropdown */}
-          <View style={styles.labelContainer}>
-            <Text style={[styles.label, { color: theme.colors.text }]}>Role</Text>
-          </View>
-          <TouchableOpacity
-            style={[styles.dropdownContainer, { borderColor: theme.colors.border }]}
-            onPress={() => setShowRoleDropdown(true)}
-          >
-            <Text style={[styles.dropdownText, { color: theme.colors.text }]}>
-              {roles.find((r) => r.value === formData.role)?.label || 'User'}
-            </Text>
-            <Icon name="keyboard-arrow-down" size={24} color={theme.colors.textSecondary} />
-          </TouchableOpacity>
 
           {/* Submit Button */}
           <TouchableOpacity
@@ -184,51 +163,6 @@ const RegisterScreen = () => {
           </View>
         </View>
       </ScrollView>
-
-      {/* Role Dropdown Modal */}
-      <Modal
-        visible={showRoleDropdown}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowRoleDropdown(false)}
-      >
-        <TouchableOpacity
-          style={styles.modalOverlay}
-          activeOpacity={1}
-          onPress={() => setShowRoleDropdown(false)}
-        >
-          <View style={[styles.dropdownModal, { backgroundColor: theme.colors.background }]}>
-            {roles.map((role) => (
-              <TouchableOpacity
-                key={role.value}
-                style={[
-                  styles.dropdownOption,
-                  formData.role === role.value && {
-                    backgroundColor: theme.colors.primary + '20',
-                  },
-                ]}
-                onPress={() => {
-                  setFormData({ ...formData, role: role.value });
-                  setShowRoleDropdown(false);
-                }}
-              >
-                <Text
-                  style={[
-                    styles.dropdownOptionText,
-                    { color: theme.colors.text },
-                    formData.role === role.value && { color: theme.colors.primary, fontWeight: '600' },
-                  ]}
-                >
-                  {role.label}
-                </Text>
-                {formData.role === role.value && (
-                  <Icon name="check" size={20} color={theme.colors.primary} />
-                )}
-              </TouchableOpacity>
-            ))}
-          </View>
-        </TouchableOpacity>
-      </Modal>
 
       <ErrorModal
         visible={showErrorModal}
@@ -332,9 +266,17 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 16,
   },
+  phoneInputNoBorder: {
+    borderWidth: 0,
+    outlineStyle: 'none',
+  },
   input: {
     flex: 1,
     fontSize: 16,
+  },
+  inputNoBorder: {
+    borderWidth: 0,
+    outlineStyle: 'none',
   },
   inputIcons: {
     flexDirection: 'row',
@@ -344,20 +286,6 @@ const styles = StyleSheet.create({
   helperText: {
     fontSize: 12,
     marginBottom: 16,
-  },
-  dropdownContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    marginBottom: 16,
-    paddingHorizontal: 16,
-    borderWidth: 1,
-    height: 50,
-  },
-  dropdownText: {
-    fontSize: 16,
   },
   button: {
     paddingVertical: 16,
@@ -384,28 +312,6 @@ const styles = StyleSheet.create({
   link: {
     fontSize: 14,
     fontWeight: '600',
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  dropdownModal: {
-    width: '80%',
-    borderRadius: 12,
-    padding: 8,
-    maxHeight: 300,
-  },
-  dropdownOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 16,
-    borderRadius: 8,
-  },
-  dropdownOptionText: {
-    fontSize: 16,
   },
 });
 

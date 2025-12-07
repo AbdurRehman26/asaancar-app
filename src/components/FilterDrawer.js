@@ -171,6 +171,7 @@ const FilterDrawer = ({ visible, onClose, filters, onFilterChange, onClearAll, o
 
           <ScrollView
             style={styles.drawerContent}
+            contentContainerStyle={styles.drawerContentContainer}
             showsVerticalScrollIndicator={true}
           >
             {/* Brand Filter */}
@@ -374,9 +375,27 @@ const FilterDrawer = ({ visible, onClose, filters, onFilterChange, onClearAll, o
               <TouchableOpacity
                 style={[styles.clearButton, { backgroundColor: '#f0f0f0' }]}
                 onPress={() => {
+                  // Reset slider values
                   setMinPriceValue(MIN_PRICE);
                   setMaxPriceValue(MAX_PRICE);
+                  
+                  // Create empty filters object
+                  const emptyFilters = {
+                    brand: '',
+                    type: '',
+                    transmission: '',
+                    fuelType: '',
+                    minSeats: '',
+                    minPrice: '',
+                    maxPrice: '',
+                  };
+                  
+                  // Clear filters in parent component
                   onClearAll();
+                  
+                  // Apply empty filters and close drawer
+                  onApply(emptyFilters);
+                  handleClose();
                 }}
               >
                 <Text style={[styles.clearButtonText, { color: theme.colors.text }]}>
@@ -444,6 +463,7 @@ const styles = StyleSheet.create({
     zIndex: 1000,
     position: 'absolute',
     bottom: 0,
+    flexDirection: 'column',
   },
   drawerHeader: {
     flexDirection: 'row',
@@ -462,11 +482,14 @@ const styles = StyleSheet.create({
   },
   drawerContent: {
     flex: 1,
+  },
+  drawerContentContainer: {
     paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 20,
   },
   section: {
-    marginTop: 24,
-    marginBottom: 8,
+    marginBottom: 20,
   },
   sectionTitle: {
     fontSize: 18,
