@@ -18,32 +18,41 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import ErrorModal from '@/components/ErrorModal';
 import SuccessModal from '@/components/SuccessModal';
 import ConfirmModal from '@/components/ConfirmModal';
+import { useAuth } from '@/context/AuthContext';
 
 const MyCarsScreen = () => {
   const navigation = useNavigation();
   const { theme } = useTheme();
+  const { user, loading: authLoading } = useAuth(); // Get user and loading state
   const [cars, setCars] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [showErrorModal, setShowErrorModal] = useState(false);
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [carToDelete, setCarToDelete] = useState(null);
 
   useFocusEffect(
     useCallback(() => {
-      loadCars();
-    }, [])
+      if (user) {
+        loadCars();
+      } else if (!authLoading) {
+        setLoading(false); // Stop loading if not logged in
+        setCars([]);
+      }
+    }, [user, authLoading])
   );
 
   const loadCars = async () => {
+    if (!user) return; // Double check
     try {
       setLoading(true);
       const data = await carAPI.getMyCars({ per_page: 50 });
+      // ... same logic ...
       let carsData = [];
-      
+
       // Handle different response structures
       if (data) {
         if (Array.isArray(data.data)) {
@@ -56,11 +65,16 @@ const MyCarsScreen = () => {
           carsData = data.data.data;
         }
       }
-      
+
       setCars(carsData);
     } catch (error) {
       console.error('Error loading my cars:', error);
-      setErrorMessage('Failed to load your cars');
+      if (error.response && error.response.status === 401) {
+        // Token might be expired or invalid
+        setErrorMessage('Session expired. Please login again.');
+      } else {
+        setErrorMessage('Failed to load your cars');
+      }
       setShowErrorModal(true);
       setCars([]);
     } finally {
@@ -206,10 +220,36 @@ const MyCarsScreen = () => {
     </View>
   );
 
-  if (loading && !refreshing) {
+  if (authLoading || (loading && !refreshing && user)) {
     return (
       <SafeAreaView style={[styles.loadingContainer, { backgroundColor: theme.colors.backgroundTertiary }]} edges={['top']}>
         <ActivityIndicator size="large" color={theme.colors.primary} />
+      </SafeAreaView>
+    );
+  }
+
+  if (!user) {
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.backgroundTertiary }]} edges={['top']}>
+        <View style={[styles.header, { backgroundColor: theme.colors.cardBackground }]}>
+          <TouchableOpacity onPress={() => navigation.navigate('SettingsMain')} style={styles.backButton}>
+            <Icon name="arrow-back" size={24} color={theme.colors.text} />
+          </TouchableOpacity>
+          <View style={{ flex: 1 }} />
+        </View>
+        <View style={styles.emptyContainer}>
+          <Icon name="lock" size={64} color={theme.colors.border} />
+          <Text style={[styles.emptyText, { color: theme.colors.text }]}>Login Required</Text>
+          <Text style={[styles.emptySubtext, { color: theme.colors.textSecondary, marginBottom: 20 }]}>
+            Please login to manage your cars
+          </Text>
+          <TouchableOpacity
+            style={[styles.addButton, { backgroundColor: theme.colors.primary }]}
+            onPress={() => navigation.navigate('Login')}
+          >
+            <Text style={styles.addButtonText}>Login Now</Text>
+          </TouchableOpacity>
+        </View>
       </SafeAreaView>
     );
   }
@@ -220,7 +260,7 @@ const MyCarsScreen = () => {
         <TouchableOpacity onPress={() => navigation.navigate('SettingsMain')} style={styles.backButton}>
           <Icon name="arrow-back" size={24} color={theme.colors.text} />
         </TouchableOpacity>
-        <View style={{ flex: 1 }} />
+        <Text style={[styles.headerTitle, { color: theme.colors.text }]}>My Cars</Text>
         <TouchableOpacity
           style={[styles.addButton, { backgroundColor: theme.colors.primary }]}
           onPress={() => {
@@ -235,6 +275,7 @@ const MyCarsScreen = () => {
       <FlatList
         data={cars}
         renderItem={renderCarItem}
+        // ... rest of list ...
         keyExtractor={(item) => item.id?.toString() || Math.random().toString()}
         contentContainerStyle={styles.listContainer}
         refreshControl={
@@ -328,6 +369,7 @@ const styles = StyleSheet.create({
   },
   listContainer: {
     padding: 16,
+    flexGrow: 1,
   },
   carCard: {
     borderRadius: 12,

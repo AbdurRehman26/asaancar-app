@@ -10,7 +10,7 @@ import {
   Modal,
   Platform,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { useTheme } from '@/context/ThemeContext';
 import { pickDropAPI } from '@/services/api';
 import Icon from 'react-native-vector-icons/MaterialIcons';
@@ -20,6 +20,9 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 
 const CreatePickDropServiceScreen = () => {
   const navigation = useNavigation();
+  const route = useRoute();
+  const { service } = route.params || {};
+  const isEditing = !!service;
   const { theme } = useTheme();
   const [loading, setLoading] = useState(false);
   const [showErrorModal, setShowErrorModal] = useState(false);
@@ -30,11 +33,89 @@ const CreatePickDropServiceScreen = () => {
   // Route Information
   const [startArea, setStartArea] = useState('');
   const [endArea, setEndArea] = useState('');
-  const [everydayService, setEverydayService] = useState(false);
+  const [scheduleType, setScheduleType] = useState('once'); // 'once', 'everyday', 'weekday', 'weekends', 'custom'
+  const [selectedDays, setSelectedDays] = useState([]);
+  const [isRoundTrip, setIsRoundTrip] = useState(false);
   const [departureDate, setDepartureDate] = useState(new Date());
   const [departureTime, setDepartureTime] = useState(new Date());
+  const [returnTime, setReturnTime] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
+  const [showReturnTimePicker, setShowReturnTimePicker] = useState(false);
+
+  // Contact Information
+  const [contactName, setContactName] = useState('');
+  const [contactPhone, setContactPhone] = useState('');
+
+  // Initialize form with service data if editing
+  React.useEffect(() => {
+    if (service) {
+      setStartArea(service.start_area || service.start_location || '');
+      setEndArea(service.end_area || service.end_location || '');
+
+      // Map legacy boolean to schedule type if needed
+      if (service.schedule_type) {
+        setScheduleType(service.schedule_type);
+      } else if (service.everyday_service || service.is_everyday) {
+        setScheduleType('everyday');
+      } else {
+        setScheduleType('once');
+      }
+
+      if (service.selected_days && Array.isArray(service.selected_days)) {
+        setSelectedDays(service.selected_days);
+      } else if (service.schedule_days && Array.isArray(service.schedule_days)) {
+        setSelectedDays(service.schedule_days);
+      }
+
+      setIsRoundTrip(service.is_roundtrip || false);
+
+      if (service.departure_date) {
+        setDepartureDate(new Date(service.departure_date));
+      }
+
+      // Parse time if string "HH:MM"
+      const parseTime = (timeStr) => {
+        if (!timeStr) return new Date();
+        if (typeof timeStr === 'string' && timeStr.includes(':')) {
+          const [hours, minutes] = timeStr.split(':');
+          const date = new Date();
+          date.setHours(parseInt(hours), parseInt(minutes));
+          return date;
+        }
+        return new Date(timeStr);
+      };
+
+      if (service.departure_time) {
+        setDepartureTime(parseTime(service.departure_time));
+      }
+
+      if (service.return_time) {
+        setReturnTime(parseTime(service.return_time));
+      }
+
+      setContactName(service.contact_name || '');
+      setContactPhone(service.contact_number || '');
+
+      setAvailableSpaces(service.available_spaces?.toString() || '1');
+      setDriverGender(service.driver_gender || 'male');
+      setPricePerPerson(service.price_per_person?.toString() || '');
+      setCurrency(service.currency || 'PKR');
+      setActive(service.active !== undefined ? service.active : true);
+      setDescription(service.description || '');
+
+      setCarBrand(service.car_brand || '');
+      setCarModel(service.car_model || '');
+      setCarColor(service.car_color || '');
+      setSeats(service.seats?.toString() || '');
+      setTransmission(service.transmission || '');
+      setFuelType(service.fuel_type || '');
+
+      if (service.stops && Array.isArray(service.stops)) {
+        setStops(service.stops.map(s => ({ ...s, id: s.id || Date.now() + Math.random() })));
+      }
+    }
+  }, [service]);
 
   // Service Details
   const [availableSpaces, setAvailableSpaces] = useState('1');
@@ -114,14 +195,26 @@ const CreatePickDropServiceScreen = () => {
       return;
     }
 
-    if (!everydayService && !departureDate) {
-      setErrorMessage('Please select departure date or enable everyday service');
+    if (scheduleType === 'once' && !departureDate) {
+      setErrorMessage('Please select departure date');
+      setShowErrorModal(true);
+      return;
+    }
+
+    if (scheduleType === 'custom' && selectedDays.length === 0) {
+      setErrorMessage('Please select at least one day for custom schedule');
       setShowErrorModal(true);
       return;
     }
 
     if (!departureTime) {
       setErrorMessage('Please select departure time');
+      setShowErrorModal(true);
+      return;
+    }
+
+    if (isRoundTrip && !returnTime) {
+      setErrorMessage('Please select return time for round trip');
       setShowErrorModal(true);
       return;
     }
@@ -143,9 +236,14 @@ const CreatePickDropServiceScreen = () => {
       const serviceData = {
         start_area: startArea,
         end_area: endArea,
-        everyday_service: everydayService,
-        departure_date: everydayService ? null : formatDate(departureDate),
+        schedule_type: scheduleType,
+        selected_days: scheduleType === 'custom' ? selectedDays : null,
+        is_roundtrip: isRoundTrip,
+        departure_date: scheduleType === 'once' ? formatDate(departureDate) : null,
         departure_time: formatTime(departureTime),
+        return_time: isRoundTrip ? formatTime(returnTime) : null,
+        contact_name: contactName || null,
+        contact_number: contactPhone || null,
         available_spaces: parseInt(availableSpaces),
         driver_gender: driverGender.toLowerCase(),
         price_per_person: pricePerPerson ? parseFloat(pricePerPerson) : null,
@@ -164,10 +262,15 @@ const CreatePickDropServiceScreen = () => {
         })) : null,
       };
 
-      await pickDropAPI.createPickAndDropService(serviceData);
-      setSuccessMessage('Service created successfully!');
+      if (isEditing) {
+        await pickDropAPI.updatePickDropService(service.id, serviceData);
+        setSuccessMessage('Service updated successfully!');
+      } else {
+        await pickDropAPI.createPickAndDropService(serviceData);
+        setSuccessMessage('Service created successfully!');
+      }
       setShowSuccessModal(true);
-      
+
       // Navigate back after success
       setTimeout(() => {
         navigation.goBack();
@@ -238,6 +341,26 @@ const CreatePickDropServiceScreen = () => {
     </View>
   );
 
+  const scheduleOptions = [
+    { id: 'once', label: 'One-time' },
+    { id: 'everyday', label: 'Everyday' },
+    { id: 'weekday', label: 'Weekdays' },
+    { id: 'weekends', label: 'Weekends' },
+    { id: 'custom', label: 'Custom' },
+  ];
+
+  const daysOfWeek = [
+    'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'
+  ];
+
+  const toggleDay = (day) => {
+    if (selectedDays.includes(day)) {
+      setSelectedDays(selectedDays.filter(d => d !== day));
+    } else {
+      setSelectedDays([...selectedDays, day]);
+    }
+  };
+
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.backgroundTertiary }]}>
       <View style={[styles.header, { backgroundColor: theme.colors.cardBackground, borderBottomColor: theme.colors.border }]}>
@@ -245,12 +368,12 @@ const CreatePickDropServiceScreen = () => {
           <Icon name="arrow-back" size={24} color={theme.colors.text} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: theme.colors.text }]}>
-          Create Pick & Drop Service
+          {isEditing ? 'Edit Pick & Drop Service' : 'Create Pick & Drop Service'}
         </Text>
         <View style={styles.placeholder} />
       </View>
 
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Info Banner */}
         <View style={[styles.infoBanner, { backgroundColor: theme.colors.backgroundSecondary, borderColor: theme.colors.border }]}>
           <Icon name="info" size={20} color={theme.colors.primary} />
@@ -262,45 +385,95 @@ const CreatePickDropServiceScreen = () => {
         {/* Route Information */}
         {renderSection('Route Information', 'location-on', (
           <>
-            <View style={styles.inputGroup}>
-              <Text style={[styles.label, { color: theme.colors.text }]}>Start Area *</Text>
-              <TouchableOpacity
-                style={[styles.input, { borderColor: theme.colors.border, backgroundColor: theme.colors.inputBackground }]}
-                onPress={() => setShowStartAreaDropdown(true)}
-              >
-                <Text style={[styles.inputText, { color: startArea ? theme.colors.text : theme.colors.placeholder }]}>
-                  {startArea || 'Search or select area...'}
-                </Text>
-                <Icon name="keyboard-arrow-down" size={24} color={theme.colors.textSecondary} />
-              </TouchableOpacity>
+            <View style={styles.row}>
+              <View style={[styles.inputGroup, styles.flex1, { marginRight: 8 }]}>
+                <Text style={[styles.label, { color: theme.colors.text }]}>Start Area *</Text>
+                <TouchableOpacity
+                  style={[styles.input, { borderColor: theme.colors.border, backgroundColor: theme.colors.inputBackground }]}
+                  onPress={() => setShowStartAreaDropdown(true)}
+                >
+                  <Text style={[styles.inputText, { color: startArea ? theme.colors.text : theme.colors.placeholder }]} numberOfLines={1}>
+                    {startArea || 'Search area...'}
+                  </Text>
+                  <Icon name="keyboard-arrow-down" size={20} color={theme.colors.textSecondary} />
+                </TouchableOpacity>
+              </View>
+
+              <View style={[styles.inputGroup, styles.flex1, { marginLeft: 8 }]}>
+                <Text style={[styles.label, { color: theme.colors.text }]}>End Area *</Text>
+                <TouchableOpacity
+                  style={[styles.input, { borderColor: theme.colors.border, backgroundColor: theme.colors.inputBackground }]}
+                  onPress={() => setShowEndAreaDropdown(true)}
+                >
+                  <Text style={[styles.inputText, { color: endArea ? theme.colors.text : theme.colors.placeholder }]} numberOfLines={1}>
+                    {endArea || 'Search area...'}
+                  </Text>
+                  <Icon name="keyboard-arrow-down" size={20} color={theme.colors.textSecondary} />
+                </TouchableOpacity>
+              </View>
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={[styles.label, { color: theme.colors.text }]}>End Area *</Text>
-              <TouchableOpacity
-                style={[styles.input, { borderColor: theme.colors.border, backgroundColor: theme.colors.inputBackground }]}
-                onPress={() => setShowEndAreaDropdown(true)}
-              >
-                <Text style={[styles.inputText, { color: endArea ? theme.colors.text : theme.colors.placeholder }]}>
-                  {endArea || 'Search or select area...'}
-                </Text>
-                <Icon name="keyboard-arrow-down" size={24} color={theme.colors.textSecondary} />
-              </TouchableOpacity>
+              <Text style={[styles.label, { color: theme.colors.text }]}>Schedule Type</Text>
+              <View style={styles.scheduleContainer}>
+                {scheduleOptions.map((opt) => (
+                  <TouchableOpacity
+                    key={opt.id}
+                    style={[
+                      styles.scheduleButton,
+                      { borderColor: theme.colors.border },
+                      scheduleType === opt.id && { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary }
+                    ]}
+                    onPress={() => setScheduleType(opt.id)}
+                  >
+                    <Text style={[
+                      styles.scheduleButtonText,
+                      { color: theme.colors.textSecondary },
+                      scheduleType === opt.id && { color: '#fff', fontWeight: '600' }
+                    ]}>{opt.label}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
             </View>
+
+            {scheduleType === 'custom' && (
+              <View style={styles.inputGroup}>
+                <Text style={[styles.label, { color: theme.colors.text }]}>Select Days</Text>
+                <View style={[styles.scheduleContainer, { gap: 6 }]}>
+                  {daysOfWeek.map((day) => (
+                    <TouchableOpacity
+                      key={day}
+                      style={[
+                        styles.dayButton,
+                        { borderColor: theme.colors.border },
+                        selectedDays.includes(day) && { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary }
+                      ]}
+                      onPress={() => toggleDay(day)}
+                    >
+                      <Text style={[
+                        styles.dayButtonText,
+                        { color: theme.colors.textSecondary },
+                        selectedDays.includes(day) && { color: '#fff', fontWeight: 'bold' }
+                      ]}>{day}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+            )}
 
             <TouchableOpacity
               style={styles.checkboxRow}
-              onPress={() => setEverydayService(!everydayService)}
+              onPress={() => setIsRoundTrip(!isRoundTrip)}
             >
-              <View style={[styles.checkbox, { borderColor: theme.colors.primary }, everydayService && { backgroundColor: theme.colors.primary }]}>
-                {everydayService && <Icon name="check" size={16} color="#fff" />}
+              <View style={[styles.checkbox, { borderColor: theme.colors.primary }, isRoundTrip && { backgroundColor: theme.colors.primary }]}>
+                {isRoundTrip && <Icon name="check" size={16} color="#fff" />}
               </View>
               <Text style={[styles.checkboxLabel, { color: theme.colors.text }]}>
-                Everyday Service (No specific date)
+                Round Trip (Return on the same day/schedule)
               </Text>
             </TouchableOpacity>
 
-            {!everydayService && (
+            {scheduleType === 'once' && (
               <View style={styles.inputGroup}>
                 <Text style={[styles.label, { color: theme.colors.text }]}>Departure Date *</Text>
                 <TouchableOpacity
@@ -327,70 +500,119 @@ const CreatePickDropServiceScreen = () => {
                 <Icon name="access-time" size={20} color={theme.colors.textSecondary} />
               </TouchableOpacity>
             </View>
+
+            {isRoundTrip && (
+              <View style={styles.inputGroup}>
+                <Text style={[styles.label, { color: theme.colors.text }]}>Return Time *</Text>
+                <TouchableOpacity
+                  style={[styles.input, { borderColor: theme.colors.border, backgroundColor: theme.colors.inputBackground }]}
+                  onPress={() => setShowReturnTimePicker(true)}
+                >
+                  <Text style={[styles.inputText, { color: theme.colors.text }]}>
+                    {formatTime(returnTime)}
+                  </Text>
+                  <Icon name="access-time" size={20} color={theme.colors.textSecondary} />
+                </TouchableOpacity>
+              </View>
+            )}
+          </>
+        ))}
+
+        {/* Contact Information (Optional) */}
+        {renderSection('Contact Information (Optional)', 'contact-phone', (
+          <>
+            <Text style={[styles.helperText, { color: theme.colors.textSecondary, marginBottom: 12 }]}>
+              If provided, these will be used as contact information. Otherwise, your account information will be used.
+            </Text>
+            <View style={styles.row}>
+              <View style={[styles.inputGroup, styles.flex1, { marginRight: 8 }]}>
+                <Text style={[styles.label, { color: theme.colors.text }]}>Contact Name</Text>
+                <TextInput
+                  style={[styles.input, { borderColor: theme.colors.border, color: theme.colors.text, backgroundColor: theme.colors.inputBackground }]}
+                  value={contactName}
+                  onChangeText={setContactName}
+                  placeholder="Name (Optional)"
+                  placeholderTextColor={theme.colors.placeholder}
+                />
+              </View>
+              <View style={[styles.inputGroup, styles.flex1, { marginLeft: 8 }]}>
+                <Text style={[styles.label, { color: theme.colors.text }]}>Contact Number</Text>
+                <TextInput
+                  style={[styles.input, { borderColor: theme.colors.border, color: theme.colors.text, backgroundColor: theme.colors.inputBackground }]}
+                  value={contactPhone}
+                  onChangeText={setContactPhone}
+                  keyboardType="phone-pad"
+                  placeholder="Number (Optional)"
+                  placeholderTextColor={theme.colors.placeholder}
+                />
+              </View>
+            </View>
           </>
         ))}
 
         {/* Service Details */}
         {renderSection('Service Details', 'group', (
           <>
-            <View style={styles.inputGroup}>
-              <Text style={[styles.label, { color: theme.colors.text }]}>Available Spaces *</Text>
-              <TextInput
-                style={[styles.input, { borderColor: theme.colors.border, color: theme.colors.text, backgroundColor: theme.colors.inputBackground }]}
-                value={availableSpaces}
-                onChangeText={setAvailableSpaces}
-                keyboardType="numeric"
-                placeholder="1"
-                placeholderTextColor={theme.colors.placeholder}
-              />
+            <View style={styles.row}>
+              <View style={[styles.inputGroup, styles.flex1, { marginRight: 8 }]}>
+                <Text style={[styles.label, { color: theme.colors.text }]}>Available Spaces *</Text>
+                <TextInput
+                  style={[styles.input, { borderColor: theme.colors.border, color: theme.colors.text, backgroundColor: theme.colors.inputBackground }]}
+                  value={availableSpaces}
+                  onChangeText={setAvailableSpaces}
+                  keyboardType="numeric"
+                  placeholder="1"
+                  placeholderTextColor={theme.colors.placeholder}
+                />
+              </View>
+              <View style={[styles.inputGroup, styles.flex1, { marginLeft: 8 }]}>
+                <Text style={[styles.label, { color: theme.colors.text }]}>Driver Gender *</Text>
+                <TouchableOpacity
+                  style={[styles.input, { borderColor: theme.colors.border, backgroundColor: theme.colors.inputBackground }]}
+                  onPress={() => setShowDriverGenderDropdown(true)}
+                >
+                  <Text style={[styles.inputText, { color: theme.colors.text }]}>
+                    {driverGender.charAt(0).toUpperCase() + driverGender.slice(1)}
+                  </Text>
+                  <Icon name="keyboard-arrow-down" size={20} color={theme.colors.textSecondary} />
+                </TouchableOpacity>
+              </View>
             </View>
 
-            <View style={styles.inputGroup}>
-              <Text style={[styles.label, { color: theme.colors.text }]}>Driver Gender *</Text>
-              <TouchableOpacity
-                style={[styles.input, { borderColor: theme.colors.border, backgroundColor: theme.colors.inputBackground }]}
-                onPress={() => setShowDriverGenderDropdown(true)}
-              >
-                <Text style={[styles.inputText, { color: theme.colors.text }]}>
-                  {driverGender.charAt(0).toUpperCase() + driverGender.slice(1)}
-                </Text>
-                <Icon name="keyboard-arrow-down" size={24} color={theme.colors.textSecondary} />
-              </TouchableOpacity>
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={[styles.label, { color: theme.colors.text }]}>Price Per Person</Text>
-              <View style={styles.priceRow}>
-                <View style={[styles.priceInput, { borderColor: theme.colors.border, backgroundColor: theme.colors.inputBackground }]}>
-                  <Icon name="lock" size={16} color={theme.colors.textSecondary} style={styles.priceIcon} />
+            <View style={styles.row}>
+              <View style={[styles.inputGroup, styles.flex1, { marginRight: 8 }]}>
+                <Text style={[styles.label, { color: theme.colors.text }]}>Price Per Person</Text>
+                <View style={[styles.priceRow, { backgroundColor: theme.colors.inputBackground, borderColor: theme.colors.border, borderWidth: 1, borderRadius: 8 }]}>
                   <TextInput
-                    style={[styles.priceInputText, { color: theme.colors.text }]}
+                    style={[styles.priceInputText, { color: theme.colors.text, flex: 1, padding: 12 }]}
                     value={pricePerPerson}
                     onChangeText={setPricePerPerson}
                     keyboardType="decimal-pad"
                     placeholder="0.00"
                     placeholderTextColor={theme.colors.placeholder}
                   />
+                  <View style={{ width: 1, backgroundColor: theme.colors.border, height: '60%' }} />
+                  <TouchableOpacity
+                    style={[styles.currencyButton]}
+                    onPress={() => setShowCurrencyDropdown(true)}
+                  >
+                    <Text style={[styles.currencyText, { color: theme.colors.text }]}>{currency}</Text>
+                    <Icon name="keyboard-arrow-down" size={20} color={theme.colors.textSecondary} />
+                  </TouchableOpacity>
                 </View>
+              </View>
+
+              <View style={[styles.inputGroup, { marginLeft: 8, justifyContent: 'center' }]}>
+                <Text style={[styles.label, { color: theme.colors.text }]}>Active</Text>
                 <TouchableOpacity
-                  style={[styles.currencyButton, { borderColor: theme.colors.border, backgroundColor: theme.colors.inputBackground }]}
-                  onPress={() => setShowCurrencyDropdown(true)}
+                  onPress={() => setActive(!active)}
                 >
-                  <Text style={[styles.currencyText, { color: theme.colors.text }]}>{currency}</Text>
-                  <Icon name="keyboard-arrow-down" size={20} color={theme.colors.textSecondary} />
+                  <View style={[styles.checkbox, { borderColor: theme.colors.primary, width: 28, height: 28 }, active && { backgroundColor: theme.colors.primary }]}>
+                    {active && <Icon name="check" size={18} color="#fff" />}
+                  </View>
                 </TouchableOpacity>
               </View>
             </View>
-
-            <TouchableOpacity
-              style={styles.checkboxRow}
-              onPress={() => setActive(!active)}
-            >
-              <View style={[styles.checkbox, { borderColor: theme.colors.primary }, active && { backgroundColor: theme.colors.primary }]}>
-                {active && <Icon name="check" size={16} color="#fff" />}
-              </View>
-              <Text style={[styles.checkboxLabel, { color: theme.colors.text }]}>Active</Text>
-            </TouchableOpacity>
 
             <View style={styles.inputGroup}>
               <Text style={[styles.label, { color: theme.colors.text }]}>Description</Text>
@@ -410,26 +632,27 @@ const CreatePickDropServiceScreen = () => {
         {/* Car Details (Optional) */}
         {renderSection('Car Details (Optional)', 'directions-car', (
           <>
-            <View style={styles.inputGroup}>
-              <Text style={[styles.label, { color: theme.colors.text }]}>Car Brand</Text>
-              <TextInput
-                style={[styles.input, { borderColor: theme.colors.border, color: theme.colors.text, backgroundColor: theme.colors.inputBackground }]}
-                value={carBrand}
-                onChangeText={setCarBrand}
-                placeholder="Enter car brand"
-                placeholderTextColor={theme.colors.placeholder}
-              />
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={[styles.label, { color: theme.colors.text }]}>Car Model</Text>
-              <TextInput
-                style={[styles.input, { borderColor: theme.colors.border, color: theme.colors.text, backgroundColor: theme.colors.inputBackground }]}
-                value={carModel}
-                onChangeText={setCarModel}
-                placeholder="Enter car model"
-                placeholderTextColor={theme.colors.placeholder}
-              />
+            <View style={styles.row}>
+              <View style={[styles.inputGroup, styles.flex1, { marginRight: 8 }]}>
+                <Text style={[styles.label, { color: theme.colors.text }]}>Car Brand</Text>
+                <TextInput
+                  style={[styles.input, { borderColor: theme.colors.border, color: theme.colors.text, backgroundColor: theme.colors.inputBackground }]}
+                  value={carBrand}
+                  onChangeText={setCarBrand}
+                  placeholder="Enter car brand"
+                  placeholderTextColor={theme.colors.placeholder}
+                />
+              </View>
+              <View style={[styles.inputGroup, styles.flex1, { marginLeft: 8 }]}>
+                <Text style={[styles.label, { color: theme.colors.text }]}>Car Model</Text>
+                <TextInput
+                  style={[styles.input, { borderColor: theme.colors.border, color: theme.colors.text, backgroundColor: theme.colors.inputBackground }]}
+                  value={carModel}
+                  onChangeText={setCarModel}
+                  placeholder="Enter car model"
+                  placeholderTextColor={theme.colors.placeholder}
+                />
+              </View>
             </View>
 
             <View style={styles.inputGroup}>
@@ -443,42 +666,44 @@ const CreatePickDropServiceScreen = () => {
               />
             </View>
 
-            <View style={styles.inputGroup}>
-              <Text style={[styles.label, { color: theme.colors.text }]}>Seats</Text>
-              <TextInput
-                style={[styles.input, { borderColor: theme.colors.border, color: theme.colors.text, backgroundColor: theme.colors.inputBackground }]}
-                value={seats}
-                onChangeText={setSeats}
-                keyboardType="numeric"
-                placeholder="Enter number of seats"
-                placeholderTextColor={theme.colors.placeholder}
-              />
-            </View>
+            <View style={styles.row}>
+              <View style={[styles.inputGroup, { width: '30%', marginRight: 8 }]}>
+                <Text style={[styles.label, { color: theme.colors.text }]}>Seats</Text>
+                <TextInput
+                  style={[styles.input, { borderColor: theme.colors.border, color: theme.colors.text, backgroundColor: theme.colors.inputBackground }]}
+                  value={seats}
+                  onChangeText={setSeats}
+                  keyboardType="numeric"
+                  placeholder="4"
+                  placeholderTextColor={theme.colors.placeholder}
+                />
+              </View>
 
-            <View style={styles.inputGroup}>
-              <Text style={[styles.label, { color: theme.colors.text }]}>Transmission</Text>
-              <TouchableOpacity
-                style={[styles.input, { borderColor: theme.colors.border, backgroundColor: theme.colors.inputBackground }]}
-                onPress={() => setShowTransmissionDropdown(true)}
-              >
-                <Text style={[styles.inputText, { color: transmission ? theme.colors.text : theme.colors.placeholder }]}>
-                  {transmission || 'Select'}
-                </Text>
-                <Icon name="keyboard-arrow-down" size={24} color={theme.colors.textSecondary} />
-              </TouchableOpacity>
-            </View>
+              <View style={[styles.inputGroup, styles.flex1, { marginRight: 8 }]}>
+                <Text style={[styles.label, { color: theme.colors.text }]}>Transmission</Text>
+                <TouchableOpacity
+                  style={[styles.input, { borderColor: theme.colors.border, backgroundColor: theme.colors.inputBackground }]}
+                  onPress={() => setShowTransmissionDropdown(true)}
+                >
+                  <Text style={[styles.inputText, { color: transmission ? theme.colors.text : theme.colors.placeholder }]} numberOfLines={1}>
+                    {transmission || 'Select'}
+                  </Text>
+                  <Icon name="keyboard-arrow-down" size={20} color={theme.colors.textSecondary} />
+                </TouchableOpacity>
+              </View>
 
-            <View style={styles.inputGroup}>
-              <Text style={[styles.label, { color: theme.colors.text }]}>Fuel Type</Text>
-              <TouchableOpacity
-                style={[styles.input, { borderColor: theme.colors.border, backgroundColor: theme.colors.inputBackground }]}
-                onPress={() => setShowFuelTypeDropdown(true)}
-              >
-                <Text style={[styles.inputText, { color: fuelType ? theme.colors.text : theme.colors.placeholder }]}>
-                  {fuelType || 'Select'}
-                </Text>
-                <Icon name="keyboard-arrow-down" size={24} color={theme.colors.textSecondary} />
-              </TouchableOpacity>
+              <View style={[styles.inputGroup, styles.flex1]}>
+                <Text style={[styles.label, { color: theme.colors.text }]}>Fuel Type</Text>
+                <TouchableOpacity
+                  style={[styles.input, { borderColor: theme.colors.border, backgroundColor: theme.colors.inputBackground }]}
+                  onPress={() => setShowFuelTypeDropdown(true)}
+                >
+                  <Text style={[styles.inputText, { color: fuelType ? theme.colors.text : theme.colors.placeholder }]} numberOfLines={1}>
+                    {fuelType || 'Select'}
+                  </Text>
+                  <Icon name="keyboard-arrow-down" size={20} color={theme.colors.textSecondary} />
+                </TouchableOpacity>
+              </View>
             </View>
           </>
         ))}
@@ -487,7 +712,7 @@ const CreatePickDropServiceScreen = () => {
         {renderSection('Stops (Optional)', 'location-on', (
           <>
             {stops.length === 0 ? (
-              <Text style={[styles.infoText, { color: theme.colors.textSecondary }]}>
+              <Text style={[styles.infoText, { color: theme.colors.textSecondary, fontStyle: 'italic', marginBottom: 12 }]}>
                 No stops added. Click "Add Stop" to add intermediate stops.
               </Text>
             ) : (
@@ -510,13 +735,15 @@ const CreatePickDropServiceScreen = () => {
                 </View>
               ))
             )}
-            <TouchableOpacity
-              style={[styles.addStopButton, { backgroundColor: theme.colors.primary }]}
-              onPress={() => setShowStopModal(true)}
-            >
-              <Icon name="add" size={20} color="#fff" />
-              <Text style={styles.addStopButtonText}>Add Stop</Text>
-            </TouchableOpacity>
+            <View style={{ alignItems: 'flex-end' }}>
+              <TouchableOpacity
+                style={[styles.addStopButton, { backgroundColor: theme.colors.primary }]}
+                onPress={() => setShowStopModal(true)}
+              >
+                <Icon name="add" size={18} color="#fff" />
+                <Text style={styles.addStopButtonText}>Add Stop</Text>
+              </TouchableOpacity>
+            </View>
           </>
         ))}
 
@@ -532,7 +759,9 @@ const CreatePickDropServiceScreen = () => {
             ) : (
               <>
                 <Icon name="description" size={20} color="#fff" />
-                <Text style={styles.createButtonText}>Create Service</Text>
+                <Text style={styles.createButtonText}>
+                  {isEditing ? 'Update Service' : 'Create Service'}
+                </Text>
               </>
             )}
           </TouchableOpacity>
@@ -571,6 +800,22 @@ const CreatePickDropServiceScreen = () => {
         />
       )}
 
+      {/* Date/Time Pickers */}
+      {showDatePicker && (
+        <DateTimePicker
+          value={departureDate}
+          mode="date"
+          display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+          onChange={(event, selectedDate) => {
+            setShowDatePicker(Platform.OS === 'ios');
+            if (selectedDate) {
+              setDepartureDate(selectedDate);
+            }
+          }}
+          minimumDate={new Date()}
+        />
+      )}
+
       {showTimePicker && (
         <DateTimePicker
           value={departureTime}
@@ -580,6 +825,20 @@ const CreatePickDropServiceScreen = () => {
             setShowTimePicker(Platform.OS === 'ios');
             if (selectedTime) {
               setDepartureTime(selectedTime);
+            }
+          }}
+        />
+      )}
+
+      {showReturnTimePicker && (
+        <DateTimePicker
+          value={returnTime}
+          mode="time"
+          display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+          onChange={(event, selectedTime) => {
+            setShowReturnTimePicker(Platform.OS === 'ios');
+            if (selectedTime) {
+              setReturnTime(selectedTime);
             }
           }}
         />
@@ -736,35 +995,50 @@ const styles = StyleSheet.create({
     fontSize: 16,
     flex: 1,
   },
-  priceRow: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  priceInput: {
-    flex: 1,
+  row: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 12,
+    marginBottom: 0, // Inputs have their own margin
   },
-  priceIcon: {
-    marginRight: 8,
-  },
-  priceInputText: {
-    fontSize: 16,
+  flex1: {
     flex: 1,
+  },
+  scheduleContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  scheduleButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    marginBottom: 8,
+  },
+  scheduleButtonText: {
+    fontSize: 14,
+  },
+  dayButton: {
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 20,
+    borderWidth: 1,
+    marginBottom: 4,
+  },
+  dayButtonText: {
+    fontSize: 12,
+  },
+  helperText: {
+    fontSize: 12,
+    lineHeight: 18,
   },
   currencyButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1,
-    borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 12,
-    minWidth: 80,
     justifyContent: 'space-between',
+    minWidth: 70,
   },
   currencyText: {
     fontSize: 16,
@@ -823,6 +1097,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 12,
+    paddingHorizontal: 16,
     borderRadius: 8,
     gap: 8,
     alignSelf: 'flex-end',

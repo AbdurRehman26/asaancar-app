@@ -106,189 +106,198 @@ const ProfileScreen = () => {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.backgroundTertiary }]} edges={['top']}>
+      {/* Header */}
+      <View style={[styles.header, { backgroundColor: theme.colors.cardBackground }]}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+          <Icon name="arrow-back" size={24} color={theme.colors.text} />
+        </TouchableOpacity>
+        <Text style={[styles.headerTitle, { color: theme.colors.text }]}>Profile</Text>
+        <View style={{ width: 28 }} />{/* Spacer for centering */}
+      </View>
+
       <KeyboardAvoidingView
         style={styles.keyboardView}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Personal Information Card */}
-        <View style={[styles.card, { backgroundColor: theme.colors.cardBackground }]}>
-          <Text style={[styles.cardTitle, { color: theme.colors.text }]}>Personal Information</Text>
-          
-          <View style={styles.inputSection}>
-            <Text style={[styles.label, { color: theme.colors.text }]}>Name</Text>
-            <TextInput
+          {/* Personal Information Card */}
+          <View style={[styles.card, { backgroundColor: theme.colors.cardBackground }]}>
+            <Text style={[styles.cardTitle, { color: theme.colors.text }]}>Personal Information</Text>
+
+            <View style={styles.inputSection}>
+              <Text style={[styles.label, { color: theme.colors.text }]}>Name</Text>
+              <TextInput
+                style={[
+                  styles.input,
+                  {
+                    color: theme.colors.text,
+                    borderColor: theme.colors.border,
+                    backgroundColor: theme.colors.inputBackground,
+                  }
+                ]}
+                placeholder="Enter your name"
+                placeholderTextColor={theme.colors.placeholder}
+                value={name}
+                onChangeText={setName}
+              />
+            </View>
+
+            <TouchableOpacity
               style={[
-                styles.input,
-                { 
-                  color: theme.colors.text,
+                styles.saveButton,
+                { backgroundColor: theme.colors.primary },
+                loading && styles.buttonDisabled,
+              ]}
+              onPress={handleSaveProfile}
+              disabled={loading}
+            >
+              {loading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.buttonText}>Save</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+
+          {/* Change Password Card */}
+          <View style={[styles.card, { backgroundColor: theme.colors.cardBackground }]}>
+            <Text style={[styles.cardTitle, { color: theme.colors.text }]}>Change Password</Text>
+
+            {/* Current Password */}
+            <View style={styles.inputSection}>
+              <Text style={[styles.label, { color: theme.colors.text }]}>Current Password</Text>
+              <View style={[
+                styles.passwordInputContainer,
+                {
                   borderColor: theme.colors.border,
                   backgroundColor: theme.colors.inputBackground,
                 }
+              ]}>
+                <TextInput
+                  style={[styles.passwordInput, { color: theme.colors.text }]}
+                  placeholder="Enter your current password"
+                  placeholderTextColor={theme.colors.placeholder}
+                  value={currentPassword}
+                  onChangeText={setCurrentPassword}
+                  secureTextEntry={!showCurrentPassword}
+                  autoCapitalize="none"
+                />
+                <View style={styles.passwordIcons}>
+                  <TouchableOpacity
+                    onPress={() => setShowCurrentPassword(!showCurrentPassword)}
+                    style={styles.iconButton}
+                  >
+                    <Icon
+                      name={showCurrentPassword ? 'visibility' : 'visibility-off'}
+                      size={20}
+                      color={theme.colors.textSecondary}
+                    />
+                  </TouchableOpacity>
+                  <Icon name="lock" size={16} color={theme.colors.textSecondary} />
+                </View>
+              </View>
+            </View>
+
+            {/* New Password */}
+            <View style={styles.inputSection}>
+              <Text style={[styles.label, { color: theme.colors.text }]}>New Password</Text>
+              <View style={[
+                styles.passwordInputContainer,
+                {
+                  borderColor: theme.colors.border,
+                  backgroundColor: theme.colors.inputBackground,
+                }
+              ]}>
+                <TextInput
+                  style={[styles.passwordInput, { color: theme.colors.text }]}
+                  placeholder="New password"
+                  placeholderTextColor={theme.colors.placeholder}
+                  value={newPassword}
+                  onChangeText={setNewPassword}
+                  secureTextEntry={!showNewPassword}
+                  autoCapitalize="none"
+                />
+                <View style={styles.passwordIcons}>
+                  <TouchableOpacity
+                    onPress={() => setShowNewPassword(!showNewPassword)}
+                    style={styles.iconButton}
+                  >
+                    <Icon
+                      name={showNewPassword ? 'visibility' : 'visibility-off'}
+                      size={20}
+                      color={theme.colors.textSecondary}
+                    />
+                  </TouchableOpacity>
+                  <Icon name="lock" size={16} color={theme.colors.textSecondary} />
+                </View>
+              </View>
+            </View>
+
+            {/* Confirm New Password */}
+            <View style={styles.inputSection}>
+              <Text style={[styles.label, { color: theme.colors.text }]}>Confirm New Password</Text>
+              <View style={[
+                styles.passwordInputContainer,
+                {
+                  borderColor: theme.colors.border,
+                  backgroundColor: theme.colors.inputBackground,
+                }
+              ]}>
+                <TextInput
+                  style={[styles.passwordInput, { color: theme.colors.text }]}
+                  placeholder="Confirm new password"
+                  placeholderTextColor={theme.colors.placeholder}
+                  value={confirmPassword}
+                  onChangeText={setConfirmPassword}
+                  secureTextEntry={!showConfirmPassword}
+                  autoCapitalize="none"
+                />
+                <View style={styles.passwordIcons}>
+                  <TouchableOpacity
+                    onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                    style={styles.iconButton}
+                  >
+                    <Icon
+                      name={showConfirmPassword ? 'visibility' : 'visibility-off'}
+                      size={20}
+                      color={theme.colors.textSecondary}
+                    />
+                  </TouchableOpacity>
+                  <Icon name="lock" size={16} color={theme.colors.textSecondary} />
+                </View>
+              </View>
+            </View>
+
+            <TouchableOpacity
+              style={[
+                styles.changePasswordButton,
+                { backgroundColor: theme.colors.primary },
+                loading && styles.buttonDisabled,
               ]}
-              placeholder="Enter your name"
-              placeholderTextColor={theme.colors.placeholder}
-              value={name}
-              onChangeText={setName}
-            />
+              onPress={handleChangePassword}
+              disabled={loading}
+            >
+              {loading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.buttonText}>Change Password</Text>
+              )}
+            </TouchableOpacity>
           </View>
+        </ScrollView>
 
-          <TouchableOpacity
-            style={[
-              styles.saveButton,
-              { backgroundColor: theme.colors.primary },
-              loading && styles.buttonDisabled,
-            ]}
-            onPress={handleSaveProfile}
-            disabled={loading}
-          >
-            {loading ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={styles.buttonText}>Save</Text>
-            )}
-          </TouchableOpacity>
-        </View>
+        <ErrorModal
+          visible={showErrorModal}
+          onClose={() => setShowErrorModal(false)}
+          message={errorMessage}
+        />
 
-        {/* Change Password Card */}
-        <View style={[styles.card, { backgroundColor: theme.colors.cardBackground }]}>
-          <Text style={[styles.cardTitle, { color: theme.colors.text }]}>Change Password</Text>
-          
-          {/* Current Password */}
-          <View style={styles.inputSection}>
-            <Text style={[styles.label, { color: theme.colors.text }]}>Current Password</Text>
-            <View style={[
-              styles.passwordInputContainer,
-              { 
-                borderColor: theme.colors.border,
-                backgroundColor: theme.colors.inputBackground,
-              }
-            ]}>
-              <TextInput
-                style={[styles.passwordInput, { color: theme.colors.text }]}
-                placeholder="Enter your current password"
-                placeholderTextColor={theme.colors.placeholder}
-                value={currentPassword}
-                onChangeText={setCurrentPassword}
-                secureTextEntry={!showCurrentPassword}
-                autoCapitalize="none"
-              />
-              <View style={styles.passwordIcons}>
-                <TouchableOpacity
-                  onPress={() => setShowCurrentPassword(!showCurrentPassword)}
-                  style={styles.iconButton}
-                >
-                  <Icon
-                    name={showCurrentPassword ? 'visibility' : 'visibility-off'}
-                    size={20}
-                    color={theme.colors.textSecondary}
-                  />
-                </TouchableOpacity>
-                <Icon name="lock" size={16} color={theme.colors.textSecondary} />
-              </View>
-            </View>
-          </View>
-
-          {/* New Password */}
-          <View style={styles.inputSection}>
-            <Text style={[styles.label, { color: theme.colors.text }]}>New Password</Text>
-            <View style={[
-              styles.passwordInputContainer,
-              { 
-                borderColor: theme.colors.border,
-                backgroundColor: theme.colors.inputBackground,
-              }
-            ]}>
-              <TextInput
-                style={[styles.passwordInput, { color: theme.colors.text }]}
-                placeholder="New password"
-                placeholderTextColor={theme.colors.placeholder}
-                value={newPassword}
-                onChangeText={setNewPassword}
-                secureTextEntry={!showNewPassword}
-                autoCapitalize="none"
-              />
-              <View style={styles.passwordIcons}>
-                <TouchableOpacity
-                  onPress={() => setShowNewPassword(!showNewPassword)}
-                  style={styles.iconButton}
-                >
-                  <Icon
-                    name={showNewPassword ? 'visibility' : 'visibility-off'}
-                    size={20}
-                    color={theme.colors.textSecondary}
-                  />
-                </TouchableOpacity>
-                <Icon name="lock" size={16} color={theme.colors.textSecondary} />
-              </View>
-            </View>
-          </View>
-
-          {/* Confirm New Password */}
-          <View style={styles.inputSection}>
-            <Text style={[styles.label, { color: theme.colors.text }]}>Confirm New Password</Text>
-            <View style={[
-              styles.passwordInputContainer,
-              { 
-                borderColor: theme.colors.border,
-                backgroundColor: theme.colors.inputBackground,
-              }
-            ]}>
-              <TextInput
-                style={[styles.passwordInput, { color: theme.colors.text }]}
-                placeholder="Confirm new password"
-                placeholderTextColor={theme.colors.placeholder}
-                value={confirmPassword}
-                onChangeText={setConfirmPassword}
-                secureTextEntry={!showConfirmPassword}
-                autoCapitalize="none"
-              />
-              <View style={styles.passwordIcons}>
-                <TouchableOpacity
-                  onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-                  style={styles.iconButton}
-                >
-                  <Icon
-                    name={showConfirmPassword ? 'visibility' : 'visibility-off'}
-                    size={20}
-                    color={theme.colors.textSecondary}
-                  />
-                </TouchableOpacity>
-                <Icon name="lock" size={16} color={theme.colors.textSecondary} />
-              </View>
-            </View>
-          </View>
-
-          <TouchableOpacity
-            style={[
-              styles.changePasswordButton,
-              { backgroundColor: theme.colors.primary },
-              loading && styles.buttonDisabled,
-            ]}
-            onPress={handleChangePassword}
-            disabled={loading}
-          >
-            {loading ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={styles.buttonText}>Change Password</Text>
-            )}
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
-
-      <ErrorModal
-        visible={showErrorModal}
-        onClose={() => setShowErrorModal(false)}
-        message={errorMessage}
-      />
-
-      <SuccessModal
-        visible={showSuccessModal}
-        onClose={() => setShowSuccessModal(false)}
-        title="Success"
-        message={successMessage}
-      />
+        <SuccessModal
+          visible={showSuccessModal}
+          onClose={() => setShowSuccessModal(false)}
+          title="Success"
+          message={successMessage}
+        />
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -297,6 +306,23 @@ const ProfileScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  backButton: {
+    padding: 4,
+    marginRight: 12,
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    flex: 1,
+    textAlign: 'center',
   },
   keyboardView: {
     flex: 1,

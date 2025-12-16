@@ -30,7 +30,7 @@ export const carAPI = {
   // Get list of cars with filters
   getCars: async (filters = {}) => {
     const params = new URLSearchParams();
-    
+
     // Add pagination
     if (filters.page) {
       params.append('page', filters.page);
@@ -38,7 +38,7 @@ export const carAPI = {
     if (filters.per_page) {
       params.append('per_page', filters.per_page);
     }
-    
+
     // Add filters - convert camelCase to snake_case for API
     const filterMapping = {
       brand: 'brand',
@@ -49,14 +49,14 @@ export const carAPI = {
       minPrice: 'min_price',
       maxPrice: 'max_price',
     };
-    
+
     Object.keys(filters).forEach((key) => {
       if (filters[key] && key !== 'page' && key !== 'per_page') {
         const apiKey = filterMapping[key] || key;
         params.append(apiKey, filters[key]);
       }
     });
-    
+
     const queryString = params.toString();
     const url = `/cars${queryString ? `?${queryString}` : ''}`;
 
@@ -73,7 +73,7 @@ export const carAPI = {
   // Get user's own cars
   getMyCars: async (filters = {}) => {
     const params = new URLSearchParams();
-    
+
     // Add pagination
     if (filters.page) {
       params.append('page', filters.page);
@@ -81,14 +81,14 @@ export const carAPI = {
     if (filters.per_page) {
       params.append('per_page', filters.per_page);
     }
-    
+
     // Add other filters if needed
     Object.keys(filters).forEach((key) => {
       if (filters[key] && key !== 'page' && key !== 'per_page') {
         params.append(key, filters[key]);
       }
     });
-    
+
     const queryString = params.toString();
     const url = queryString ? `/my-cars?${queryString}` : '/my-cars';
     const response = await api.get(url);
@@ -140,7 +140,7 @@ export const bookingAPI = {
   // Get user bookings with pagination
   getBookings: async (filters = {}) => {
     const params = new URLSearchParams();
-    
+
     // Add pagination
     if (filters.page) {
       params.append('page', filters.page);
@@ -148,14 +148,14 @@ export const bookingAPI = {
     if (filters.per_page) {
       params.append('per_page', filters.per_page);
     }
-    
+
     // Add other filters if needed
     Object.keys(filters).forEach((key) => {
       if (filters[key] && key !== 'page' && key !== 'per_page') {
         params.append(key, filters[key]);
       }
     });
-    
+
     const queryString = params.toString();
     const url = queryString ? `/bookings?${queryString}` : '/bookings';
     const response = await api.get(url);
@@ -185,7 +185,7 @@ export const storeAPI = {
   // Get user's own stores
   getMyStores: async (filters = {}) => {
     const params = new URLSearchParams();
-    
+
     // Add pagination
     if (filters.page) {
       params.append('page', filters.page);
@@ -193,14 +193,14 @@ export const storeAPI = {
     if (filters.per_page) {
       params.append('per_page', filters.per_page);
     }
-    
+
     // Add other filters if needed
     Object.keys(filters).forEach((key) => {
       if (filters[key] && key !== 'page' && key !== 'per_page') {
         params.append(key, filters[key]);
       }
     });
-    
+
     const queryString = params.toString();
     const url = queryString ? `/my-stores?${queryString}` : '/my-stores';
     const response = await api.get(url);
@@ -244,7 +244,7 @@ export const pickDropAPI = {
   // Get pick and drop services with filters
   getPickDropServices: async (filters = {}) => {
     const params = new URLSearchParams();
-    
+
     // Add pagination
     if (filters.page) {
       params.append('page', filters.page);
@@ -252,12 +252,12 @@ export const pickDropAPI = {
     if (filters.per_page) {
       params.append('per_page', filters.per_page);
     }
-    
+
     // Add search query if provided
     if (filters.search) {
       params.append('search', filters.search);
     }
-    
+
     // Add filters - convert camelCase to snake_case for API
     const filterMapping = {
       startLocation: 'start_location',
@@ -266,14 +266,14 @@ export const pickDropAPI = {
       departureTime: 'departure_time',
       departureDate: 'departure_date',
     };
-    
+
     Object.keys(filters).forEach((key) => {
       if (filters[key] && key !== 'page' && key !== 'per_page' && key !== 'search') {
         const apiKey = filterMapping[key] || key;
         params.append(apiKey, filters[key]);
       }
     });
-    
+
     const response = await api.get(`/pick-and-drop?${params.toString()}`);
     return response.data;
   },
@@ -291,9 +291,9 @@ export const pickDropAPI = {
   },
 
   // Get user's own pick and drop services
-  getMyPickDropServices: async (filters = {}) => {
+  getMyPickAndDropServices: async (filters = {}) => {
     const params = new URLSearchParams();
-    
+
     // Add pagination
     if (filters.page) {
       params.append('page', filters.page);
@@ -301,16 +301,16 @@ export const pickDropAPI = {
     if (filters.per_page) {
       params.append('per_page', filters.per_page);
     }
-    
+
     // Add other filters if needed
     Object.keys(filters).forEach((key) => {
       if (filters[key] && key !== 'page' && key !== 'per_page') {
         params.append(key, filters[key]);
       }
     });
-    
+
     const queryString = params.toString();
-    const url = queryString ? `/my-pick-and-drop?${queryString}` : '/my-pick-and-drop';
+    const url = queryString ? `/customer/pick-and-drop/my-services?${queryString}` : '/customer/pick-and-drop/my-services';
     const response = await api.get(url);
     return response.data;
   },
@@ -331,7 +331,7 @@ export const pickDropAPI = {
 export const authAPI = {
   // Login with phone number and password
   login: async (phone, password) => {
-    const response = await api.post('/login', { 
+    const response = await api.post('/login', {
       login_method: 'password',
       phone_number: phone,
       password: password
@@ -477,7 +477,7 @@ export const notificationAPI = {
   // Get all notifications with pagination
   getNotifications: async (filters = {}) => {
     const params = new URLSearchParams();
-    
+
     // Add pagination
     if (filters.page) {
       params.append('page', filters.page);
@@ -485,14 +485,14 @@ export const notificationAPI = {
     if (filters.per_page) {
       params.append('per_page', filters.per_page);
     }
-    
+
     // Add other filters if needed
     Object.keys(filters).forEach((key) => {
       if (filters[key] && key !== 'page' && key !== 'per_page') {
         params.append(key, filters[key]);
       }
     });
-    
+
     const queryString = params.toString();
     const url = queryString ? `/notifications?${queryString}` : '/notifications';
     const response = await api.get(url);

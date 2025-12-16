@@ -59,10 +59,10 @@ const PickDropDetailScreen = () => {
   const loadServiceDetails = async () => {
     try {
       setLoading(true);
-      
+
       // Fetch service details from API
       const data = await pickDropAPI.getPickDropService(serviceId);
-      
+
       // Handle different response structures
       let serviceData = null;
       if (data) {
@@ -74,7 +74,7 @@ const PickDropDetailScreen = () => {
           serviceData = data;
         }
       }
-      
+
       if (serviceData) {
         setService(serviceData);
       } else {
@@ -217,382 +217,277 @@ const PickDropDetailScreen = () => {
         </View>
 
         <View style={styles.contentContainer}>
-          {/* Left Column - Main Content */}
-          <View style={styles.mainContent}>
-            {/* Route Details Card */}
-            <View style={[styles.card, { backgroundColor: theme.colors.cardBackground, borderColor: theme.colors.border }]}>
-              <View style={styles.cardHeader}>
-                <Icon name="send" size={20} color={theme.colors.primary} />
-                <Text style={[styles.cardTitle, { color: theme.colors.primary }]}>
-                  Route Details
-                </Text>
-              </View>
 
-              {/* Pickup Location */}
-              <View style={styles.section}>
-                <View style={styles.sectionHeader}>
-                  <Icon name="location-on" size={20} color={theme.colors.secondary} />
-                  <Text style={[styles.sectionLabel, { color: theme.colors.text }]}>
-                    Pickup Location
+          {/* 1. Route Section - Spacious Timeline */}
+          <View style={styles.sectionContainer}>
+            <Text style={[styles.sectionHeaderTitle, { color: theme.colors.textSecondary }]}>ROUTE DETAILS</Text>
+            <View style={[styles.card, styles.routeCard, { backgroundColor: theme.colors.cardBackground, borderColor: theme.colors.border }]}>
+
+              {/* Start Location */}
+              <View style={styles.timelineRow}>
+                <View style={styles.timelineColumn}>
+                  <View style={[styles.largeDotGreen, { backgroundColor: theme.colors.primary, borderColor: theme.colors.cardBackground }]} />
+                  <View style={[styles.verticalLineFull, { backgroundColor: theme.colors.border }]} />
+                </View>
+                <View style={styles.locationContent}>
+                  <Text style={[styles.largeLocationLabel, { color: theme.colors.textSecondary }]}>Pick Up</Text>
+                  <Text style={[styles.largeLocationTitle, { color: theme.colors.text }]}>
+                    {startLocation}
                   </Text>
                 </View>
-                <Text style={[styles.boldText, { color: theme.colors.text }]}>
-                  {startLocation}
-                </Text>
-                {city && city !== 'City' && city.toLowerCase() !== 'karachi' && (
-                  <Text style={[styles.text, { color: theme.colors.textSecondary }]}>
-                    {city}
-                  </Text>
-                )}
               </View>
 
               {/* Stops */}
               {service.stops && service.stops.length > 0 && (
-                <View style={styles.section}>
-                  <TouchableOpacity
-                    style={styles.stopsHeader}
-                    onPress={() => setExpandedStops(!expandedStops)}
-                  >
-                    <View style={styles.sectionHeader}>
-                      <Icon name="schedule" size={20} color={theme.colors.textSecondary} />
-                      <Text style={[styles.sectionLabel, { color: theme.colors.text }]}>
-                        Stops ({service.stops.length})
-                      </Text>
+                <View style={styles.stopsContainer}>
+                  <View style={styles.timelineColumn}>
+                    <View style={[styles.verticalLineFull, { backgroundColor: theme.colors.border }]} />
+                  </View>
+                  <View style={styles.stopsListContent}>
+                    <View style={[styles.stopsBadge, { backgroundColor: theme.colors.backgroundSecondary }]}>
+                      <Text style={[styles.stopsBadgeText, { color: theme.colors.primary }]}>{service.stops.length} Stops</Text>
                     </View>
-                    <Icon
-                      name={expandedStops ? 'keyboard-arrow-up' : 'keyboard-arrow-down'}
-                      size={24}
-                      color={theme.colors.textSecondary}
-                    />
-                  </TouchableOpacity>
-                  {expandedStops && (
-                    <View style={styles.stopsList}>
-                      {service.stops.map((stop, index) => {
-                        const stopName = stop.location || stop.name || stop.area?.name || stop.city?.name || 'Stop';
-                        const stopTime = stop.stop_time || stop.time || '';
-                        return (
-                          <View key={stop.id || index} style={styles.stopItem}>
-                            <View style={[styles.stopDot, { backgroundColor: theme.colors.primary }]} />
-                            <View style={styles.stopContent}>
-                              <Text style={[styles.boldText, { color: theme.colors.text }]}>
-                                {stopName}
-                              </Text>
-                              {stopTime && (
-                                <Text style={[styles.text, { color: theme.colors.textSecondary }]}>
-                                  {stopTime}
-                                </Text>
-                              )}
-                            </View>
-                          </View>
-                        );
-                      })}
-                    </View>
-                  )}
+                    {service.stops.map((stop, index) => (
+                      <View key={index} style={styles.stopRow}>
+                        <View style={[styles.stopDot, { backgroundColor: theme.colors.textSecondary }]} />
+                        <Text style={[styles.stopText, { color: theme.colors.textSecondary }]}>
+                          {stop.location || stop.name || 'Stop'}
+                          {stop.time ? ` (${stop.time})` : ''}
+                        </Text>
+                      </View>
+                    ))}
+                  </View>
                 </View>
               )}
 
-              {/* Dropoff Location */}
-              <View style={styles.section}>
-                <View style={styles.sectionHeader}>
-                  <Icon name="place" size={20} color="#ff4444" />
-                  <Text style={[styles.sectionLabel, { color: theme.colors.text }]}>
-                    Dropoff Location
+              {/* End Location */}
+              <View style={styles.timelineRow}>
+                <View style={styles.timelineColumn}>
+                  <View style={[styles.verticalLineTop, { backgroundColor: theme.colors.border }]} />
+                  <Icon name="location-pin" size={24} color={theme.colors.secondary} style={{ marginLeft: -12 }} />
+                </View>
+                <View style={styles.locationContent}>
+                  <Text style={[styles.largeLocationLabel, { color: theme.colors.textSecondary }]}>Drop Off</Text>
+                  <Text style={[styles.largeLocationTitle, { color: theme.colors.text }]}>
+                    {endLocation}
                   </Text>
                 </View>
-                <Text style={[styles.boldText, { color: theme.colors.text }]}>
-                  {endLocation}
-                </Text>
-                {city && city !== 'City' && city.toLowerCase() !== 'karachi' && (
-                  <Text style={[styles.text, { color: theme.colors.textSecondary }]}>
-                    {city}
-                  </Text>
-                )}
               </View>
+
             </View>
+          </View>
 
-            {/* Service Details Card */}
-            <View style={[styles.card, { backgroundColor: theme.colors.cardBackground, borderColor: theme.colors.border }]}>
-              <Text style={[styles.cardTitle, { color: theme.colors.primary }]}>
-                Service Details
-              </Text>
+          {/* 2. Trip Information - Grid Layout */}
+          <View style={styles.sectionContainer}>
+            <Text style={[styles.sectionHeaderTitle, { color: theme.colors.textSecondary }]}>TRIP INFORMATION</Text>
+            <View style={styles.gridContainer}>
 
-              <View style={styles.section}>
-                <View style={styles.sectionHeader}>
-                  <Icon name="calendar-today" size={20} color={theme.colors.textSecondary} />
-                  <Text style={[styles.sectionLabel, { color: theme.colors.text }]}>
-                    Departure Time
-                  </Text>
+              {/* Price Item */}
+              <View style={[styles.gridItem, { backgroundColor: theme.colors.cardBackground, borderColor: theme.colors.border }]}>
+                <View style={[styles.iconCircle, { backgroundColor: theme.colors.primary }]}>
+                  <Icon name="attach-money" size={24} color="#fff" />
                 </View>
-                <Text style={[styles.boldText, { color: theme.colors.text }]}>
+                <Text style={[styles.gridLabel, { color: theme.colors.textSecondary }]}>Price Per Person</Text>
+                <Text style={[styles.gridValueLarge, { color: theme.colors.text }]}>
                   {(() => {
-                    const departureTime = 
-                      service.departure_time ||
-                      service.departureTime ||
-                      null;
-                    const departureDate = 
-                      service.departure_date ||
-                      service.departureDate ||
-                      null;
-                    const isEveryday = 
-                      service.is_everyday ||
-                      service.everyday_service ||
-                      service.everydayService ||
-                      false;
-                    
-                    if (isEveryday) {
-                      return departureTime ? `Everyday at ${departureTime}` : 'Everyday Service';
-                    } else if (departureDate && departureTime) {
-                      // Format date if needed
-                      const date = new Date(departureDate);
-                      const formattedDate = date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
-                      return `${formattedDate} at ${departureTime}`;
-                    } else if (departureTime) {
-                      return departureTime;
-                    } else if (departureDate) {
-                      const date = new Date(departureDate);
-                      return date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
-                    }
-                    
-                    return service.schedule || 'N/A';
-                  })()}
-                </Text>
-              </View>
-
-              <View style={styles.section}>
-                <View style={styles.sectionHeader}>
-                  <Icon name="people" size={20} color={theme.colors.textSecondary} />
-                  <Text style={[styles.sectionLabel, { color: theme.colors.text }]}>
-                    Available Spaces
-                  </Text>
-                </View>
-                <Text style={[styles.boldText, { color: theme.colors.text }]}>
-                  {(() => {
-                    const availableSpaces = 
-                      service.available_spaces ||
-                      service.availableSpaces ||
-                      service.available_seats ||
-                      service.availableSeats ||
-                      0;
-                    return `${availableSpaces} space${availableSpaces !== 1 ? 's' : ''}`;
-                  })()}
-                </Text>
-              </View>
-
-              <View style={styles.section}>
-                <Text style={[styles.sectionLabel, { color: theme.colors.text }]}>
-                  Price Per Person:
-                </Text>
-                <Text style={[styles.priceText, { color: theme.colors.primary }]}>
-                  {(() => {
-                    const price = 
+                    const price =
                       service.price_per_person ||
                       service.pricePerPerson ||
                       (service.price && typeof service.price === 'object' ? service.price.perPerson || service.price.amount : null) ||
-                      service.price ||
-                      '0';
+                      service.price || '0';
                     const currency = service.currency || 'PKR';
                     const formattedPrice = typeof price === 'number' ? price.toLocaleString() : price;
-                    return `${currency} ${formattedPrice}`;
+                    return `${currency}\n${formattedPrice}`;
                   })()}
                 </Text>
               </View>
+
+              {/* Schedule Item */}
+              <View style={[styles.gridItem, { backgroundColor: theme.colors.cardBackground, borderColor: theme.colors.border }]}>
+                <View style={[styles.iconCircle, { backgroundColor: theme.colors.secondary }]}>
+                  <Icon name="access-time" size={24} color="#fff" />
+                </View>
+                <Text style={[styles.gridLabel, { color: theme.colors.textSecondary }]}>Schedule</Text>
+                <Text style={[styles.gridValue, { color: theme.colors.text }]}>
+                  {(() => {
+                    const { schedule_type, selected_days, departure_date, departure_time, is_everyday, everyday_service } = service;
+                    let displaySchedule = '';
+                    let displayTime = departure_time || '';
+
+                    if (schedule_type) {
+                      switch (schedule_type.toLowerCase()) {
+                        case 'everyday':
+                          displaySchedule = 'Everyday';
+                          break;
+                        case 'weekday':
+                        case 'weekdays':
+                          displaySchedule = 'Mon-Fri';
+                          break;
+                        case 'weekend':
+                        case 'weekends':
+                          displaySchedule = 'Sat-Sun';
+                          break;
+                        case 'custom':
+                          displaySchedule = selected_days ? selected_days.replace(/,/g, ', ') : 'Custom Types';
+                          break;
+                        case 'once':
+                          displaySchedule = departure_date ? new Date(departure_date).toLocaleDateString() : 'Once';
+                          break;
+                        default:
+                          displaySchedule = schedule_type;
+                      }
+                    } else {
+                      // Fallback
+                      if (is_everyday || everyday_service) {
+                        displaySchedule = 'Everyday';
+                      } else if (departure_date) {
+                        displaySchedule = new Date(departure_date).toLocaleDateString();
+                      } else {
+                        displaySchedule = 'Flexible';
+                      }
+                    }
+
+                    return `${displaySchedule}${displayTime ? `\nat ${displayTime}` : ''}`;
+                  })()}
+                </Text>
+              </View>
+
+              {/* Seats Item */}
+              <View style={[styles.gridItem, { backgroundColor: theme.colors.cardBackground, borderColor: theme.colors.border }]}>
+                <View style={[styles.iconCircle, { backgroundColor: theme.colors.backgroundSecondary }]}>
+                  <Icon name="event-seat" size={24} color={theme.colors.text} />
+                </View>
+                <Text style={[styles.gridLabel, { color: theme.colors.textSecondary }]}>Available Seats</Text>
+                <Text style={[styles.gridValueLarge, { color: theme.colors.text }]}>
+                  {service.available_spaces || service.available_seats || 0}
+                </Text>
+              </View>
+
+              {/* Gender Item */}
+              <View style={[styles.gridItem, { backgroundColor: theme.colors.cardBackground, borderColor: theme.colors.border }]}>
+                <View style={[styles.iconCircle, { backgroundColor: service.driver_gender === 'female' ? '#EC407A' : '#42A5F5' }]}>
+                  <Icon name="person" size={24} color="#fff" />
+                </View>
+                <Text style={[styles.gridLabel, { color: theme.colors.textSecondary }]}>Driver Gender</Text>
+                <Text style={[styles.gridValue, { color: theme.colors.text }]}>
+                  {service.driver_gender === 'female' ? 'Female\nDriver' : 'Male\nDriver'}
+                </Text>
+              </View>
+
             </View>
+          </View>
 
-            {/* Car Information Card */}
-            {(() => {
-              const hasCarDetails = 
-                service.car ||
-                service.car_brand ||
-                service.car_model ||
-                service.car_color ||
-                service.car_seats;
-              
-              if (!hasCarDetails) return null;
-              
-              return (
-                <View style={[styles.card, { backgroundColor: theme.colors.cardBackground, borderColor: theme.colors.border }]}>
-                  <View style={styles.cardHeader}>
-                    <Icon name="directions-car" size={20} color={theme.colors.primary} />
-                    <Text style={[styles.cardTitle, { color: theme.colors.primary }]}>
-                      Car Information
-                    </Text>
+          {/* 3. Vehicle Information - List Card */}
+          {service.car && (
+            <View style={styles.sectionContainer}>
+              <Text style={[styles.sectionHeaderTitle, { color: theme.colors.textSecondary }]}>VEHICLE DETAILS</Text>
+              <View style={[styles.card, styles.vehicleCard, { backgroundColor: theme.colors.cardBackground, borderColor: theme.colors.border }]}>
+                <View style={styles.vehicleHeader}>
+                  <View style={[styles.vehicleIconLarge, { backgroundColor: theme.colors.backgroundSecondary }]}>
+                    <Icon name="directions-car" size={40} color={theme.colors.textSecondary} />
                   </View>
-
-                  <View style={styles.carInfoGrid}>
-                    {service.car && (
-                      <View style={[styles.carInfoItem, { borderBottomColor: theme.colors.border }]}>
-                        <Text style={[styles.carInfoLabel, { color: theme.colors.textSecondary }]}>
-                          Car:
-                        </Text>
-                        <Text style={[styles.carInfoValue, { color: theme.colors.text }]}>
-                          {service.car}
-                        </Text>
-                      </View>
-                    )}
-                    {service.car_brand && (
-                      <View style={[styles.carInfoItem, { borderBottomColor: theme.colors.border }]}>
-                        <Text style={[styles.carInfoLabel, { color: theme.colors.textSecondary }]}>
-                          Brand:
-                        </Text>
-                        <Text style={[styles.carInfoValue, { color: theme.colors.text }]}>
-                          {service.car_brand}
-                        </Text>
-                      </View>
-                    )}
-                    {service.car_model && (
-                      <View style={[styles.carInfoItem, { borderBottomColor: theme.colors.border }]}>
-                        <Text style={[styles.carInfoLabel, { color: theme.colors.textSecondary }]}>
-                          Model:
-                        </Text>
-                        <Text style={[styles.carInfoValue, { color: theme.colors.text }]}>
-                          {service.car_model}
-                        </Text>
-                      </View>
-                    )}
-                    {service.car_color && (
-                      <View style={[styles.carInfoItem, { borderBottomColor: theme.colors.border }]}>
-                        <Text style={[styles.carInfoLabel, { color: theme.colors.textSecondary }]}>
-                          Color:
-                        </Text>
-                        <Text style={[styles.carInfoValue, { color: theme.colors.text }]}>
-                          {service.car_color}
-                        </Text>
-                      </View>
-                    )}
-                    {service.car_seats && (
-                      <View style={[styles.carInfoItem, { borderBottomColor: theme.colors.border }]}>
-                        <Text style={[styles.carInfoLabel, { color: theme.colors.textSecondary }]}>
-                          Seats:
-                        </Text>
-                        <Text style={[styles.carInfoValue, { color: theme.colors.text }]}>
-                          {service.car_seats}
-                        </Text>
-                      </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.vehicleTitleLarge, { color: theme.colors.text }]}>
+                      {service.car.name || service.car}
+                    </Text>
+                    {service.car.color && (
+                      <Text style={[styles.vehicleSubtitle, { color: theme.colors.textSecondary }]}>
+                        {service.car.color} Color
+                      </Text>
                     )}
                   </View>
                 </View>
-              );
-            })()}
+                <View style={[styles.divider, { backgroundColor: theme.colors.border }]} />
+                <View style={[styles.vehicleDetailsRow, { backgroundColor: theme.colors.cardBackground }]}>
+                  <View style={styles.vehicleDetailItem}>
+                    <Text style={[styles.detailLabel, { color: theme.colors.textSecondary }]}>Brand</Text>
+                    <Text style={[styles.detailValue, { color: theme.colors.text }]}>{service.car_brand || 'N/A'}</Text>
+                  </View>
+                  <View style={styles.vehicleDetailItem}>
+                    <Text style={[styles.detailLabel, { color: theme.colors.textSecondary }]}>Model</Text>
+                    <Text style={[styles.detailValue, { color: theme.colors.text }]}>{service.car_model || 'N/A'}</Text>
+                  </View>
+                  <View style={styles.vehicleDetailItem}>
+                    <Text style={[styles.detailLabel, { color: theme.colors.textSecondary }]}>Total Seats</Text>
+                    <Text style={[styles.detailValue, { color: theme.colors.text }]}>{service.car_seats || 'N/A'}</Text>
+                  </View>
+                </View>
+              </View>
+            </View>
+          )}
 
-            {/* Description Card */}
-            {service.description && (
-              <View style={[styles.card, { backgroundColor: theme.colors.cardBackground, borderColor: theme.colors.border }]}>
-                <Text style={[styles.cardTitle, { color: theme.colors.primary }]}>
-                  Description
-                </Text>
-                <Text style={[styles.descriptionText, { color: theme.colors.textSecondary }]}>
+          {/* Description */}
+          {service.description && (
+            <View style={styles.sectionContainer}>
+              <Text style={[styles.sectionHeaderTitle, { color: theme.colors.textSecondary }]}>ADDITIONAL NOTES</Text>
+              <View style={[styles.card, { padding: 16, backgroundColor: theme.colors.cardBackground, borderColor: theme.colors.border }]}>
+                <Text style={[styles.descriptionTextLarge, { color: theme.colors.text }]}>
                   {service.description}
                 </Text>
               </View>
-            )}
-          </View>
-
-          {/* Right Sidebar */}
-          <View style={styles.sidebar}>
-            {/* Service Provider Card */}
-            <View style={[styles.card, { backgroundColor: theme.colors.cardBackground, borderColor: theme.colors.border }]}>
-              <View style={styles.cardHeader}>
-                <Icon name="person" size={20} color={theme.colors.primary} />
-                <Text style={[styles.cardTitle, { color: theme.colors.primary }]}>
-                  Service Provider
-                </Text>
-              </View>
-              <Text style={[styles.providerName, { color: theme.colors.text }]}>
-                {provider?.name || 
-                 provider?.user?.name || 
-                 provider?.username ||
-                 service.driver?.name || 
-                 service.driver || 
-                 service.user?.name ||
-                 service.provider?.name ||
-                 'N/A'}
-              </Text>
-
-              {/* Call / In-App Chat / WhatsApp icon buttons - always show */}
-              <View style={styles.contactButtonsRow}>
-                {/* Call Button */}
-                <TouchableOpacity
-                  style={[styles.contactIconButton, { backgroundColor: theme.colors.primary }]}
-                  onPress={() => {
-                    if (!user) {
-                      navigation.navigate('Login');
-                    } else if (providerPhone) {
-                      handleCallProvider();
-                    } else {
-                      setErrorMessage('Phone number not available');
-                      setShowErrorModal(true);
-                    }
-                  }}
-                >
-                  <Icon name="call" size={20} color="#fff" />
-                </TouchableOpacity>
-                
-                {/* In-App Chat Button */}
-                <TouchableOpacity
-                  style={[styles.contactIconButton, { backgroundColor: theme.colors.secondary }]}
-                  onPress={() => {
-                    if (!user) {
-                      navigation.navigate('Login');
-                    } else if (provider?.id || provider?.user_id) {
-                      const providerUserId = provider.id || provider.user_id;
-                      const providerName = provider.name || provider.user?.name || service.driver?.name || service.driver || 'Provider';
-                      navigation.navigate('Chat', {
-                        userId: providerUserId,
-                        userName: providerName,
-                        type: 'pick_and_drop',
-                        serviceId: service.id || serviceId,
-                      });
-                    } else {
-                      setErrorMessage('Provider information not available');
-                      setShowErrorModal(true);
-                    }
-                  }}
-                >
-                  <Icon name="forum" size={20} color="#fff" />
-                </TouchableOpacity>
-                
-                {/* WhatsApp Button */}
-                <TouchableOpacity
-                  style={[styles.contactIconButton, { backgroundColor: '#25D366' }]}
-                  onPress={() => {
-                    if (!user) {
-                      navigation.navigate('Login');
-                    } else if (providerWhatsApp) {
-                      handleMessageProvider();
-                    } else {
-                      setErrorMessage('WhatsApp number not available');
-                      setShowErrorModal(true);
-                    }
-                  }}
-                >
-                  <FontAwesome name="whatsapp" size={20} color="#fff" />
-                </TouchableOpacity>
-              </View>
             </View>
+          )}
 
-            {/* Contact Service Provider Card for guests */}
-            {!user && (
-              <View style={[styles.card, { backgroundColor: theme.colors.cardBackground, borderColor: theme.colors.border }]}>
-                <Text style={[styles.contactText, { color: theme.colors.textSecondary }]}>
-                  Please login to contact the service provider
-                </Text>
-                <TouchableOpacity
-                  style={[styles.loginButton, { backgroundColor: theme.colors.primary }]}
-                  onPress={() => navigation.navigate('Login')}
-                >
-                  <Text style={styles.loginButtonText}>Login</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.signUpButton, { borderColor: theme.colors.primary }]}
-                  onPress={() => navigation.navigate('Register')}
-                >
-                  <Text style={[styles.signUpButtonText, { color: theme.colors.primary }]}>
-                    Sign Up
+          {/* 4. Service Provider - Large Profile */}
+          <View style={styles.sectionContainer}>
+            <Text style={[styles.sectionHeaderTitle, { color: theme.colors.textSecondary }]}>SERVICE PROVIDER</Text>
+            <View style={[styles.card, styles.providerCard, { backgroundColor: theme.colors.cardBackground, borderColor: theme.colors.border }]}>
+
+              <View style={styles.providerHeader}>
+                <View style={[styles.providerAvatarXLarge, { backgroundColor: theme.colors.backgroundSecondary }]}>
+                  <Text style={[styles.providerInitialsXLarge, { color: theme.colors.textSecondary }]}>
+                    {(provider?.name || provider?.user?.name || service.driver?.name || 'U').charAt(0).toUpperCase()}
                   </Text>
-                </TouchableOpacity>
+                </View>
+                <View style={styles.providerInfoCenter}>
+                  <Text style={[styles.providerNameXLarge, { color: theme.colors.text }]}>
+                    {provider?.name || provider?.user?.name || service.driver?.name || 'User'}
+                  </Text>
+                  <Text style={[styles.providerRole, { color: theme.colors.primary, backgroundColor: theme.colors.backgroundSecondary }]}>Verified Driver</Text>
+                </View>
               </View>
-            )}
+
+              <View style={styles.providerActionsColumn}>
+                {providerPhone && (
+                  <TouchableOpacity style={[styles.actionBtnFull, { backgroundColor: theme.colors.primary }]} onPress={handleCallProvider}>
+                    <Icon name="call" size={20} color="#fff" />
+                    <Text style={styles.actionBtnText}>Call Now</Text>
+                  </TouchableOpacity>
+                )}
+                {providerWhatsApp && (
+                  <TouchableOpacity style={[styles.actionBtnFull, { backgroundColor: '#25D366' }]} onPress={handleMessageProvider}>
+                    <FontAwesome name="whatsapp" size={20} color="#fff" />
+                    <Text style={styles.actionBtnText}>WhatsApp</Text>
+                  </TouchableOpacity>
+                )}
+                {(provider?.id || provider?.user_id) && (
+                  <TouchableOpacity style={[styles.actionBtnFull, { backgroundColor: theme.colors.secondary }]} onPress={() => {
+                    if (!user) {
+                      navigation.navigate('Login');
+                    } else {
+                      const pId = provider.id || provider.user_id;
+                      const pName = provider.name || provider.user?.name || service.driver?.name || 'Provider';
+                      navigation.navigate('Chat', {
+                        userId: pId,
+                        userName: pName,
+                        type: 'pick_and_drop',
+                        serviceId: service.id
+                      });
+                    }
+                  }}>
+                    <Icon name="forum" size={20} color="#fff" />
+                    <Text style={styles.actionBtnText}>Chat in App</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+
+              {!user && (
+                <Text style={[styles.loginHint, { color: theme.colors.textSecondary }]}>Login to contact the driver</Text>
+              )}
+            </View>
           </View>
+
+          <View style={{ height: 40 }} />
         </View>
       </ScrollView>
 
@@ -619,221 +514,282 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 16,
     gap: 8,
+    zIndex: 10,
+  },
+  container: {
+    flex: 1,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  backButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    gap: 8,
+    zIndex: 10,
   },
   backButtonText: {
     fontSize: 16,
     fontWeight: '500',
   },
   headerBanner: {
-    padding: 24,
-    marginHorizontal: 16,
-    marginBottom: 16,
-    borderRadius: 12,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-  },
-  bannerContent: {
-    flex: 1,
-  },
-  bannerLocationRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 4,
-  },
-  bannerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#fff',
-    flex: 1,
-  },
-  bannerRoute: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#fff',
-    flex: 1,
-  },
-  driverGenderTag: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-    marginTop: 12,
-    alignSelf: 'flex-start',
-    gap: 6,
-  },
-  driverGenderEmoji: {
-    fontSize: 16,
-  },
-  driverGenderText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#fff',
+    display: 'none',
   },
   contentContainer: {
-    flexDirection: 'column',
-    paddingHorizontal: 16,
-    gap: 16,
+    paddingHorizontal: 20,
+    paddingTop: 10,
+    paddingBottom: 40,
   },
-  mainContent: {
-    width: '100%',
-    gap: 16,
+  sectionContainer: {
+    marginBottom: 24,
   },
-  sidebar: {
-    width: '100%',
-    gap: 16,
+  sectionHeaderTitle: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    letterSpacing: 1,
+    textTransform: 'uppercase',
   },
   card: {
-    borderRadius: 12,
-    padding: 20,
+    borderRadius: 16,
     borderWidth: 1,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
     elevation: 3,
+    overflow: 'hidden',
   },
-  cardHeader: {
+  routeCard: {
+    padding: 20,
+  },
+  timelineRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 16,
+    alignItems: 'flex-start',
   },
-  cardTitle: {
+  timelineColumn: {
+    width: 24,
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  largeDotGreen: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    borderWidth: 3,
+    zIndex: 2,
+  },
+  verticalLineFull: {
+    width: 2,
+    flex: 1,
+    minHeight: 40,
+  },
+  verticalLineTop: {
+    width: 2,
+    height: 12,
+  },
+  locationContent: {
+    flex: 1,
+    paddingBottom: 20,
+  },
+  largeLocationLabel: {
+    fontSize: 12,
+    marginBottom: 4,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+  },
+  largeLocationTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 16,
+    lineHeight: 24,
   },
-  section: {
-    marginBottom: 20,
+  stopsContainer: {
+    flexDirection: 'row',
   },
-  sectionHeader: {
+  stopsListContent: {
+    flex: 1,
+    paddingBottom: 20,
+  },
+  stopsBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    alignSelf: 'flex-start',
+    marginBottom: 12,
+  },
+  stopsBadgeText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  stopRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
     marginBottom: 8,
   },
-  sectionLabel: {
-    fontSize: 14,
-    fontWeight: '500',
+  stopDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    marginRight: 10,
   },
-  boldText: {
-    fontSize: 16,
+  stopText: {
+    fontSize: 14,
+  },
+
+  /* Grid Layout */
+  gridContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 16,
+  },
+  gridItem: {
+    width: '47%',
+    padding: 16,
+    borderRadius: 16,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    aspectRatio: 1,
+  },
+  iconCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+  },
+  gridLabel: {
+    fontSize: 12,
+    marginBottom: 4,
+    textAlign: 'center',
+  },
+  gridValueLarge: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    lineHeight: 24,
+  },
+  gridValue: {
+    fontSize: 14,
+    fontWeight: '600',
+    textAlign: 'center',
+    lineHeight: 18,
+  },
+
+  /* Vehicle Card */
+  vehicleCard: {
+    padding: 0,
+  },
+  vehicleHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 20,
+  },
+  vehicleIconLarge: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 16,
+  },
+  vehicleTitleLarge: {
+    fontSize: 20,
     fontWeight: 'bold',
     marginBottom: 4,
   },
-  text: {
+  vehicleSubtitle: {
     fontSize: 14,
-    marginBottom: 2,
   },
-  stopsHeader: {
+  divider: {
+    height: 1,
+  },
+  vehicleDetailsRow: {
     flexDirection: 'row',
+    padding: 20,
+  },
+  vehicleDetailItem: {
+    flex: 1,
     alignItems: 'center',
-    justifyContent: 'space-between',
   },
-  stopsList: {
-    marginTop: 12,
-    marginLeft: 28,
-  },
-  stopItem: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginBottom: 12,
-  },
-  stopDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginRight: 12,
-    marginTop: 6,
-  },
-  stopContent: {
-    flex: 1,
-  },
-  priceText: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginTop: 4,
-  },
-  carInfoGrid: {
-    gap: 12,
-  },
-  carInfoItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingBottom: 8,
-    borderBottomWidth: 1,
-  },
-  carInfoLabel: {
-    fontSize: 14,
-    flex: 1,
-  },
-  carInfoValue: {
-    fontSize: 14,
-    fontWeight: '500',
-    flex: 1,
-    textAlign: 'right',
-  },
-  descriptionText: {
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  providerName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 8,
-  },
-  contactHint: {
+  detailLabel: {
     fontSize: 12,
-    marginTop: 4,
+    marginBottom: 4,
   },
-  contactText: {
+  detailValue: {
     fontSize: 14,
-    marginBottom: 16,
-    textAlign: 'center',
+    fontWeight: '600',
   },
-  contactButtonsRow: {
-    flexDirection: 'row',
-    justifyContent: 'flex-start',
+  descriptionTextLarge: {
+    fontSize: 16,
+    lineHeight: 24,
+  },
+
+  /* Provider Card */
+  providerCard: {
+    padding: 24,
     alignItems: 'center',
-    marginTop: 12,
-    gap: 8,
   },
-  contactIconButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 8,
+  providerHeader: {
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  providerAvatarXLarge: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  loginButton: {
-    paddingVertical: 14,
-    borderRadius: 8,
-    alignItems: 'center',
     marginBottom: 12,
   },
-  loginButtonText: {
+  providerInitialsXLarge: {
+    fontSize: 32,
+    fontWeight: 'bold',
+  },
+  providerInfoCenter: {
+    alignItems: 'center',
+  },
+  providerNameXLarge: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  providerRole: {
+    fontSize: 14,
+    fontWeight: '500',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  providerActionsColumn: {
+    width: '100%',
+    gap: 12,
+  },
+  actionBtnFull: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+    borderRadius: 12,
+    width: '100%',
+    gap: 10,
+  },
+  actionBtnText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
   },
-  signUpButton: {
-    paddingVertical: 14,
-    borderRadius: 8,
-    alignItems: 'center',
-    borderWidth: 1,
-  },
-  signUpButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
+  loginHint: {
+    marginTop: 16,
+    fontSize: 12,
   },
   errorText: {
     fontSize: 16,
-    color: '#999',
     textAlign: 'center',
-    marginTop: 40,
   },
 });
 

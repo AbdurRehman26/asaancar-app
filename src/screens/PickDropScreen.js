@@ -101,7 +101,7 @@ const PickDropScreen = () => {
 
     // Remove any non-digit characters except + for WhatsApp
     const cleanNumber = numberToUse.replace(/[^\d+]/g, '');
-    
+
     // Try WhatsApp first
     const whatsappUrl = `https://wa.me/${cleanNumber}`;
     try {
@@ -150,15 +150,15 @@ const PickDropScreen = () => {
         page: currentPage,
         per_page: pageSize,
       };
-      
+
       // Add search query if provided
       if (searchQuery) {
         params.search = searchQuery;
       }
-      
+
       const data = await pickDropAPI.getPickDropServices(params);
       let servicesData = [];
-      
+
       // Handle different response structures
       if (data) {
         if (Array.isArray(data.data)) {
@@ -171,14 +171,14 @@ const PickDropScreen = () => {
           servicesData = data.data.data;
         }
       }
-      
+
       setServices(servicesData);
-      
+
       // Handle pagination - prioritize meta key as user indicated
       let currentPageValue = 1;
       let lastPageValue = 1;
       let totalValue = 0;
-      
+
       if (data?.meta) {
         currentPageValue = parseInt(data.meta.current_page || data.meta.page || currentPage, 10) || 1;
         lastPageValue = parseInt(data.meta.last_page || data.meta.total_pages || 1, 10) || 1;
@@ -200,7 +200,7 @@ const PickDropScreen = () => {
         lastPageValue = 1;
         totalValue = servicesData.length || 0;
       }
-      
+
       setApiCurrentPage(currentPageValue);
       setTotalPages(lastPageValue);
       setTotalServices(totalValue);
@@ -253,7 +253,7 @@ const PickDropScreen = () => {
       departureTime: filtersToApply.departureTime || '',
       departureDate: filtersToApply.departureDate || '',
     };
-    
+
     setFilters(newFilters);
     setTempFilters(newFilters);
     setCurrentPage(1); // Reset to first page when filters change
@@ -279,10 +279,10 @@ const PickDropScreen = () => {
               onPress={toggleTheme}
               style={styles.themeToggleButton}
             >
-              <Icon 
-                name={isDark ? 'light-mode' : 'dark-mode'} 
-                size={24} 
-                color={theme.colors.primary} 
+              <Icon
+                name={isDark ? 'light-mode' : 'dark-mode'}
+                size={24}
+                color={theme.colors.primary}
               />
             </TouchableOpacity>
           </View>
@@ -331,14 +331,14 @@ const PickDropScreen = () => {
               const totalNum = Number(totalServices) || 0;
               const startNumber = (currentPageNum - 1) * pageSizeNum + 1;
               const endNumber = Math.min(currentPageNum * pageSizeNum, totalNum);
-              return totalNum > 0 
+              return totalNum > 0
                 ? `Showing ${startNumber}-${endNumber} of ${totalNum}`
                 : `Showing ${startNumber}-${endNumber}`;
             })()}
           </Text>
         </View>
       )}
-      
+
       <ScrollView>
         {/* Services List */}
         {loading ? (
@@ -349,265 +349,208 @@ const PickDropScreen = () => {
           <View style={styles.servicesContainer}>
             {services.map((service) => (
               <View key={service.id} style={[styles.serviceCard, { backgroundColor: theme.colors.cardBackground, borderColor: theme.colors.border }]}>
-                  {/* Route */}
-                  <View style={styles.routeSection}>
-                    <View style={styles.locationRow}>
-                      <Icon name="location-on" size={16} color={theme.colors.secondary} />
-                      <Text style={[styles.locationText, { color: theme.colors.text }]} numberOfLines={1}>
-                        {service.start_location || 'Start Location'}
-                      </Text>
+                {/* Top Section: Route & Price */}
+                <View style={styles.cardHeader}>
+                  {/* Left: Route Timeline */}
+                  <View style={styles.routeContainer}>
+                    {/* Start Point */}
+                    <View style={styles.timelineItem}>
+                      <View style={styles.timelineDotGreen} />
+                      <View style={styles.timelineContent}>
+                        <Text style={[styles.locationTitle, { color: theme.colors.text }]} numberOfLines={1}>
+                          {service.start_location || 'Start Location'}
+                        </Text>
+                        <Text style={styles.locationLabel}>Start Point</Text>
+                      </View>
                     </View>
-                    <View style={styles.locationRow}>
-                      <Icon name="send" size={16} color="#ff4444" />
-                      <Text style={[styles.locationText, { color: theme.colors.text }]} numberOfLines={1}>
-                        {service.end_location || 'End Location'}
-                      </Text>
+
+                    {/* Connecting Line & Stops */}
+                    <View style={styles.timelineLineContainer}>
+                      <View style={styles.timelineLine} />
+                      {service.stops && service.stops.length > 0 && (
+                        <View style={styles.stopsTag}>
+                          <Text style={styles.stopsTagText}>
+                            {service.stops.length} Stop{service.stops.length > 1 ? 's' : ''} in between
+                          </Text>
+                          <Icon name="keyboard-arrow-down" size={14} color="#C2185B" />
+                        </View>
+                      )}
+                    </View>
+
+                    {/* Destination */}
+                    <View style={styles.timelineItem}>
+                      <Icon name="location-pin" size={18} color="#8E24AA" style={{ marginLeft: -1 }} />
+                      <View style={styles.timelineContent}>
+                        <Text style={[styles.locationTitle, { color: theme.colors.text }]} numberOfLines={1}>
+                          {service.end_location || 'End Location'}
+                        </Text>
+                        <Text style={styles.locationLabel}>Destination</Text>
+                      </View>
                     </View>
                   </View>
 
-                  {/* Driver */}
-                  {service.driver && (
-                    <Text style={[styles.driverText, { color: theme.colors.textSecondary }]}>
-                      by {service.driver.name || service.driver}
-                    </Text>
-                  )}
+                  {/* Right: Price */}
+                  <View style={styles.priceContainer}>
+                    <Text style={styles.priceLabel}>Per Person</Text>
+                    {(() => {
+                      const price =
+                        service.price_per_person ||
+                        service.pricePerPerson ||
+                        (service.price && typeof service.price === 'object' ? service.price.perPerson || service.price.amount : null) ||
+                        service.price ||
+                        null;
+                      const currency = service.currency || 'PKR';
 
-                  {/* Schedule: Everyday vs specific date/time */}
+                      if (!price) return null;
+
+                      return (
+                        <Text style={styles.priceValue}>
+                          {currency} {typeof price === 'number' ? price.toLocaleString() : price}
+                        </Text>
+                      );
+                    })()}
+                  </View>
+                </View>
+
+                {/* Tags Row: Schedule, Seats, Gender */}
+                <View style={styles.tagsRow}>
+                  {/* Schedule Tag */}
                   {(() => {
-                    const departureDate = service.departure_date || service.departureDate || null;
-                    const departureTime = service.departure_time || service.departureTime || null;
-                    const everydayService =
-                      service.is_everyday ||
-                      service.everyday_service ||
-                      service.everydayService ||
-                      false;
-                    const hasSchedule =
-                      everydayService || departureDate || departureTime || service.schedule;
+                    const { schedule_type, selected_days, departure_date, departure_time, is_everyday, everyday_service } = service;
 
-                    if (!hasSchedule) return null;
+                    let labelText = '';
+                    let timeText = departure_time ? formatTime(departure_time) : '';
 
-                    let scheduleText = '';
-                    if (everydayService) {
-                      scheduleText = departureTime 
-                        ? `Everyday Service at ${formatTime(departureTime)}`
-                        : 'Everyday Service';
-                    } else if (departureDate) {
-                      scheduleText = `${formatDate(departureDate)}${
-                        departureTime ? ` at ${formatTime(departureTime)}` : ''
-                      }`;
-                    } else if (departureTime) {
-                      scheduleText = formatTime(departureTime);
+                    if (schedule_type) {
+                      switch (schedule_type.toLowerCase()) {
+                        case 'everyday':
+                          labelText = 'Everyday';
+                          break;
+                        case 'weekday':
+                        case 'weekdays':
+                          labelText = 'Mon-Fri';
+                          break;
+                        case 'weekend':
+                        case 'weekends':
+                          labelText = 'Sat-Sun';
+                          break;
+                        case 'custom':
+                          labelText = selected_days || 'Custom';
+                          break;
+                        case 'once':
+                          labelText = departure_date ? formatDate(departure_date) : 'Once';
+                          break;
+                        default:
+                          labelText = schedule_type;
+                      }
                     } else {
-                      scheduleText = service.schedule;
+                      // Fallback logic
+                      const isEverydayService = is_everyday || everyday_service;
+                      if (isEverydayService) {
+                        labelText = 'Everyday';
+                      } else if (departure_date) {
+                        labelText = formatDate(departure_date);
+                      } else {
+                        labelText = 'Flexible';
+                      }
                     }
 
                     return (
-                      <View style={styles.scheduleRow}>
-                        <Icon name="calendar-today" size={14} color={theme.colors.secondary} />
-                        <Text style={[styles.scheduleText, { color: theme.colors.textSecondary }]}>
-                          {scheduleText}
+                      <View style={styles.scheduleTag}>
+                        <Icon name="access-time" size={14} color="#0056cb" />
+                        <Text style={styles.scheduleTagText}>
+                          {labelText} {timeText ? `• ${timeText}` : ''}
                         </Text>
                       </View>
                     );
                   })()}
 
-                  {/* Availability */}
+                  {/* Seats Tag */}
                   {(() => {
-                    const availableSpaces = 
+                    const availableSpaces =
                       service.available_spaces ||
                       service.availableSpaces ||
                       service.available_seats ||
                       service.availableSeats ||
                       null;
-                    
+
                     if (availableSpaces === null || availableSpaces === undefined) return null;
-                    
+
                     return (
-                      <View style={styles.availabilityRow}>
-                        <Icon name="person" size={14} color={theme.colors.textSecondary} />
-                        <Text style={[styles.availabilityText, { color: theme.colors.textSecondary }]}>
-                          {availableSpaces} space{availableSpaces !== 1 ? 's' : ''} available
+                      <View style={styles.seatsTag}>
+                        <Icon name="people-outline" size={14} color="#E65100" />
+                        <Text style={styles.seatsTagText}>
+                          {availableSpaces} Seat{availableSpaces !== 1 ? 's' : ''} left
                         </Text>
                       </View>
                     );
                   })()}
 
-                  {/* Price */}
-                  {(() => {
-                    const price = 
-                      service.price_per_person ||
-                      service.pricePerPerson ||
-                      (service.price && typeof service.price === 'object' ? service.price.perPerson || service.price.amount : null) ||
-                      service.price ||
-                      null;
-                    const currency = service.currency || 'PKR';
-                    
-                    if (!price) return null;
-                    
-                    return (
-                      <Text style={[styles.priceText, { color: theme.colors.primary }]}>
-                        {currency} {typeof price === 'number' ? price.toLocaleString() : price} per person
-                      </Text>
-                    );
-                  })()}
-
-                  {/* Driver Gender */}
+                  {/* Driver Gender Tag */}
                   {service.driver_gender && (
-                    <View style={[styles.genderTag, { backgroundColor: service.driver_gender === 'female' ? '#ffb3d9' : '#b3d9ff' }]}>
-                      <Text style={styles.genderText}>
-                        {service.driver_gender === 'female' ? '♀' : '♂'} {service.driver_gender === 'female' ? 'Female' : 'Male'} driver
+                    <View style={[styles.driverGenderTag, {
+                      backgroundColor: service.driver_gender === 'female' ? '#FCE4EC' : '#E3F2FD'
+                    }]}>
+                      <Text style={styles.driverGenderText}>
+                        {service.driver_gender === 'female' ? '👩 Female Driver' : '👨 Male Driver'}
                       </Text>
                     </View>
                   )}
-
-                  {/* Car Details */}
-                  {service.car && (
-                    <Text style={[styles.carText, { color: theme.colors.textSecondary }]}>
-                      Car: {service.car.name || service.car} {service.car.color ? `(${service.car.color})` : ''} • {service.car.seats || service.seats || 'N/A'} seats
-                    </Text>
-                  )}
-
-                  {/* Stops (Everyday vs specific time) */}
-                  {service.stops && service.stops.length > 0 && (
-                    <View style={styles.stopsSection}>
-                      <Icon name="schedule" size={14} color={theme.colors.textSecondary} />
-                      <Text style={[styles.stopsText, { color: theme.colors.textSecondary }]}>
-                        Stops ({service.stops.length})
-                      </Text>
-                      {service.stops.map((stop, index) => {
-                        // Handle stop object structure
-                        const stopName =
-                          stop.location ||
-                          stop.name ||
-                          stop.area?.name ||
-                          stop.city?.name ||
-                          'Stop';
-                        const stopTime = stop.stop_time || stop.time || '';
-                        const isEverydayStop =
-                          stop.is_everyday ||
-                          stop.everyday_service ||
-                          stop.everydayService ||
-                          false;
-
-                        let stopLabel = stopName;
-                        if (isEverydayStop) {
-                          stopLabel = `${stopName} (Everyday)`;
-                        } else if (stopTime) {
-                          stopLabel = `${stopName} (${stopTime})`;
-                        }
-
-                        return (
-                          <View key={stop.id || index} style={styles.stopItem}>
-                            <View style={[styles.stopDot, { backgroundColor: theme.colors.primary }]} />
-                            <Text style={[styles.stopText, { color: theme.colors.textSecondary }]}>
-                              {stopLabel}
-                            </Text>
-                          </View>
-                        );
-                      })}
-                    </View>
-                  )}
-
-                  {/* Description */}
-                  {service.description && (
-                    <Text style={[styles.descriptionText, { color: theme.colors.textSecondary }]} numberOfLines={2}>
-                      {service.description}
-                    </Text>
-                  )}
-
-                  {/* Action Buttons Row (Call, Message, Chat, View Details) */}
-                  {(() => {
-                    const provider =
-                      service.user ||
-                      service.provider ||
-                      service.owner ||
-                      null;
-
-                    const phoneNumber =
-                      provider?.phone_number ||
-                      provider?.phone ||
-                      provider?.contact_number ||
-                      service.contact_phone ||
-                      service.phone ||
-                      service.phone_number ||
-                      service.contact_number ||
-                      null;
-
-                    const whatsappNumber =
-                      provider?.whatsapp_number ||
-                      provider?.whatsapp ||
-                      provider?.contact_whatsapp ||
-                      service.whatsapp_number ||
-                      service.whatsapp ||
-                      service.contact_whatsapp ||
-                      phoneNumber ||
-                      null;
-
-                    const providerUserId = provider?.id || provider?.user_id || null;
-                    const providerName = provider?.name || provider?.user?.name || service.driver?.name || service.driver || 'Provider';
-
-                    return (
-                      <View style={styles.actionButtonsContainer}>
-                        {phoneNumber && (
-                          <TouchableOpacity
-                            style={[styles.iconButton, styles.callButton, { backgroundColor: theme.colors.primary }]}
-                            onPress={() => {
-                              if (!user) {
-                                navigation.navigate('Login');
-                              } else {
-                                handleCall(phoneNumber);
-                              }
-                            }}
-                          >
-                            <Icon name="phone" size={20} color="#fff" />
-                          </TouchableOpacity>
-                        )}
-                        {(whatsappNumber || phoneNumber) && (
-                          <TouchableOpacity
-                            style={[styles.iconButton, styles.messageButton, { backgroundColor: '#25D366' }]}
-                            onPress={() => {
-                              if (!user) {
-                                navigation.navigate('Login');
-                              } else {
-                                handleMessage(phoneNumber, whatsappNumber);
-                              }
-                            }}
-                          >
-                            <FontAwesome name="whatsapp" size={20} color="#fff" />
-                          </TouchableOpacity>
-                        )}
-                        {providerUserId && (
-                          <TouchableOpacity
-                            style={[styles.iconButton, styles.chatButton, { backgroundColor: theme.colors.secondary }]}
-                            onPress={() => {
-                              if (!user) {
-                                navigation.navigate('Login');
-                              } else {
-                                navigation.navigate('Chat', {
-                                  userId: providerUserId,
-                                  userName: providerName,
-                                  type: 'pick_and_drop',
-                                  serviceId: service.id,
-                                });
-                              }
-                            }}
-                          >
-                            <Icon name="forum" size={20} color="#fff" />
-                          </TouchableOpacity>
-                        )}
-                        <TouchableOpacity
-                          style={[styles.actionButton, styles.viewDetailsButton, { backgroundColor: theme.colors.primary }]}
-                          onPress={() => {
-                            navigation.navigate('PickDropDetail', { serviceId: service.id, serviceData: service });
-                          }}
-                        >
-                          <Text style={styles.actionButtonText}>View Details</Text>
-                        </TouchableOpacity>
-                      </View>
-                    );
-                  })()}
                 </View>
-              ))}
+
+                {/* Vehicle Info */}
+                {service.car && (
+                  <View style={styles.vehicleSection}>
+                    <Text style={styles.vehicleLabel}>VEHICLE</Text>
+                    <View style={styles.vehicleRow}>
+                      <Icon name="directions-car" size={16} color="#FF5252" />
+                      <Text style={[styles.vehicleText, { color: theme.colors.text }]}>
+                        {service.car.name || service.car} <Text style={{ color: theme.colors.textSecondary }}>{service.car.color ? `(${service.car.color})` : ''}</Text>
+                      </Text>
+                    </View>
+                  </View>
+                )}
+
+                {/* Divider */}
+                <View style={styles.cardDivider} />
+
+                {/* Footer: Driver & Action */}
+                <View style={styles.cardFooter}>
+                  <View style={styles.driverInfo}>
+                    {/* Avatar */}
+                    <View style={styles.driverAvatar}>
+                      <Text style={styles.driverInitials}>
+                        {(service.driver?.name || service.driver || 'U').charAt(0).toUpperCase()}
+                      </Text>
+                    </View>
+                    <View>
+                      <Text style={[styles.driverName, { color: theme.colors.text }]}>
+                        {service.driver?.name || service.driver || 'User'}
+                      </Text>
+                      {(() => {
+                        const provider = service.user || service.provider || service.owner || null;
+                        const phone = provider?.phone_number || service.contact_number || service.phone || null;
+                        if (phone) {
+                          return (
+                            <Text style={styles.driverPhone}>{phone}</Text>
+                          )
+                        }
+                        return null;
+                      })()}
+                    </View>
+                  </View>
+
+                  <TouchableOpacity
+                    style={styles.viewDetailsButtonSmall}
+                    onPress={() => {
+                      navigation.navigate('PickDropDetail', { serviceId: service.id, serviceData: service });
+                    }}
+                  >
+                    <Text style={styles.viewDetailsText}>View Details</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ))}
           </View>
         ) : (
           <View style={styles.emptyContainer}>
@@ -826,149 +769,214 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   serviceCard: {
-    width: '100%',
-    marginBottom: 16,
-    padding: 16,
     borderRadius: 12,
     borderWidth: 1,
+    padding: 16,
+    marginBottom: 16,
+    marginHorizontal: 16,
     shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
-  routeSection: {
-    marginBottom: 8,
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 16,
   },
-  locationRow: {
+  routeContainer: {
+    flex: 1,
+    marginRight: 16,
+  },
+  timelineItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 4,
+    marginBottom: 0,
   },
-  locationText: {
-    fontSize: 14,
-    fontWeight: '600',
-    marginLeft: 6,
+  timelineDotGreen: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#00C853', // Green for start
+    marginRight: 8,
+    borderWidth: 2,
+    borderColor: '#fff',
+    elevation: 2,
+  },
+  timelineContent: {
     flex: 1,
   },
-  driverText: {
-    fontSize: 12,
-    marginBottom: 8,
+  locationTitle: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginBottom: 2,
   },
-  scheduleRow: {
+  locationLabel: {
+    fontSize: 10,
+    color: '#9E9E9E',
+  },
+  timelineLineContainer: {
+    marginLeft: 4,
+    borderLeftWidth: 2,
+    borderLeftColor: '#E0E0E0',
+    paddingLeft: 12,
+    minHeight: 50, // Increased height to prevent overlap
+    justifyContent: 'center', // Center content vertically
+    position: 'relative',
+  },
+  timelineLine: {
+    // handled by container border
+  },
+  stopsTag: {
+    position: 'absolute',
+    left: -2,
+    // top: '30%' -> Removed to use centering
+    alignSelf: 'flex-start', // Keeps it near the line
+    backgroundColor: '#F8BBD0',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 12,
     flexDirection: 'row',
     alignItems: 'center',
+    zIndex: 1, // Ensure it sits on top of the line
+  },
+  stopsTagText: {
+    fontSize: 10,
+    color: '#880E4F',
+    marginRight: 2,
+    fontWeight: '500',
+  },
+  priceContainer: {
+    alignItems: 'flex-end',
+    backgroundColor: '#f9f9f9',
+    padding: 8,
+    borderRadius: 8,
+  },
+  priceLabel: {
+    fontSize: 10,
+    color: '#757575',
     marginBottom: 4,
   },
-  scheduleText: {
-    fontSize: 12,
-    marginLeft: 6,
-  },
-  availabilityRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 4,
-  },
-  availabilityText: {
-    fontSize: 12,
-    marginLeft: 6,
-  },
-  priceText: {
+  priceValue: {
     fontSize: 16,
     fontWeight: 'bold',
-    marginTop: 8,
-    marginBottom: 8,
+    color: '#8E24AA', // Purple
   },
-  genderTag: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-    marginBottom: 8,
-  },
-  genderText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#fff',
-  },
-  carText: {
-    fontSize: 12,
-    marginBottom: 8,
-  },
-  stopsSection: {
+  tagsRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  stopsText: {
-    fontSize: 12,
-    marginLeft: 6,
-  },
-  stopItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginLeft: 20,
-    marginTop: 4,
-    width: '100%',
-  },
-  stopDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    marginRight: 6,
-  },
-  stopText: {
-    fontSize: 11,
-  },
-  descriptionText: {
-    fontSize: 12,
-    marginBottom: 12,
-    lineHeight: 18,
-  },
-  actionButtonsContainer: {
-    flexDirection: 'row',
     gap: 8,
-    marginTop: 8,
-    alignItems: 'center',
+    marginBottom: 16,
   },
-  iconButton: {
-    width: 44,
-    height: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 8,
-  },
-  actionButton: {
-    flex: 1,
+  scheduleTag: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 12,
+    backgroundColor: '#E3F2FD', // Light Blue
+    paddingHorizontal: 8,
+    paddingVertical: 4,
     borderRadius: 8,
-    gap: 6,
+    gap: 4,
   },
-  callButton: {
-    // backgroundColor set dynamically
-  },
-  messageButton: {
-    // backgroundColor set dynamically
-  },
-  chatButton: {
-    // backgroundColor set dynamically
-  },
-  viewDetailsButton: {
-    // backgroundColor set dynamically
-  },
-  actionButtonText: {
-    color: '#fff',
-    fontSize: 14,
+  scheduleTagText: {
+    fontSize: 11,
+    color: '#0D47A1',
     fontWeight: '600',
   },
+  seatsTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFF3E0', // Light Orange
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    gap: 4,
+  },
+  seatsTagText: {
+    fontSize: 11,
+    color: '#E65100',
+    fontWeight: '600',
+  },
+  driverGenderTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  driverGenderText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#333',
+  },
+  vehicleSection: {
+    marginBottom: 16,
+  },
+  vehicleLabel: {
+    fontSize: 10,
+    color: '#9E9E9E',
+    marginBottom: 4,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+  vehicleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  vehicleText: {
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  cardDivider: {
+    height: 1,
+    backgroundColor: '#EEEEEE',
+    marginBottom: 12,
+  },
+  cardFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  driverInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  driverAvatar: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#F5F5F5',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  driverInitials: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#616161',
+  },
+  driverName: {
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  driverPhone: {
+    fontSize: 11,
+    color: '#757575',
+  },
+  viewDetailsButtonSmall: {
+    backgroundColor: '#8E24AA',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  viewDetailsText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  // Keep required non-card styles
   emptyContainer: {
     padding: 40,
     alignItems: 'center',

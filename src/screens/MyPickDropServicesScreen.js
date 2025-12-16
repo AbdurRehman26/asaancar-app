@@ -40,9 +40,9 @@ const MyPickDropServicesScreen = () => {
   const loadServices = async () => {
     try {
       setLoading(true);
-      const data = await pickDropAPI.getMyPickDropServices({ per_page: 50 });
+      const data = await pickDropAPI.getMyPickAndDropServices({ per_page: 50 });
       let servicesData = [];
-      
+
       // Handle different response structures
       if (data) {
         if (Array.isArray(data.data)) {
@@ -55,7 +55,7 @@ const MyPickDropServicesScreen = () => {
           servicesData = data.data.data;
         }
       }
-      
+
       setServices(servicesData);
     } catch (error) {
       console.error('Error loading my pick and drop services:', error);
@@ -74,9 +74,7 @@ const MyPickDropServicesScreen = () => {
   };
 
   const handleEdit = (service) => {
-    // Navigate to edit service screen (you can create this later)
-    Alert.alert('Edit Service', 'Edit functionality will be implemented');
-    // navigation.navigate('EditPickDropService', { serviceId: service.id });
+    navigation.navigate('CreatePickDropService', { service });
   };
 
   const handleDelete = (service) => {
@@ -155,9 +153,9 @@ const MyPickDropServicesScreen = () => {
           <View style={styles.detailRow}>
             <Icon name="schedule" size={14} color={theme.colors.textSecondary} style={{ marginRight: 8 }} />
             <Text style={[styles.detailText, { color: theme.colors.textSecondary }]}>
-              {everydayService 
-                ? 'Everyday Service' 
-                : departureDate 
+              {everydayService
+                ? 'Everyday Service'
+                : departureDate
                   ? `${formatDate(departureDate)} at ${formatTime(departureTime)}`
                   : formatTime(departureTime) || 'N/A'}
             </Text>
@@ -329,6 +327,7 @@ const styles = StyleSheet.create({
   },
   listContainer: {
     padding: 16,
+    flexGrow: 1,
   },
   serviceCard: {
     borderRadius: 12,

@@ -170,7 +170,7 @@ const StoreProfileScreen = () => {
           
           {item.store && (
             <>
-              <View style={styles.divider} />
+              <View style={[styles.divider, { backgroundColor: theme.colors.border }]} />
               <View style={styles.dealerInfo}>
                 <Icon name="store" size={16} color={theme.colors.textSecondary} />
                 <View style={styles.dealerDetails}>
@@ -189,7 +189,7 @@ const StoreProfileScreen = () => {
 
           <View style={styles.featuresRow}>
             {item.seats && (
-              <View style={styles.featureBadge}>
+              <View style={[styles.featureBadge, { backgroundColor: theme.colors.backgroundTertiary }]}>
                 <Icon name="people" size={14} color={theme.colors.textSecondary} />
                 <Text style={[styles.featureText, { color: theme.colors.textSecondary }]}>
                   {item.seats}
@@ -197,7 +197,7 @@ const StoreProfileScreen = () => {
               </View>
             )}
             {item.fuelType && (
-              <View style={styles.featureBadge}>
+              <View style={[styles.featureBadge, { backgroundColor: theme.colors.backgroundTertiary }]}>
                 <Icon name="local-gas-station" size={14} color={theme.colors.textSecondary} />
                 <Text style={[styles.featureText, { color: theme.colors.textSecondary }]}>
                   {item.fuelType.toLowerCase()}
@@ -205,7 +205,7 @@ const StoreProfileScreen = () => {
               </View>
             )}
             {item.transmission && (
-              <View style={styles.featureBadge}>
+              <View style={[styles.featureBadge, { backgroundColor: theme.colors.backgroundTertiary }]}>
                 <Icon name="settings" size={14} color={theme.colors.textSecondary} />
                 <Text style={[styles.featureText, { color: theme.colors.textSecondary }]}>
                   {item.transmission.toLowerCase()}
@@ -213,7 +213,7 @@ const StoreProfileScreen = () => {
               </View>
             )}
             {item.type?.name && (
-              <View style={styles.featureBadge}>
+              <View style={[styles.featureBadge, { backgroundColor: theme.colors.backgroundTertiary }]}>
                 <Icon name="directions-car" size={14} color={theme.colors.textSecondary} />
                 <Text style={[styles.featureText, { color: theme.colors.textSecondary }]}>
                   {item.type.name.toLowerCase()}
@@ -245,13 +245,13 @@ const StoreProfileScreen = () => {
   if (!store) {
     return (
       <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-        <Text style={styles.errorText}>Store not found</Text>
+        <Text style={[styles.errorText, { color: theme.colors.textSecondary }]}>Store not found</Text>
       </View>
     );
   }
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: '#f5f5f5' }]}>
+    <ScrollView style={[styles.container, { backgroundColor: theme.colors.background }]}>
       {/* Back Button */}
       <TouchableOpacity
         style={styles.backButton}
@@ -278,7 +278,7 @@ const StoreProfileScreen = () => {
       </View>
 
       {/* Information Section */}
-      <View style={styles.infoSection}>
+      <View style={[styles.infoSection, { backgroundColor: theme.colors.backgroundSecondary }]}>
         <View style={styles.infoRow}>
           {/* Left Column */}
           <View style={styles.infoColumn}>
@@ -365,8 +365,8 @@ const StoreProfileScreen = () => {
           />
         ) : (
           <View style={styles.emptyContainer}>
-            <Icon name="directions-car" size={64} color="#ccc" />
-            <Text style={styles.emptyText}>No cars available</Text>
+            <Icon name="directions-car" size={64} color={theme.colors.textLight} />
+            <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>No cars available</Text>
           </View>
         )}
       </View>
@@ -439,7 +439,6 @@ const styles = StyleSheet.create({
     opacity: 0.8,
   },
   infoSection: {
-    backgroundColor: '#fff',
     padding: 20,
     marginTop: 16,
   },
@@ -500,7 +499,6 @@ const styles = StyleSheet.create({
   imageContainer: {
     width: '100%',
     height: 180,
-    backgroundColor: '#e0e0e0',
   },
   carImage: {
     width: '100%',
@@ -525,7 +523,6 @@ const styles = StyleSheet.create({
   },
   divider: {
     height: 1,
-    backgroundColor: '#e0e0e0',
     marginVertical: 8,
   },
   dealerInfo: {
@@ -558,7 +555,6 @@ const styles = StyleSheet.create({
     gap: 4,
     paddingHorizontal: 8,
     paddingVertical: 4,
-    backgroundColor: '#f5f5f5',
     borderRadius: 12,
   },
   featureText: {
@@ -583,12 +579,10 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 16,
-    color: '#999',
     marginTop: 16,
   },
   errorText: {
     fontSize: 16,
-    color: '#999',
     textAlign: 'center',
     marginTop: 64,
   },
