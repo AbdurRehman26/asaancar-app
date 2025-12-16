@@ -348,7 +348,14 @@ const PickDropScreen = () => {
         ) : services.length > 0 ? (
           <View style={styles.servicesContainer}>
             {services.map((service) => (
-              <View key={service.id} style={[styles.serviceCard, { backgroundColor: theme.colors.cardBackground, borderColor: theme.colors.border }]}>
+              <TouchableOpacity
+                key={service.id}
+                style={[styles.serviceCard, { backgroundColor: theme.colors.cardBackground, borderColor: theme.colors.border }]}
+                onPress={() => {
+                  navigation.navigate('PickDropDetail', { serviceId: service.id, serviceData: service });
+                }}
+                activeOpacity={0.7}
+              >
                 {/* Top Section: Route & Price */}
                 <View style={styles.cardHeader}>
                   {/* Left: Route Timeline */}
@@ -542,14 +549,11 @@ const PickDropScreen = () => {
 
                   <TouchableOpacity
                     style={styles.viewDetailsButtonSmall}
-                    onPress={() => {
-                      navigation.navigate('PickDropDetail', { serviceId: service.id, serviceData: service });
-                    }}
                   >
                     <Text style={styles.viewDetailsText}>View Details</Text>
                   </TouchableOpacity>
                 </View>
-              </View>
+              </TouchableOpacity>
             ))}
           </View>
         ) : (
