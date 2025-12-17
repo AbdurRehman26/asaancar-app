@@ -563,6 +563,9 @@ const PickDropScreen = () => {
 
                   <TouchableOpacity
                     style={[styles.viewDetailsButtonSmall, { backgroundColor: theme.colors.primary }]}
+                    onPress={() => {
+                      navigation.navigate('PickDropDetail', { serviceId: service.id, serviceData: service });
+                    }}
                   >
                     <Text style={styles.viewDetailsText}>View Details</Text>
                   </TouchableOpacity>
