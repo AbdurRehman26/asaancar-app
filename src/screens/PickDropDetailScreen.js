@@ -21,7 +21,7 @@ const PickDropDetailScreen = () => {
   const route = useRoute();
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
-  const { theme } = useTheme();
+  const { theme, isDark } = useTheme();
   const { user } = useAuth();
   const { serviceId, serviceData } = route.params || {};
   const [service, setService] = useState(serviceData || null);
@@ -221,12 +221,12 @@ const PickDropDetailScreen = () => {
           {/* 1. Route Section - Spacious Timeline */}
           <View style={styles.sectionContainer}>
             <Text style={[styles.sectionHeaderTitle, { color: theme.colors.textSecondary }]}>ROUTE DETAILS</Text>
-            <View style={[styles.card, styles.routeCard, { backgroundColor: theme.colors.cardBackground, borderColor: theme.colors.border }]}>
+            <View style={[styles.card, styles.routeCard, { backgroundColor: theme.colors.cardBackground, borderColor: isDark ? theme.colors.border : theme.colors.primary, shadowColor: isDark ? '#000' : theme.colors.primary, shadowOpacity: isDark ? 0.3 : 0.08 }]}>
 
               {/* Start Location */}
               <View style={styles.timelineRow}>
                 <View style={styles.timelineColumn}>
-                  <View style={[styles.largeDotGreen, { backgroundColor: theme.colors.primary, borderColor: theme.colors.cardBackground }]} />
+                  <View style={[styles.largeDotGreen, { backgroundColor: '#00C853', borderColor: theme.colors.cardBackground }]} />
                   <View style={[styles.verticalLineFull, { backgroundColor: theme.colors.border }]} />
                 </View>
                 <View style={styles.locationContent}>
@@ -244,8 +244,8 @@ const PickDropDetailScreen = () => {
                     <View style={[styles.verticalLineFull, { backgroundColor: theme.colors.border }]} />
                   </View>
                   <View style={styles.stopsListContent}>
-                    <View style={[styles.stopsBadge, { backgroundColor: theme.colors.backgroundSecondary }]}>
-                      <Text style={[styles.stopsBadgeText, { color: theme.colors.primary }]}>{service.stops.length} Stops</Text>
+                    <View style={[styles.stopsBadge, { backgroundColor: isDark ? 'rgba(126, 36, 108, 0.25)' : 'rgba(126, 36, 108, 0.12)' }]}>
+                      <Text style={[styles.stopsBadgeText, { color: isDark ? '#c77dba' : theme.colors.primary }]}>{service.stops.length} Stops</Text>
                     </View>
                     {service.stops.map((stop, index) => (
                       <View key={index} style={styles.stopRow}>
@@ -264,7 +264,7 @@ const PickDropDetailScreen = () => {
               <View style={styles.timelineRow}>
                 <View style={styles.timelineColumn}>
                   <View style={[styles.verticalLineTop, { backgroundColor: theme.colors.border }]} />
-                  <Icon name="location-pin" size={24} color={theme.colors.secondary} style={{ marginLeft: -12 }} />
+                  <Icon name="location-pin" size={24} color={isDark ? '#c77dba' : theme.colors.primary} style={{ marginLeft: -12 }} />
                 </View>
                 <View style={styles.locationContent}>
                   <Text style={[styles.largeLocationLabel, { color: theme.colors.textSecondary }]}>Drop Off</Text>
@@ -283,12 +283,12 @@ const PickDropDetailScreen = () => {
             <View style={styles.gridContainer}>
 
               {/* Price Item */}
-              <View style={[styles.gridItem, { backgroundColor: theme.colors.cardBackground, borderColor: theme.colors.border }]}>
-                <View style={[styles.iconCircle, { backgroundColor: theme.colors.primary }]}>
-                  <Icon name="attach-money" size={24} color="#fff" />
+              <View style={[styles.gridItem, { backgroundColor: theme.colors.cardBackground, borderColor: isDark ? theme.colors.border : theme.colors.primary, shadowColor: isDark ? '#000' : theme.colors.primary, shadowOpacity: isDark ? 0.3 : 0.08 }]}>
+                <View style={[styles.iconCircle, { backgroundColor: isDark ? 'rgba(126, 36, 108, 0.3)' : theme.colors.primary }]}>
+                  <Icon name="attach-money" size={24} color={isDark ? '#c77dba' : '#fff'} />
                 </View>
                 <Text style={[styles.gridLabel, { color: theme.colors.textSecondary }]}>Price Per Person</Text>
-                <Text style={[styles.gridValueLarge, { color: theme.colors.text }]}>
+                <Text style={[styles.gridValueLarge, { color: isDark ? '#c77dba' : theme.colors.primary }]}>
                   {(() => {
                     const price =
                       service.price_per_person ||
@@ -303,9 +303,9 @@ const PickDropDetailScreen = () => {
               </View>
 
               {/* Schedule Item */}
-              <View style={[styles.gridItem, { backgroundColor: theme.colors.cardBackground, borderColor: theme.colors.border }]}>
-                <View style={[styles.iconCircle, { backgroundColor: theme.colors.secondary }]}>
-                  <Icon name="access-time" size={24} color="#fff" />
+              <View style={[styles.gridItem, { backgroundColor: theme.colors.cardBackground, borderColor: isDark ? theme.colors.border : theme.colors.primary, shadowColor: isDark ? '#000' : theme.colors.primary, shadowOpacity: isDark ? 0.3 : 0.08 }]}>
+                <View style={[styles.iconCircle, { backgroundColor: isDark ? 'rgba(126, 36, 108, 0.3)' : theme.colors.secondary }]}>
+                  <Icon name="access-time" size={24} color={isDark ? '#c77dba' : '#fff'} />
                 </View>
                 <Text style={[styles.gridLabel, { color: theme.colors.textSecondary }]}>Schedule</Text>
                 <Text style={[styles.gridValue, { color: theme.colors.text }]}>
@@ -353,23 +353,23 @@ const PickDropDetailScreen = () => {
               </View>
 
               {/* Seats Item */}
-              <View style={[styles.gridItem, { backgroundColor: theme.colors.cardBackground, borderColor: theme.colors.border }]}>
-                <View style={[styles.iconCircle, { backgroundColor: theme.colors.backgroundSecondary }]}>
-                  <Icon name="event-seat" size={24} color={theme.colors.text} />
+              <View style={[styles.gridItem, { backgroundColor: theme.colors.cardBackground, borderColor: isDark ? theme.colors.border : theme.colors.primary, shadowColor: isDark ? '#000' : theme.colors.primary, shadowOpacity: isDark ? 0.3 : 0.08 }]}>
+                <View style={[styles.iconCircle, { backgroundColor: isDark ? 'rgba(255, 152, 0, 0.2)' : 'rgba(255, 152, 0, 0.15)' }]}>
+                  <Icon name="event-seat" size={24} color={isDark ? '#ffb74d' : '#f57c00'} />
                 </View>
                 <Text style={[styles.gridLabel, { color: theme.colors.textSecondary }]}>Available Seats</Text>
-                <Text style={[styles.gridValueLarge, { color: theme.colors.text }]}>
+                <Text style={[styles.gridValueLarge, { color: isDark ? '#ffb74d' : '#f57c00' }]}>
                   {service.available_spaces || service.available_seats || 0}
                 </Text>
               </View>
 
               {/* Gender Item */}
-              <View style={[styles.gridItem, { backgroundColor: theme.colors.cardBackground, borderColor: theme.colors.border }]}>
-                <View style={[styles.iconCircle, { backgroundColor: service.driver_gender === 'female' ? '#EC407A' : '#42A5F5' }]}>
-                  <Icon name="person" size={24} color="#fff" />
+              <View style={[styles.gridItem, { backgroundColor: theme.colors.cardBackground, borderColor: isDark ? theme.colors.border : theme.colors.primary, shadowColor: isDark ? '#000' : theme.colors.primary, shadowOpacity: isDark ? 0.3 : 0.08 }]}>
+                <View style={[styles.iconCircle, { backgroundColor: service.driver_gender === 'female' ? (isDark ? 'rgba(233, 30, 99, 0.25)' : '#EC407A') : (isDark ? 'rgba(33, 150, 243, 0.25)' : '#42A5F5') }]}>
+                  <Icon name="person" size={24} color={service.driver_gender === 'female' ? (isDark ? '#f48fb1' : '#fff') : (isDark ? '#90caf9' : '#fff')} />
                 </View>
                 <Text style={[styles.gridLabel, { color: theme.colors.textSecondary }]}>Driver Gender</Text>
-                <Text style={[styles.gridValue, { color: theme.colors.text }]}>
+                <Text style={[styles.gridValue, { color: service.driver_gender === 'female' ? (isDark ? '#f48fb1' : '#e91e63') : (isDark ? '#90caf9' : '#2196f3') }]}>
                   {service.driver_gender === 'female' ? 'Female\nDriver' : 'Male\nDriver'}
                 </Text>
               </View>
@@ -381,10 +381,10 @@ const PickDropDetailScreen = () => {
           {service.car && (
             <View style={styles.sectionContainer}>
               <Text style={[styles.sectionHeaderTitle, { color: theme.colors.textSecondary }]}>VEHICLE DETAILS</Text>
-              <View style={[styles.card, styles.vehicleCard, { backgroundColor: theme.colors.cardBackground, borderColor: theme.colors.border }]}>
+              <View style={[styles.card, styles.vehicleCard, { backgroundColor: theme.colors.cardBackground, borderColor: isDark ? theme.colors.border : theme.colors.primary, shadowColor: isDark ? '#000' : theme.colors.primary, shadowOpacity: isDark ? 0.3 : 0.08 }]}>
                 <View style={styles.vehicleHeader}>
-                  <View style={[styles.vehicleIconLarge, { backgroundColor: theme.colors.backgroundSecondary }]}>
-                    <Icon name="directions-car" size={40} color={theme.colors.textSecondary} />
+                  <View style={[styles.vehicleIconLarge, { backgroundColor: isDark ? 'rgba(255, 82, 82, 0.15)' : 'rgba(255, 82, 82, 0.1)' }]}>
+                    <Icon name="directions-car" size={40} color={isDark ? '#ff8a80' : '#FF5252'} />
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text style={[styles.vehicleTitleLarge, { color: theme.colors.text }]}>
@@ -420,7 +420,7 @@ const PickDropDetailScreen = () => {
           {service.description && (
             <View style={styles.sectionContainer}>
               <Text style={[styles.sectionHeaderTitle, { color: theme.colors.textSecondary }]}>ADDITIONAL NOTES</Text>
-              <View style={[styles.card, { padding: 16, backgroundColor: theme.colors.cardBackground, borderColor: theme.colors.border }]}>
+              <View style={[styles.card, { padding: 16, backgroundColor: theme.colors.cardBackground, borderColor: isDark ? theme.colors.border : theme.colors.primary, shadowColor: isDark ? '#000' : theme.colors.primary, shadowOpacity: isDark ? 0.3 : 0.08 }]}>
                 <Text style={[styles.descriptionTextLarge, { color: theme.colors.text }]}>
                   {service.description}
                 </Text>
@@ -431,11 +431,11 @@ const PickDropDetailScreen = () => {
           {/* 4. Service Provider - Large Profile */}
           <View style={styles.sectionContainer}>
             <Text style={[styles.sectionHeaderTitle, { color: theme.colors.textSecondary }]}>SERVICE PROVIDER</Text>
-            <View style={[styles.card, styles.providerCard, { backgroundColor: theme.colors.cardBackground, borderColor: theme.colors.border }]}>
+            <View style={[styles.card, styles.providerCard, { backgroundColor: theme.colors.cardBackground, borderColor: isDark ? theme.colors.border : theme.colors.primary, shadowColor: isDark ? '#000' : theme.colors.primary, shadowOpacity: isDark ? 0.3 : 0.08 }]}>
 
               <View style={styles.providerHeader}>
-                <View style={[styles.providerAvatarXLarge, { backgroundColor: theme.colors.backgroundSecondary }]}>
-                  <Text style={[styles.providerInitialsXLarge, { color: theme.colors.textSecondary }]}>
+                <View style={[styles.providerAvatarXLarge, { backgroundColor: isDark ? 'rgba(126, 36, 108, 0.3)' : 'rgba(126, 36, 108, 0.1)', borderWidth: 2, borderColor: isDark ? theme.colors.border : 'transparent' }]}>
+                  <Text style={[styles.providerInitialsXLarge, { color: isDark ? '#c77dba' : theme.colors.primary }]}>
                     {(provider?.name || provider?.user?.name || service.driver?.name || 'U').charAt(0).toUpperCase()}
                   </Text>
                 </View>

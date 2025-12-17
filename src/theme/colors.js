@@ -53,22 +53,22 @@ export const colors = {
 };
 
 export const darkColors = {
-  // Primary brand colors (same)
-  primary: '#7e246c',
-  primaryDark: '#5d1a4f',
-  primaryLight: '#9d3a85',
+  // Primary brand colors - slightly brighter for dark mode visibility
+  primary: '#9d3a85',
+  primaryDark: '#7e246c',
+  primaryLight: '#c77dba',
   
   // Secondary brand colors (using primary for consistency)
-  secondary: '#7e246c',
-  secondaryDark: '#5d1a4f',
-  secondaryLight: '#9d3a85',
+  secondary: '#9d3a85',
+  secondaryDark: '#7e246c',
+  secondaryLight: '#c77dba',
   
   // Background colors - matching website dark mode (#1A1A2E and #21213A)
   background: '#1a1a2e',
-  backgroundSecondary: '#21213a',
+  backgroundSecondary: '#2a2a42', // Lighter for better card contrast
   backgroundTertiary: '#1a1a2e',
   backgroundDark: '#1a1a2e',
-  backgroundDarkSecondary: '#21213a',
+  backgroundDarkSecondary: '#252540', // Card background for better readability
   
   // Text colors
   text: '#ffffff',
@@ -79,9 +79,9 @@ export const darkColors = {
   textOnSecondary: '#1a1a1a',
   
   // Border colors
-  border: '#3a3a5a',
-  borderLight: '#21213a',
-  borderDark: '#4a4a6a',
+  border: '#4a4a6a', // Lighter border for better visibility
+  borderLight: '#252540',
+  borderDark: '#5a5a7a',
   
   // Status colors (same)
   success: '#7e246c',
@@ -89,13 +89,13 @@ export const darkColors = {
   warning: '#ffa500',
   info: '#2196f3',
   
-  // Card colors - matching website dark purple-blue
-  cardBackground: '#21213a',
-  cardShadow: 'rgba(0, 0, 0, 0.5)',
+  // Card colors - lighter for better readability in dark mode
+  cardBackground: '#252540', // Lighter card background
+  cardShadow: 'rgba(0, 0, 0, 0.3)',
   
   // Input colors
-  inputBackground: '#21213a',
-  inputBorder: '#3a3a5a',
+  inputBackground: '#252540',
+  inputBorder: '#4a4a6a',
   inputFocus: '#7e246c',
   placeholder: '#b0b0b0',
   

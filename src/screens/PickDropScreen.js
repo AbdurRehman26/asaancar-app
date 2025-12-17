@@ -270,7 +270,7 @@ const PickDropScreen = () => {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.backgroundTertiary }]} edges={['top']}>
-      <View style={[styles.header, { backgroundColor: theme.colors.background }]}>
+      <View style={[styles.header, { backgroundColor: theme.colors.background, borderBottomColor: theme.colors.border }]}>
         <View style={styles.headerTop}>
           <View style={styles.headerTitleSection}>
           </View>
@@ -294,11 +294,11 @@ const PickDropScreen = () => {
       </View>
 
       {/* Filter and Add Service Section (match Rental Cars layout) */}
-      <View style={[styles.searchSection, { backgroundColor: theme.colors.background }]}>
+      <View style={[styles.searchSection, { backgroundColor: theme.colors.background, borderBottomColor: theme.colors.border }]}>
         <View style={styles.searchBarContainer}>
           {/* Filter icon (same as Rental Cars) */}
           <TouchableOpacity
-            style={[styles.filterButton, { borderColor: theme.colors.primary }]}
+            style={[styles.filterButton, { borderColor: theme.colors.primary, backgroundColor: theme.colors.background }]}
             onPress={openFilters}
           >
             <Icon name="tune" size={20} color={theme.colors.primary} />
@@ -343,14 +343,22 @@ const PickDropScreen = () => {
         {/* Services List */}
         {loading ? (
           <View style={styles.loadingContainer}>
-            <Text style={styles.loadingText}>Loading services...</Text>
+            <Text style={[styles.loadingText, { color: theme.colors.textSecondary }]}>Loading services...</Text>
           </View>
         ) : services.length > 0 ? (
           <View style={styles.servicesContainer}>
             {services.map((service) => (
               <TouchableOpacity
                 key={service.id}
-                style={[styles.serviceCard, { backgroundColor: theme.colors.cardBackground, borderColor: theme.colors.border }]}
+                style={[
+                  styles.serviceCard,
+                  {
+                    backgroundColor: theme.colors.cardBackground,
+                    borderColor: isDark ? theme.colors.border : theme.colors.primary,
+                    shadowColor: isDark ? '#000' : theme.colors.primary,
+                    shadowOpacity: isDark ? 0.3 : 0.08,
+                  }
+                ]}
                 onPress={() => {
                   navigation.navigate('PickDropDetail', { serviceId: service.id, serviceData: service });
                 }}
@@ -362,43 +370,43 @@ const PickDropScreen = () => {
                   <View style={styles.routeContainer}>
                     {/* Start Point */}
                     <View style={styles.timelineItem}>
-                      <View style={styles.timelineDotGreen} />
+                      <View style={[styles.timelineDotGreen, { borderColor: theme.colors.cardBackground }]} />
                       <View style={styles.timelineContent}>
                         <Text style={[styles.locationTitle, { color: theme.colors.text }]} numberOfLines={1}>
                           {service.start_location || 'Start Location'}
                         </Text>
-                        <Text style={styles.locationLabel}>Start Point</Text>
+                        <Text style={[styles.locationLabel, { color: theme.colors.textLight }]}>Start Point</Text>
                       </View>
                     </View>
 
                     {/* Connecting Line & Stops */}
-                    <View style={styles.timelineLineContainer}>
+                    <View style={[styles.timelineLineContainer, { borderLeftColor: isDark ? theme.colors.border : '#E0E0E0' }]}>
                       <View style={styles.timelineLine} />
                       {service.stops && service.stops.length > 0 && (
-                        <View style={styles.stopsTag}>
-                          <Text style={styles.stopsTagText}>
+                        <View style={[styles.stopsTag, { backgroundColor: isDark ? 'rgba(126, 36, 108, 0.25)' : 'rgba(126, 36, 108, 0.12)' }]}>
+                          <Text style={[styles.stopsTagText, { color: isDark ? '#c77dba' : theme.colors.primary }]}>
                             {service.stops.length} Stop{service.stops.length > 1 ? 's' : ''} in between
                           </Text>
-                          <Icon name="keyboard-arrow-down" size={14} color="#C2185B" />
+                          <Icon name="keyboard-arrow-down" size={14} color={isDark ? '#c77dba' : theme.colors.primary} />
                         </View>
                       )}
                     </View>
 
                     {/* Destination */}
                     <View style={styles.timelineItem}>
-                      <Icon name="location-pin" size={18} color="#8E24AA" style={{ marginLeft: -1 }} />
+                      <Icon name="location-pin" size={18} color={isDark ? '#c77dba' : theme.colors.primary} style={{ marginLeft: -1 }} />
                       <View style={styles.timelineContent}>
                         <Text style={[styles.locationTitle, { color: theme.colors.text }]} numberOfLines={1}>
                           {service.end_location || 'End Location'}
                         </Text>
-                        <Text style={styles.locationLabel}>Destination</Text>
+                        <Text style={[styles.locationLabel, { color: theme.colors.textLight }]}>Destination</Text>
                       </View>
                     </View>
                   </View>
 
                   {/* Right: Price */}
-                  <View style={styles.priceContainer}>
-                    <Text style={styles.priceLabel}>Per Person</Text>
+                  <View style={[styles.priceContainer, { backgroundColor: isDark ? 'rgba(126, 36, 108, 0.2)' : 'rgba(126, 36, 108, 0.08)', borderWidth: 1, borderColor: isDark ? 'rgba(126, 36, 108, 0.4)' : 'transparent' }]}>
+                    <Text style={[styles.priceLabel, { color: theme.colors.textSecondary }]}>Per Person</Text>
                     {(() => {
                       const price =
                         service.price_per_person ||
@@ -411,7 +419,7 @@ const PickDropScreen = () => {
                       if (!price) return null;
 
                       return (
-                        <Text style={styles.priceValue}>
+                        <Text style={[styles.priceValue, { color: isDark ? '#c77dba' : theme.colors.primary }]}>
                           {currency} {typeof price === 'number' ? price.toLocaleString() : price}
                         </Text>
                       );
@@ -463,9 +471,9 @@ const PickDropScreen = () => {
                     }
 
                     return (
-                      <View style={styles.scheduleTag}>
-                        <Icon name="access-time" size={14} color="#0056cb" />
-                        <Text style={styles.scheduleTagText}>
+                      <View style={[styles.scheduleTag, { backgroundColor: isDark ? 'rgba(126, 36, 108, 0.25)' : 'rgba(126, 36, 108, 0.12)' }]}>
+                        <Icon name="access-time" size={14} color={isDark ? '#c77dba' : theme.colors.primary} />
+                        <Text style={[styles.scheduleTagText, { color: isDark ? '#c77dba' : theme.colors.primary }]}>
                           {labelText} {timeText ? `• ${timeText}` : ''}
                         </Text>
                       </View>
@@ -484,9 +492,9 @@ const PickDropScreen = () => {
                     if (availableSpaces === null || availableSpaces === undefined) return null;
 
                     return (
-                      <View style={styles.seatsTag}>
-                        <Icon name="people-outline" size={14} color="#E65100" />
-                        <Text style={styles.seatsTagText}>
+                      <View style={[styles.seatsTag, { backgroundColor: isDark ? 'rgba(255, 152, 0, 0.2)' : 'rgba(255, 152, 0, 0.12)' }]}>
+                        <Icon name="people-outline" size={14} color={isDark ? '#ffb74d' : '#f57c00'} />
+                        <Text style={[styles.seatsTagText, { color: isDark ? '#ffb74d' : '#f57c00' }]}>
                           {availableSpaces} Seat{availableSpaces !== 1 ? 's' : ''} left
                         </Text>
                       </View>
@@ -496,9 +504,15 @@ const PickDropScreen = () => {
                   {/* Driver Gender Tag */}
                   {service.driver_gender && (
                     <View style={[styles.driverGenderTag, {
-                      backgroundColor: service.driver_gender === 'female' ? '#FCE4EC' : '#E3F2FD'
+                      backgroundColor: service.driver_gender === 'female'
+                        ? (isDark ? 'rgba(233, 30, 99, 0.2)' : 'rgba(233, 30, 99, 0.12)')
+                        : (isDark ? 'rgba(33, 150, 243, 0.2)' : 'rgba(33, 150, 243, 0.12)')
                     }]}>
-                      <Text style={styles.driverGenderText}>
+                      <Text style={[styles.driverGenderText, {
+                        color: service.driver_gender === 'female'
+                          ? (isDark ? '#f48fb1' : '#e91e63')
+                          : (isDark ? '#90caf9' : '#2196f3')
+                      }]}>
                         {service.driver_gender === 'female' ? '👩 Female Driver' : '👨 Male Driver'}
                       </Text>
                     </View>
@@ -508,9 +522,9 @@ const PickDropScreen = () => {
                 {/* Vehicle Info */}
                 {service.car && (
                   <View style={styles.vehicleSection}>
-                    <Text style={styles.vehicleLabel}>VEHICLE</Text>
+                    <Text style={[styles.vehicleLabel, { color: theme.colors.textLight }]}>VEHICLE</Text>
                     <View style={styles.vehicleRow}>
-                      <Icon name="directions-car" size={16} color="#FF5252" />
+                      <Icon name="directions-car" size={16} color={isDark ? '#ff8a80' : '#FF5252'} />
                       <Text style={[styles.vehicleText, { color: theme.colors.text }]}>
                         {service.car.name || service.car} <Text style={{ color: theme.colors.textSecondary }}>{service.car.color ? `(${service.car.color})` : ''}</Text>
                       </Text>
@@ -519,14 +533,14 @@ const PickDropScreen = () => {
                 )}
 
                 {/* Divider */}
-                <View style={styles.cardDivider} />
+                <View style={[styles.cardDivider, { backgroundColor: theme.colors.border }]} />
 
                 {/* Footer: Driver & Action */}
                 <View style={styles.cardFooter}>
                   <View style={styles.driverInfo}>
                     {/* Avatar */}
-                    <View style={styles.driverAvatar}>
-                      <Text style={styles.driverInitials}>
+                    <View style={[styles.driverAvatar, { backgroundColor: isDark ? 'rgba(126, 36, 108, 0.3)' : 'rgba(126, 36, 108, 0.1)', borderWidth: 1, borderColor: isDark ? theme.colors.border : 'transparent' }]}>
+                      <Text style={[styles.driverInitials, { color: isDark ? '#c77dba' : theme.colors.primary }]}>
                         {(service.driver?.name || service.driver || 'U').charAt(0).toUpperCase()}
                       </Text>
                     </View>
@@ -539,7 +553,7 @@ const PickDropScreen = () => {
                         const phone = provider?.phone_number || service.contact_number || service.phone || null;
                         if (phone) {
                           return (
-                            <Text style={styles.driverPhone}>{phone}</Text>
+                            <Text style={[styles.driverPhone, { color: theme.colors.textSecondary }]}>{phone}</Text>
                           )
                         }
                         return null;
@@ -548,7 +562,7 @@ const PickDropScreen = () => {
                   </View>
 
                   <TouchableOpacity
-                    style={styles.viewDetailsButtonSmall}
+                    style={[styles.viewDetailsButtonSmall, { backgroundColor: theme.colors.primary }]}
                   >
                     <Text style={styles.viewDetailsText}>View Details</Text>
                   </TouchableOpacity>
@@ -558,8 +572,8 @@ const PickDropScreen = () => {
           </View>
         ) : (
           <View style={styles.emptyContainer}>
-            <Icon name="directions-car" size={64} color="#ccc" />
-            <Text style={styles.emptyText}>No services found</Text>
+            <Icon name="directions-car" size={64} color={theme.colors.textLight} />
+            <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>No services found</Text>
           </View>
         )}
 
@@ -647,7 +661,6 @@ const styles = StyleSheet.create({
   },
   header: {
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
   },
   headerTop: {
     flexDirection: 'row',
@@ -663,12 +676,12 @@ const styles = StyleSheet.create({
   pageTitle: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: '#1a1a1a',
+    color: '#ffffff',
     marginBottom: 8,
   },
   pageSubtitle: {
     fontSize: 13,
-    color: '#666',
+    color: '#b0b0b0',
     lineHeight: 18,
   },
   headerTitle: {
@@ -704,7 +717,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   addServiceButtonText: {
-    color: '#fff',
+    color: '#ffffff',
     fontWeight: '600',
     fontSize: 14,
   },
@@ -713,8 +726,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 6,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-    backgroundColor: '#fff',
   },
   searchBarContainer: {
     flexDirection: 'row',
@@ -722,13 +733,12 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   filterButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
     borderWidth: 1.5,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#fff',
   },
   sectionTitle: {
     fontSize: 20,
@@ -749,6 +759,7 @@ const styles = StyleSheet.create({
     marginLeft: 12,
     fontSize: 14,
     lineHeight: 20,
+    color: '#d0d0d0',
   },
   loadingContainer: {
     padding: 40,
@@ -756,7 +767,7 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: 16,
-    color: '#666',
+    color: '#999999',
   },
   servicesContainer: {
     padding: 16,
@@ -773,16 +784,14 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   serviceCard: {
-    borderRadius: 12,
-    borderWidth: 1,
+    borderRadius: 16,
+    borderWidth: 1.5,
     padding: 16,
     marginBottom: 16,
-    marginHorizontal: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    marginHorizontal: 0,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 8,
+    elevation: 3,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -800,13 +809,12 @@ const styles = StyleSheet.create({
     marginBottom: 0,
   },
   timelineDotGreen: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
+    width: 12,
+    height: 12,
+    borderRadius: 6,
     backgroundColor: '#00C853', // Green for start
     marginRight: 8,
     borderWidth: 2,
-    borderColor: '#fff',
     elevation: 2,
   },
   timelineContent: {
@@ -818,16 +826,14 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   locationLabel: {
-    fontSize: 10,
-    color: '#9E9E9E',
+    fontSize: 11,
   },
   timelineLineContainer: {
-    marginLeft: 4,
+    marginLeft: 5,
     borderLeftWidth: 2,
-    borderLeftColor: '#E0E0E0',
-    paddingLeft: 12,
-    minHeight: 50, // Increased height to prevent overlap
-    justifyContent: 'center', // Center content vertically
+    paddingLeft: 14,
+    minHeight: 55,
+    justifyContent: 'center',
     position: 'relative',
   },
   timelineLine: {
@@ -836,37 +842,32 @@ const styles = StyleSheet.create({
   stopsTag: {
     position: 'absolute',
     left: -2,
-    // top: '30%' -> Removed to use centering
-    alignSelf: 'flex-start', // Keeps it near the line
-    backgroundColor: '#F8BBD0',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
+    alignSelf: 'flex-start',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
     borderRadius: 12,
     flexDirection: 'row',
     alignItems: 'center',
-    zIndex: 1, // Ensure it sits on top of the line
+    zIndex: 1,
   },
   stopsTagText: {
-    fontSize: 10,
-    color: '#880E4F',
+    fontSize: 11,
     marginRight: 2,
-    fontWeight: '500',
+    fontWeight: '600',
   },
   priceContainer: {
     alignItems: 'flex-end',
-    backgroundColor: '#f9f9f9',
-    padding: 8,
-    borderRadius: 8,
+    padding: 10,
+    borderRadius: 10,
   },
   priceLabel: {
-    fontSize: 10,
-    color: '#757575',
+    fontSize: 11,
     marginBottom: 4,
+    fontWeight: '500',
   },
   priceValue: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
-    color: '#8E24AA', // Purple
   },
   tagsRow: {
     flexDirection: 'row',
@@ -877,52 +878,47 @@ const styles = StyleSheet.create({
   scheduleTag: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#E3F2FD', // Light Blue
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
     borderRadius: 8,
-    gap: 4,
+    gap: 6,
   },
   scheduleTagText: {
-    fontSize: 11,
-    color: '#0D47A1',
+    fontSize: 12,
     fontWeight: '600',
   },
   seatsTag: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFF3E0', // Light Orange
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
     borderRadius: 8,
-    gap: 4,
+    gap: 6,
   },
   seatsTagText: {
-    fontSize: 11,
-    color: '#E65100',
+    fontSize: 12,
     fontWeight: '600',
   },
   driverGenderTag: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
     borderRadius: 8,
   },
   driverGenderText: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '600',
-    color: '#333',
   },
   vehicleSection: {
     marginBottom: 16,
   },
   vehicleLabel: {
     fontSize: 10,
-    color: '#9E9E9E',
-    marginBottom: 4,
+    marginBottom: 6,
     textTransform: 'uppercase',
-    letterSpacing: 1,
+    letterSpacing: 1.2,
+    fontWeight: '600',
   },
   vehicleRow: {
     flexDirection: 'row',
@@ -935,8 +931,7 @@ const styles = StyleSheet.create({
   },
   cardDivider: {
     height: 1,
-    backgroundColor: '#EEEEEE',
-    marginBottom: 12,
+    marginVertical: 12,
   },
   cardFooter: {
     flexDirection: 'row',
@@ -949,17 +944,15 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   driverAvatar: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#F5F5F5',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
   },
   driverInitials: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#616161',
+    fontSize: 17,
+    fontWeight: '700',
   },
   driverName: {
     fontSize: 14,
@@ -970,14 +963,13 @@ const styles = StyleSheet.create({
     color: '#757575',
   },
   viewDetailsButtonSmall: {
-    backgroundColor: '#8E24AA',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderRadius: 10,
   },
   viewDetailsText: {
-    color: '#fff',
-    fontSize: 12,
+    color: '#ffffff',
+    fontSize: 13,
     fontWeight: 'bold',
   },
   // Keep required non-card styles
