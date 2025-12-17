@@ -9,16 +9,21 @@ import {
   ActivityIndicator,
   RefreshControl,
   Alert,
+  Dimensions,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useTheme } from '@/context/ThemeContext';
 import { carAPI } from '@/services/api';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import { LinearGradient } from 'expo-linear-gradient';
 import ErrorModal from '@/components/ErrorModal';
 import SuccessModal from '@/components/SuccessModal';
 import ConfirmModal from '@/components/ConfirmModal';
 import { useAuth } from '@/context/AuthContext';
+
+const { width } = Dimensions.get('window');
 
 const MyCarsScreen = () => {
   const navigation = useNavigation();
@@ -173,47 +178,86 @@ const MyCarsScreen = () => {
   };
 
   const renderCarItem = ({ item }) => (
-    <View style={[styles.carCard, { backgroundColor: theme.colors.cardBackground }]}>
+    <View style={[styles.carCard, { backgroundColor: theme.colors.cardBackground, shadowColor: theme.colors.shadow || '#000' }]}>
       <TouchableOpacity
         onPress={() => navigation.navigate('CarDetail', { carId: item.id })}
-        style={styles.carImageContainer}
+        style={styles.cardContent}
+        activeOpacity={0.9}
       >
-        <Image
-          source={{ uri: getCarImageUrl(item) }}
-          style={styles.carImage}
-          resizeMode="cover"
-        />
+        <View style={[styles.imageContainer, { backgroundColor: theme.colors.backgroundSecondary || '#f5f5f5' }]}>
+          <Image
+            source={{ uri: getCarImageUrl(item) }}
+            style={styles.carImage}
+            resizeMode="contain"
+          />
+          <LinearGradient
+            colors={['transparent', 'rgba(0,0,0,0.3)', 'rgba(0,0,0,0.7)']}
+            style={styles.imageOverlay}
+          />
+          <View style={styles.priceTag}>
+            <Text style={styles.priceText}>
+              {formatPrice(item.price_per_day, item.price)}
+            </Text>
+          </View>
+        </View>
+
+        <View style={styles.carInfo}>
+          <View style={styles.infoHeader}>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.carBrand, { color: theme.colors.primary }]} numberOfLines={1}>
+                {item.brand?.name || item.brand || 'Brand'}
+              </Text>
+              <Text style={[styles.carName, { color: theme.colors.text }]} numberOfLines={1}>
+                {item.name || 'Car Name'}
+              </Text>
+            </View>
+          </View>
+
+          {/* Add dummy specs if real ones aren't available to complete the look, or just hide */}
+          <View style={styles.specsRow}>
+            <View style={styles.specItem}>
+              <Icon name="local-gas-station" size={16} color={theme.colors.textSecondary} />
+              <Text style={[styles.specText, { color: theme.colors.textSecondary }]}>{item.fuel_type || 'Petrol'}</Text>
+            </View>
+            <View style={styles.specDivider} />
+            <View style={styles.specItem}>
+              <Icon name="settings" size={16} color={theme.colors.textSecondary} />
+              <Text style={[styles.specText, { color: theme.colors.textSecondary }]}>{item.transmission || 'Automatic'}</Text>
+            </View>
+            <View style={styles.specDivider} />
+            <View style={styles.specItem}>
+              <Icon name="people" size={16} color={theme.colors.textSecondary} />
+              <Text style={[styles.specText, { color: theme.colors.textSecondary }]}>{item.seats || '4 Seats'}</Text>
+            </View>
+          </View>
+        </View>
+
+        <View style={[styles.actionDivider, { backgroundColor: theme.colors.border }]} />
+
+        <View style={styles.actionButtons}>
+          <TouchableOpacity
+            style={styles.actionButton}
+            onPress={() => handleEdit(item)}
+          >
+            <View style={[styles.iconCircle, { backgroundColor: theme.colors.primary + '15' }]}>
+              <Icon name="edit" size={20} color={theme.colors.primary} />
+            </View>
+            <Text style={[styles.actionText, { color: theme.colors.primary }]}>Edit Car</Text>
+          </TouchableOpacity>
+
+          <View style={[styles.verticalDivider, { backgroundColor: theme.colors.border }]} />
+
+          <TouchableOpacity
+            style={styles.actionButton}
+            onPress={() => handleDelete(item)}
+          >
+            <View style={[styles.iconCircle, { backgroundColor: '#ff444415' }]}>
+              <Icon name="delete-outline" size={20} color="#ff4444" />
+            </View>
+            <Text style={[styles.actionText, { color: '#ff4444' }]}>Delete</Text>
+          </TouchableOpacity>
+        </View>
       </TouchableOpacity>
-
-      <View style={styles.carInfo}>
-        <Text style={[styles.carName, { color: theme.colors.text }]} numberOfLines={1}>
-          {item.name || 'Car Name'}
-        </Text>
-        <Text style={[styles.carBrand, { color: theme.colors.textSecondary }]} numberOfLines={1}>
-          {item.brand?.name || item.brand || 'Brand'}
-        </Text>
-        <Text style={[styles.carPrice, { color: theme.colors.primary }]}>
-          {formatPrice(item.price_per_day, item.price)}
-        </Text>
-      </View>
-
-      <View style={styles.actionButtons}>
-        <TouchableOpacity
-          style={[styles.editButton, { backgroundColor: theme.colors.primary }]}
-          onPress={() => handleEdit(item)}
-        >
-          <Icon name="edit" size={18} color="#fff" />
-          <Text style={styles.buttonText}>Edit</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.deleteButton, { backgroundColor: '#ff4444' }]}
-          onPress={() => handleDelete(item)}
-        >
-          <Icon name="delete" size={18} color="#fff" />
-          <Text style={styles.buttonText}>Delete</Text>
-        </TouchableOpacity>
-      </View>
     </View>
   );
 
@@ -253,7 +297,7 @@ const MyCarsScreen = () => {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.backgroundTertiary }]} edges={['top']}>
-      <View style={[styles.header, { backgroundColor: theme.colors.cardBackground }]}>
+      <View style={[styles.header, { backgroundColor: theme.colors.cardBackground, borderBottomColor: theme.colors.border }]}>
         <TouchableOpacity onPress={() => navigation.navigate('SettingsMain')} style={styles.backButton}>
           <Icon name="arrow-back" size={24} color={theme.colors.text} />
         </TouchableOpacity>
@@ -339,25 +383,36 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: 16,
+    paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: 'rgba(0,0,0,0.05)',
   },
   backButton: {
-    padding: 4,
-    marginRight: 12,
+    padding: 8,
+    marginRight: 8,
+    borderRadius: 20,
   },
   headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
+    fontSize: 20,
+    fontWeight: '700',
     flex: 1,
+    letterSpacing: 0.5,
   },
   addButton: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
+    paddingVertical: 10,
+    borderRadius: 25,
     gap: 6,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 4,
   },
   addButtonText: {
     color: '#fff',
@@ -367,67 +422,127 @@ const styles = StyleSheet.create({
   listContainer: {
     padding: 16,
     flexGrow: 1,
+    paddingBottom: 40,
   },
   carCard: {
-    borderRadius: 12,
-    marginBottom: 16,
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    borderRadius: 20,
+    marginBottom: 20,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 5,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.03)',
   },
-  carImageContainer: {
+  cardContent: {
+    borderRadius: 20,
+    overflow: 'hidden',
+  },
+  imageContainer: {
     width: '100%',
-    height: 200,
+    height: 220,
+    position: 'relative',
   },
   carImage: {
     width: '100%',
     height: '100%',
   },
+  imageOverlay: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: '40%',
+  },
+  priceTag: {
+    position: 'absolute',
+    top: 16,
+    right: 16,
+    backgroundColor: 'rgba(0,0,0,0.75)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+    backdropFilter: 'blur(10px)',
+  },
+  priceText: {
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 14,
+  },
   carInfo: {
     padding: 16,
+    paddingBottom: 12,
   },
-  carName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 4,
+  infoHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 12,
   },
   carBrand: {
-    fontSize: 14,
+    fontSize: 12,
+    fontWeight: '700',
+    marginBottom: 4,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+  carName: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    letterSpacing: 0.3,
+  },
+  specsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 8,
   },
-  carPrice: {
-    fontSize: 16,
-    fontWeight: '600',
+  specItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  specText: {
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  specDivider: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#ccc',
+    marginHorizontal: 8,
+  },
+  actionDivider: {
+    height: 1,
+    width: '100%',
+    opacity: 0.1,
   },
   actionButtons: {
     flexDirection: 'row',
-    padding: 16,
-    paddingTop: 0,
-    gap: 12,
+    alignItems: 'center',
+    paddingVertical: 4,
   },
-  editButton: {
+  actionButton: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 12,
-    borderRadius: 8,
-    gap: 6,
+    gap: 8,
   },
-  deleteButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
+  verticalDivider: {
+    width: 1,
+    height: '60%',
+    opacity: 0.1,
+  },
+  iconCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     justifyContent: 'center',
-    paddingVertical: 12,
-    borderRadius: 8,
-    gap: 6,
+    alignItems: 'center',
   },
-  buttonText: {
-    color: '#fff',
+  actionText: {
     fontSize: 14,
     fontWeight: '600',
   },
@@ -446,6 +561,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginTop: 8,
     textAlign: 'center',
+    color: '#666',
   },
 });
 

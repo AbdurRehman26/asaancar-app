@@ -10,6 +10,7 @@ import {
   ScrollView,
   ActivityIndicator,
   RefreshControl,
+  Dimensions
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
@@ -20,6 +21,9 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import ServiceTabs from '@/components/ServiceTabs';
 import Dropdown from '@/components/Dropdown';
 import FilterDrawer from '@/components/FilterDrawer';
+import { LinearGradient } from 'expo-linear-gradient';
+
+const { width } = Dimensions.get('window');
 
 const HomeScreen = () => {
   const navigation = useNavigation();
@@ -85,16 +89,16 @@ const HomeScreen = () => {
         carBrandAPI.getBrands(),
         carTypeAPI.getTypes(),
       ]);
-      const brandsArray = Array.isArray(brandsData?.data) 
-        ? brandsData.data 
-        : Array.isArray(brandsData) 
-        ? brandsData 
-        : [];
-      const typesArray = Array.isArray(typesData?.data) 
-        ? typesData.data 
-        : Array.isArray(typesData) 
-        ? typesData 
-        : [];
+      const brandsArray = Array.isArray(brandsData?.data)
+        ? brandsData.data
+        : Array.isArray(brandsData)
+          ? brandsData
+          : [];
+      const typesArray = Array.isArray(typesData?.data)
+        ? typesData.data
+        : Array.isArray(typesData)
+          ? typesData
+          : [];
       setBrands(brandsArray);
       setTypes(typesArray);
     } catch (error) {
@@ -114,7 +118,7 @@ const HomeScreen = () => {
       };
       const data = await carAPI.getCars(params);
       let carsData = [];
-      
+
       // Handle different response structures
       if (data) {
         if (Array.isArray(data.data)) {
@@ -127,13 +131,13 @@ const HomeScreen = () => {
           carsData = data.data.data;
         }
       }
-      
+
       setCars(carsData);
-      
+
       // Handle pagination - check for current_page and last_page
       let currentPageValue = 1;
       let lastPageValue = 1;
-      
+
       if (data?.pagination) {
         currentPageValue = data.pagination.current_page || data.pagination.page || 1;
         lastPageValue = data.pagination.last_page || 1;
@@ -147,10 +151,10 @@ const HomeScreen = () => {
         currentPageValue = data.current_page;
         lastPageValue = data.last_page || 1;
       }
-      
+
       setApiCurrentPage(currentPageValue);
       setLastPage(lastPageValue);
-      
+
       // Get total cars count
       if (data?.pagination?.total) {
         setTotalCars(data.pagination.total);
@@ -212,7 +216,7 @@ const HomeScreen = () => {
       minPrice: filtersToApply.minPrice || '',
       maxPrice: filtersToApply.maxPrice || '',
     };
-    
+
     console.log('HomeScreen - newFilters to set:', JSON.stringify(newFilters, null, 2));
     setFilters(newFilters); // Create a new object to ensure state update
     setTempFilters(newFilters); // Sync tempFilters as well
@@ -234,7 +238,7 @@ const HomeScreen = () => {
   const formatPrice = (pricePerDay, price) => {
     let priceValue = '0';
     let currency = 'PKR';
-    
+
     if (pricePerDay) {
       if (typeof pricePerDay === 'object') {
         // Handle nested structure: price.perDay.withDriver
@@ -270,7 +274,7 @@ const HomeScreen = () => {
         priceValue = price;
       }
     }
-    
+
     return { priceValue, currency };
   };
 
@@ -289,64 +293,100 @@ const HomeScreen = () => {
       // If it's just a filename or path, prepend the base URL
       return `https://asaancar.com/${car.image}`;
     }
-    
+
     // Fallback to placeholder if no image is provided
     return 'https://via.placeholder.com/300x200?text=Car+Image';
   };
 
   const renderCarItem = ({ item }) => {
     return (
-    <TouchableOpacity
-      style={[styles.carCard, { borderColor: theme.colors.primary, backgroundColor: theme.colors.cardBackground }]}
-      onPress={() => navigation.navigate('CarDetail', { carId: item.id })}
-    >
-      <View style={[styles.imageContainer, { backgroundColor: theme.colors.border }]}>
-        <Image
-          source={{
-            uri: getCarImageUrl(item),
-          }}
-          style={styles.carImage}
-          resizeMode="cover"
-        />
-      </View>
-      <View style={styles.carInfo}>
-        <Text style={[styles.carName, { color: theme.colors.text }]}>
-          {item.name || 'Car Name'}
-        </Text>
-        <Text style={[styles.carBrand, { color: theme.colors.textSecondary }]}>
-          {item.brand?.name || 'Brand'}
-        </Text>
-        <View style={styles.priceContainer}>
-          <Text style={[styles.price, { color: theme.colors.primary }]}>
-            {(() => {
-              const { priceValue, currency } = formatPrice(item.pricePerDay, item.price);
-              return `${currency} ${priceValue}/day`;
-            })()}
-          </Text>
-        </View>
-        {(item.store || item.dealer) && (
-          <>
-            <View style={[styles.divider, { backgroundColor: theme.colors.border }]} />
-            <TouchableOpacity
-              style={styles.dealerInfo}
-              onPress={() => {
-                const storeId = item.store?.id || item.dealer?.id || item.store_id;
-                if (storeId) {
-                  navigation.navigate('StoreProfile', { storeId });
-                }
+      <View style={[styles.carCard, { backgroundColor: theme.colors.cardBackground, shadowColor: theme.colors.shadow || '#000' }]}>
+        <TouchableOpacity
+          onPress={() => navigation.navigate('CarDetail', { carId: item.id })}
+          style={styles.cardContent}
+          activeOpacity={0.9}
+        >
+          <View style={[styles.imageContainer, { backgroundColor: theme.colors.backgroundSecondary || '#f5f5f5' }]}>
+            <Image
+              source={{
+                uri: getCarImageUrl(item),
               }}
-            >
-              <Icon name="store" size={16} color={theme.colors.textSecondary} />
-              <View style={styles.dealerDetails}>
-                <Text style={[styles.rentalProvider, { color: theme.colors.text }]}>
-                  {item.store?.name || item.dealer?.name || 'N/A'}
+              style={styles.carImage}
+              resizeMode="contain"
+            />
+            <LinearGradient
+              colors={['transparent', 'rgba(0,0,0,0.3)', 'rgba(0,0,0,0.7)']}
+              style={styles.imageOverlay}
+            />
+            <View style={styles.priceTag}>
+              <Text style={styles.priceText}>
+                {(() => {
+                  const { priceValue, currency } = formatPrice(item.pricePerDay, item.price);
+                  return `${currency} ${priceValue}/day`;
+                })()}
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.carInfo}>
+            <View style={styles.infoHeader}>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.carBrand, { color: theme.colors.primary }]} numberOfLines={1}>
+                  {item.brand?.name || item.brand || 'Brand'}
+                </Text>
+                <Text style={[styles.carName, { color: theme.colors.text }]} numberOfLines={1}>
+                  {item.name || 'Car Name'}
                 </Text>
               </View>
-            </TouchableOpacity>
-          </>
-        )}
+            </View>
+
+            {/* Specs Row - Only show if data seems somewhat plausible, otherwise it's just decorative icons */}
+            <View style={styles.specsRow}>
+              <View style={styles.specItem}>
+                <Icon name="local-gas-station" size={16} color={theme.colors.textSecondary} />
+                <Text style={[styles.specText, { color: theme.colors.textSecondary }]}>{item.fuel_type || 'Petrol'}</Text>
+              </View>
+              <View style={styles.specDivider} />
+              <View style={styles.specItem}>
+                <Icon name="settings" size={16} color={theme.colors.textSecondary} />
+                <Text style={[styles.specText, { color: theme.colors.textSecondary }]}>{item.transmission || 'Automatic'}</Text>
+              </View>
+              <View style={styles.specDivider} />
+              <View style={styles.specItem}>
+                <Icon name="people" size={16} color={theme.colors.textSecondary} />
+                <Text style={[styles.specText, { color: theme.colors.textSecondary }]}>{item.seats || '4 Seats'}</Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Dealer/Store Section */}
+          {(item.store || item.dealer) && (
+            <>
+              <View style={[styles.actionDivider, { backgroundColor: theme.colors.border }]} />
+              <TouchableOpacity
+                style={styles.dealerSection}
+                onPress={() => {
+                  const storeId = item.store?.id || item.dealer?.id || item.store_id;
+                  if (storeId) {
+                    navigation.navigate('StoreProfile', { storeId });
+                  }
+                }}
+              >
+                <View style={[styles.dealerIconCircle, { backgroundColor: theme.colors.backgroundSecondary }]}>
+                  <Icon name="store" size={18} color={theme.colors.primary} />
+                </View>
+                <View style={styles.dealerInfoText}>
+                  <Text style={[styles.dealerLabel, { color: theme.colors.textSecondary }]}>Provided by</Text>
+                  <Text style={[styles.dealerName, { color: theme.colors.text }]} numberOfLines={1}>
+                    {item.store?.name || item.dealer?.name || 'Verfied Partner'}
+                  </Text>
+                </View>
+                <Icon name="chevron-right" size={20} color={theme.colors.textSecondary} />
+              </TouchableOpacity>
+            </>
+          )}
+        </TouchableOpacity>
       </View>
-    </TouchableOpacity>
     );
   };
 
@@ -373,15 +413,15 @@ const HomeScreen = () => {
               onPress={toggleTheme}
               style={styles.themeToggleButton}
             >
-              <Icon 
-                name={isDark ? 'light-mode' : 'dark-mode'} 
-                size={24} 
-                color={theme.colors.primary} 
+              <Icon
+                name={isDark ? 'light-mode' : 'dark-mode'}
+                size={24}
+                color={theme.colors.primary}
               />
             </TouchableOpacity>
           </View>
         </View>
-        
+
         <ServiceTabs
           activeTab={activeServiceTab}
           onTabChange={handleServiceTabChange}
@@ -396,7 +436,7 @@ const HomeScreen = () => {
         >
           <Icon name="tune" size={20} color={theme.colors.primary} />
         </TouchableOpacity>
-        
+
         <View style={styles.infoBanner}>
           <Icon name="info" size={16} color={theme.colors.primary} />
           <Text style={[styles.infoText, { color: theme.colors.textSecondary }]}>
@@ -412,7 +452,7 @@ const HomeScreen = () => {
             {(() => {
               const startNumber = (apiCurrentPage - 1) * pageSize + 1;
               const endNumber = Math.min(apiCurrentPage * pageSize, totalCars);
-              return totalCars > 0 
+              return totalCars > 0
                 ? `Showing ${startNumber}-${endNumber} of ${totalCars}`
                 : `Showing ${startNumber}-${endNumber}`;
             })()}
@@ -596,97 +636,125 @@ const styles = StyleSheet.create({
   },
   listContainer: {
     padding: 16,
-  },
-  row: {
-    justifyContent: 'space-between',
-    paddingHorizontal: 8,
-    gap: 16,
+    paddingBottom: 40,
   },
   carCard: {
-    borderRadius: 12,
-    marginBottom: 12,
-    overflow: 'hidden',
+    borderRadius: 20,
+    marginBottom: 20,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 5,
     borderWidth: 1,
-    width: '100%',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    borderColor: 'rgba(0,0,0,0.03)',
+  },
+  cardContent: {
+    borderRadius: 20,
+    overflow: 'hidden',
   },
   imageContainer: {
     width: '100%',
-    height: 150,
-    overflow: 'hidden',
-    borderTopLeftRadius: 8,
-    borderTopRightRadius: 8,
+    height: 220,
     position: 'relative',
   },
   carImage: {
     width: '100%',
     height: '100%',
   },
-  carInfo: {
-    padding: 12,
+  imageOverlay: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: '40%',
   },
-  carName: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 4,
+  priceTag: {
+    position: 'absolute',
+    top: 16,
+    right: 16,
+    backgroundColor: 'rgba(0,0,0,0.75)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+    backdropFilter: 'blur(10px)',
+  },
+  priceText: {
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 14,
+  },
+  carInfo: {
+    padding: 16,
+    paddingBottom: 12,
+  },
+  infoHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 12,
   },
   carBrand: {
-    fontSize: 13,
-    marginBottom: 12,
-  },
-  divider: {
-    height: 1,
-    marginVertical: 12,
-  },
-  dealerInfo: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 8,
-  },
-  dealerDetails: {
-    flex: 1,
-  },
-  rentalProvider: {
     fontSize: 12,
+    fontWeight: '700',
     marginBottom: 4,
-    fontWeight: '500',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
   },
-  address: {
-    fontSize: 11,
-    color: '#666',
-    lineHeight: 16,
+  carName: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    letterSpacing: 0.3,
   },
-  carDetails: {
+  specsRow: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginBottom: 12,
-    paddingVertical: 8,
-    borderTopWidth: 1,
-    borderBottomWidth: 1,
-    borderColor: '#e0e0e0',
+    alignItems: 'center',
+    marginBottom: 8,
   },
-  detailItem: {
+  specItem: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
   },
-  detailText: {
-    fontSize: 12,
-    color: '#666',
+  specText: {
+    fontSize: 13,
+    fontWeight: '500',
   },
-  priceContainer: {
+  specDivider: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#ccc',
+    marginHorizontal: 8,
+  },
+  actionDivider: {
+    height: 1,
+    width: '100%',
+    opacity: 0.1,
+  },
+  dealerSection: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 12,
+    paddingHorizontal: 16,
+    gap: 12,
+  },
+  dealerIconCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: 'center',
     alignItems: 'center',
   },
-  price: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#7e246c',
+  dealerInfoText: {
+    flex: 1,
+  },
+  dealerLabel: {
+    fontSize: 11,
+    marginBottom: 2,
+  },
+  dealerName: {
+    fontSize: 14,
+    fontWeight: '600',
   },
   emptyContainer: {
     flex: 1,
