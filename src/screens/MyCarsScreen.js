@@ -89,10 +89,7 @@ const MyCarsScreen = () => {
   };
 
   const handleEdit = (car) => {
-    // Navigate to edit car screen (you can create this later)
-    // For now, show an alert
-    Alert.alert('Edit Car', 'Edit functionality will be implemented');
-    // navigation.navigate('EditCar', { carId: car.id });
+    navigation.navigate('AddCar', { carId: car.id, isEditing: true });
   };
 
   const handleDelete = (car) => {

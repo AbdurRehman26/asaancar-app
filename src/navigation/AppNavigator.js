@@ -28,6 +28,7 @@ import ConversationsScreen from '@/screens/ConversationsScreen';
 import ContactUsScreen from '@/screens/ContactUsScreen';
 import NotificationsScreen from '@/screens/NotificationsScreen';
 import AboutUsScreen from '@/screens/AboutUsScreen';
+import CreateStoreScreen from '@/screens/CreateStoreScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -158,6 +159,13 @@ const SettingsStack = () => {
       <Stack.Screen
         name="MyStores"
         component={MyStoresScreen}
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="CreateStore"
+        component={CreateStoreScreen}
         options={{
           headerShown: false,
         }}

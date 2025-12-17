@@ -97,13 +97,13 @@ export const carAPI = {
 
   // Create car
   createCar: async (carData) => {
-    const response = await api.post('/cars', carData);
+    const response = await api.post('/customer/cars', carData);
     return response.data;
   },
 
   // Update car
   updateCar: async (id, carData) => {
-    const response = await api.put(`/cars/${id}`, carData);
+    const response = await api.put(`/customer/cars/${id}`, carData);
     return response.data;
   },
 
@@ -126,6 +126,14 @@ export const carTypeAPI = {
   // Get all car types
   getTypes: async () => {
     const response = await api.get('/car-types');
+    return response.data;
+  },
+};
+
+export const carModelAPI = {
+  // Get car models by brand ID
+  getModelsByBrand: async (brandId) => {
+    const response = await api.get(`/car-models/brand/${brandId}`);
     return response.data;
   },
 };
@@ -216,6 +224,16 @@ export const storeAPI = {
   // Update store
   updateStore: async (id, storeData) => {
     const response = await api.put(`/stores/${id}`, storeData);
+    return response.data;
+  },
+
+  // Create store
+  createStore: async (storeData) => {
+    const response = await api.post('/customer/stores', storeData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
     return response.data;
   },
 

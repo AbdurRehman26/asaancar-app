@@ -11,9 +11,9 @@ import {
   Image,
   Alert,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { useTheme } from '@/context/ThemeContext';
-import { carAPI, carBrandAPI, carTypeAPI, storeAPI } from '@/services/api';
+import { carAPI, carBrandAPI, carTypeAPI, carModelAPI, storeAPI } from '@/services/api';
 import * as ImagePicker from 'expo-image-picker';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import ErrorModal from '@/components/ErrorModal';
@@ -21,6 +21,7 @@ import SuccessModal from '@/components/SuccessModal';
 
 const AddCarScreen = () => {
   const navigation = useNavigation();
+  const route = useRoute();
   const { theme } = useTheme();
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
@@ -28,6 +29,10 @@ const AddCarScreen = () => {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  
+  // Edit mode variables
+  const [isEditing, setIsEditing] = useState(false);
+  const [currentCarId, setCurrentCarId] = useState(null);
 
   // Form fields
   const [name, setName] = useState('');
@@ -84,9 +89,17 @@ const AddCarScreen = () => {
   const transmissions = ['Automatic', 'Manual'];
   const fuelTypes = ['Petrol', 'Diesel', 'Hybrid', 'Electric', 'CNG'];
 
+  // Check if editing from route params
+  useEffect(() => {
+    if (route.params?.isEditing && route.params?.carId) {
+      setIsEditing(true);
+      setCurrentCarId(route.params.carId);
+    }
+  }, [route.params]);
+
   useEffect(() => {
     loadInitialData();
-  }, []);
+  }, [isEditing, currentCarId]);
 
   useEffect(() => {
     if (brand) {
@@ -137,6 +150,11 @@ const AddCarScreen = () => {
         }
       }
       setTypes(typesArray);
+
+      // Load car data if editing
+      if (isEditing && currentCarId) {
+        await loadCarForEdit();
+      }
     } catch (error) {
       console.error('Error loading initial data:', error);
     } finally {
@@ -144,11 +162,60 @@ const AddCarScreen = () => {
     }
   };
 
+  const loadCarForEdit = async () => {
+    try {
+      const carData = await carAPI.getCarById(currentCarId);
+      
+      // Extract car data from response
+      let car = carData;
+      if (carData?.data) {
+        car = carData.data;
+      }
+
+      // Populate form fields
+      setName(car.name || '');
+      setStore(car.store_id || '');
+      setType(car.car_type_id || '');
+      setBrand(car.car_brand_id || '');
+      
+      // Get model ID from carModel object
+      const modelId = car.carModel?.id || car.model_id || car.model;
+      setModel(modelId || '');
+      
+      setYear(car.year?.toString() || '');
+      setColor(car.color || '');
+      setSeats(car.seats?.toString() || '');
+      setTransmission(car.transmission ? car.transmission.charAt(0).toUpperCase() + car.transmission.slice(1) : '');
+      setFuelType(car.fuel_type ? car.fuel_type.charAt(0).toUpperCase() + car.fuel_type.slice(1) : '');
+      setWithDriver(car.withDriver?.toString() || '');
+      setWithoutDriver(car.withoutDriver?.toString() || '');
+      setDescription(car.description || '');
+      
+      // Load models for the selected brand
+      if (car.car_brand_id) {
+        await loadModels(car.car_brand_id);
+      }
+    } catch (error) {
+      console.error('Error loading car for edit:', error);
+      setErrorMessage('Failed to load car details for editing');
+      setShowErrorModal(true);
+    }
+  };
+
   const loadModels = async (brandId) => {
     try {
-      // TODO: Implement API call to get models by brand
-      // For now, set empty array
-      setModels([]);
+      const modelsData = await carModelAPI.getModelsByBrand(brandId);
+      
+      // Process models from API
+      let modelsArray = [];
+      if (modelsData) {
+        if (Array.isArray(modelsData.data)) {
+          modelsArray = modelsData.data;
+        } else if (Array.isArray(modelsData)) {
+          modelsArray = modelsData;
+        }
+      }
+      setModels(modelsArray);
     } catch (error) {
       console.error('Error loading models:', error);
       setModels([]);
@@ -248,28 +315,37 @@ const AddCarScreen = () => {
 
     try {
       setLoading(true);
+      
+      // Get model name from selected model
+      const selectedModel = models.find((m) => m.id === model);
+      const modelName = selectedModel ? selectedModel.name : '';
+      
       const carData = {
-        name: name || null,
+        name: name || 'Car',
         store_id: store,
-        type_id: type,
-        brand_id: brand,
-        model_id: model || null,
+        car_type_id: type,
+        car_brand_id: brand,
+        model: modelName,
         year: year || null,
         color: color || null,
         seats: parseInt(seats),
         transmission: transmission.toLowerCase(),
         fuel_type: fuelType.toLowerCase(),
-        price_per_day: {
-          withDriver: withDriver ? parseFloat(withDriver) : null,
-          withoutDriver: withoutDriver ? parseFloat(withoutDriver) : null,
-        },
+        with_driver_rate: withDriver ? parseFloat(withDriver) : null,
+        without_driver_rate: withoutDriver ? parseFloat(withoutDriver) : null,
         description: description || null,
       };
 
       // TODO: Upload images if any
-      // For now, create car without images
-      await carAPI.createCar(carData);
-      setSuccessMessage('Car added successfully!');
+      // For now, create or update car without images
+      if (isEditing && currentCarId) {
+        await carAPI.updateCar(currentCarId, carData);
+        setSuccessMessage('Car updated successfully!');
+      } else {
+        await carAPI.createCar(carData);
+        setSuccessMessage('Car added successfully!');
+      }
+      
       setShowSuccessModal(true);
       
       // Navigate back after success
@@ -360,7 +436,7 @@ const AddCarScreen = () => {
         <TouchableOpacity onPress={() => navigation.navigate('SettingsMain')} style={styles.backButton}>
           <Icon name="arrow-back" size={24} color={theme.colors.text} />
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: theme.colors.text }]}>Add Car</Text>
+        <Text style={[styles.headerTitle, { color: theme.colors.text }]}>{isEditing ? 'Edit Car' : 'Add Car'}</Text>
         <View style={styles.placeholder} />
       </View>
 
@@ -630,7 +706,7 @@ const AddCarScreen = () => {
           {loading ? (
             <ActivityIndicator color="#fff" />
           ) : (
-            <Text style={styles.saveButtonText}>Save Changes</Text>
+            <Text style={styles.saveButtonText}>{isEditing ? 'Update Car' : 'Save Changes'}</Text>
           )}
         </TouchableOpacity>
       </ScrollView>

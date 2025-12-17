@@ -188,11 +188,7 @@ const MyStoresScreen = () => {
         <View style={{ flex: 1 }} />
         <TouchableOpacity
           style={[styles.addButton, { backgroundColor: theme.colors.primary }]}
-          onPress={() => {
-            // Navigate to add store screen (you can create this later)
-            Alert.alert('Create Store', 'Create store functionality will be implemented');
-            // navigation.navigate('CreateStore');
-          }}
+          onPress={() => navigation.navigate('CreateStore')}
         >
           <Icon name="add" size={20} color="#fff" />
           <Text style={styles.addButtonText}>Create Store</Text>
