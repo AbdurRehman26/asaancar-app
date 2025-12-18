@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,10 +9,12 @@ import {
   ActivityIndicator,
   Modal,
   Platform,
+  Alert,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useTheme } from '@/context/ThemeContext';
-import { pickDropAPI } from '@/services/api';
+import { useAuth } from '@/context/AuthContext';
+import { pickDropAPI, locationAPI } from '@/services/api';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import ErrorModal from '@/components/ErrorModal';
 import SuccessModal from '@/components/SuccessModal';
@@ -24,15 +26,28 @@ const CreatePickDropServiceScreen = () => {
   const { service } = route.params || {};
   const isEditing = !!service;
   const { theme } = useTheme();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
 
+  // Stepper State
+  const [currentStep, setCurrentStep] = useState(0);
+  const steps = [
+    { title: 'Route', required: true, subtitle: 'Locations & Schedule' },
+    { title: 'Service', required: true, subtitle: 'Details & Price' },
+    { title: 'Car', required: false, subtitle: 'Optional' },
+    { title: 'Stops', required: false, subtitle: 'Optional' },
+  ];
+
   // Route Information
   const [startArea, setStartArea] = useState('');
+  const [startAreaId, setStartAreaId] = useState(null);
   const [endArea, setEndArea] = useState('');
+  const [endAreaId, setEndAreaId] = useState(null);
+  const [areaList, setAreaList] = useState([]);
   const [scheduleType, setScheduleType] = useState('once'); // 'once', 'everyday', 'weekday', 'weekends', 'custom'
   const [selectedDays, setSelectedDays] = useState([]);
   const [isRoundTrip, setIsRoundTrip] = useState(false);
@@ -47,8 +62,67 @@ const CreatePickDropServiceScreen = () => {
   const [contactName, setContactName] = useState('');
   const [contactPhone, setContactPhone] = useState('');
 
-  // Initialize form with service data if editing
-  React.useEffect(() => {
+  // Service Details
+  const [availableSpaces, setAvailableSpaces] = useState('1');
+  const [driverGender, setDriverGender] = useState('male');
+  const [pricePerPerson, setPricePerPerson] = useState('');
+  const [currency] = useState('PKR'); // Hardcoded to PKR
+  const [active, setActive] = useState(true);
+  const [description, setDescription] = useState('');
+
+  // Car Details (Optional)
+  const [carBrand, setCarBrand] = useState('');
+  const [carModel, setCarModel] = useState('');
+  const [carColor, setCarColor] = useState('');
+  const [seats, setSeats] = useState('');
+  const [transmission, setTransmission] = useState('');
+  const [fuelType, setFuelType] = useState('');
+
+  // Stops
+  const [stops, setStops] = useState([]);
+  const [showStopModal, setShowStopModal] = useState(false);
+  const [newStop, setNewStop] = useState({ location: '', stop_time: '' });
+
+  // Dropdown states
+  const [showStartAreaDropdown, setShowStartAreaDropdown] = useState(false);
+  const [showEndAreaDropdown, setShowEndAreaDropdown] = useState(false);
+  const [showDriverGenderDropdown, setShowDriverGenderDropdown] = useState(false);
+  // Currency dropdown removed
+  const [showTransmissionDropdown, setShowTransmissionDropdown] = useState(false);
+  const [showFuelTypeDropdown, setShowFuelTypeDropdown] = useState(false);
+
+
+
+  const driverGenders = ['Male', 'Female', 'Any'];
+  const currencies = ['PKR', 'USD', 'EUR'];
+  const transmissions = ['Automatic', 'Manual'];
+  const fuelTypes = ['Petrol', 'Diesel', 'Hybrid', 'Electric', 'CNG'];
+
+  // Initialize form
+  useEffect(() => {
+    // Fetch areas
+    const fetchAreas = async () => {
+      try {
+        const response = await locationAPI.getAreas();
+        // Assuming response is array of objects { id, name, ... } or similar
+        // Adjust based on actual API response structure if needed
+        if (Array.isArray(response)) {
+          setAreaList(response);
+        } else if (response.data && Array.isArray(response.data)) {
+          setAreaList(response.data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch areas:', error);
+      }
+    };
+    fetchAreas();
+
+    // Always set contact info from user profile
+    if (user) {
+      setContactName(user.name || '');
+      setContactPhone(user.phone_number || user.phone || '');
+    }
+
     if (service) {
       setStartArea(service.start_area || service.start_location || '');
       setEndArea(service.end_area || service.end_location || '');
@@ -94,8 +168,10 @@ const CreatePickDropServiceScreen = () => {
         setReturnTime(parseTime(service.return_time));
       }
 
-      setContactName(service.contact_name || '');
-      setContactPhone(service.contact_number || '');
+      // Override contact info if editing (optional, but requirements say "should be fetched from user")
+      // We'll stick to user profile data as per "should not be editable" + "fetched from user"
+      // If the service has specific contact info that differs, we might want to show that,
+      // but the requirement implies standardized contact info based on the account.
 
       setAvailableSpaces(service.available_spaces?.toString() || '1');
       setDriverGender(service.driver_gender || 'male');
@@ -115,52 +191,7 @@ const CreatePickDropServiceScreen = () => {
         setStops(service.stops.map(s => ({ ...s, id: s.id || Date.now() + Math.random() })));
       }
     }
-  }, [service]);
-
-  // Service Details
-  const [availableSpaces, setAvailableSpaces] = useState('1');
-  const [driverGender, setDriverGender] = useState('male');
-  const [pricePerPerson, setPricePerPerson] = useState('');
-  const [currency, setCurrency] = useState('PKR');
-  const [active, setActive] = useState(true);
-  const [description, setDescription] = useState('');
-
-  // Car Details (Optional)
-  const [carBrand, setCarBrand] = useState('');
-  const [carModel, setCarModel] = useState('');
-  const [carColor, setCarColor] = useState('');
-  const [seats, setSeats] = useState('');
-  const [transmission, setTransmission] = useState('');
-  const [fuelType, setFuelType] = useState('');
-
-  // Stops
-  const [stops, setStops] = useState([]);
-  const [showStopModal, setShowStopModal] = useState(false);
-  const [newStop, setNewStop] = useState({ location: '', stop_time: '' });
-
-  // Dropdown states
-  const [showStartAreaDropdown, setShowStartAreaDropdown] = useState(false);
-  const [showEndAreaDropdown, setShowEndAreaDropdown] = useState(false);
-  const [showDriverGenderDropdown, setShowDriverGenderDropdown] = useState(false);
-  const [showCurrencyDropdown, setShowCurrencyDropdown] = useState(false);
-  const [showTransmissionDropdown, setShowTransmissionDropdown] = useState(false);
-  const [showFuelTypeDropdown, setShowFuelTypeDropdown] = useState(false);
-
-  const areas = [
-    'North Nazimabad',
-    'Yaseenabad',
-    'Saadabad',
-    'Clifton',
-    'Bahria Town',
-    'Gulshan-e-Iqbal',
-    'Defence',
-    'PECHS',
-  ];
-
-  const driverGenders = ['Male', 'Female', 'Any'];
-  const currencies = ['PKR', 'USD', 'EUR'];
-  const transmissions = ['Automatic', 'Manual'];
-  const fuelTypes = ['Petrol', 'Diesel', 'Hybrid', 'Electric', 'CNG'];
+  }, [service, user]);
 
   const formatDate = (date) => {
     const day = String(date.getDate()).padStart(2, '0');
@@ -187,79 +218,128 @@ const CreatePickDropServiceScreen = () => {
     setStops(stops.filter((stop) => stop.id !== id));
   };
 
+  const validateStep = (step) => {
+    switch (step) {
+      case 0: // Route
+        if (!startArea || !endArea) {
+          setErrorMessage('Please select start and end areas');
+          return false;
+        }
+        if (scheduleType === 'once' && !departureDate) {
+          setErrorMessage('Please select departure date');
+          return false;
+        }
+        if (scheduleType === 'custom' && selectedDays.length === 0) {
+          setErrorMessage('Please select at least one day for custom schedule');
+          return false;
+        }
+        if (!departureTime) {
+          setErrorMessage('Please select departure time');
+          return false;
+        }
+        if (isRoundTrip && !returnTime) {
+          setErrorMessage('Please select return time for round trip');
+          return false;
+        }
+        return true;
+
+      case 1: // Service (Was 2)
+        if (!availableSpaces || parseInt(availableSpaces) < 1) {
+          setErrorMessage('Please enter available spaces (minimum 1)');
+          return false;
+        }
+        if (!driverGender) {
+          setErrorMessage('Please select driver gender');
+          return false;
+        }
+        return true;
+
+      case 2: // Car (Was 3)
+        return true;
+
+      case 3: // Stops (Was 4)
+        return true;
+
+      default:
+        return true;
+    }
+  };
+
+  const handleNext = () => {
+    if (validateStep(currentStep)) {
+      if (currentStep < steps.length - 1) {
+        setCurrentStep(currentStep + 1);
+      } else {
+        handleSubmit();
+      }
+    } else {
+      setShowErrorModal(true);
+    }
+  };
+
+  const handleBack = () => {
+    if (currentStep > 0) {
+      setCurrentStep(currentStep - 1);
+    } else {
+      navigation.goBack();
+    }
+  };
+
+  const handleSkip = () => {
+    if (currentStep < steps.length - 1) {
+      setCurrentStep(currentStep + 1);
+    } else {
+      handleSubmit();
+    }
+  };
+
   const handleSubmit = async () => {
-    // Validation
-    if (!startArea || !endArea) {
-      setErrorMessage('Please select start and end areas');
-      setShowErrorModal(true);
-      return;
-    }
-
-    if (scheduleType === 'once' && !departureDate) {
-      setErrorMessage('Please select departure date');
-      setShowErrorModal(true);
-      return;
-    }
-
-    if (scheduleType === 'custom' && selectedDays.length === 0) {
-      setErrorMessage('Please select at least one day for custom schedule');
-      setShowErrorModal(true);
-      return;
-    }
-
-    if (!departureTime) {
-      setErrorMessage('Please select departure time');
-      setShowErrorModal(true);
-      return;
-    }
-
-    if (isRoundTrip && !returnTime) {
-      setErrorMessage('Please select return time for round trip');
-      setShowErrorModal(true);
-      return;
-    }
-
-    if (!availableSpaces || parseInt(availableSpaces) < 1) {
-      setErrorMessage('Please enter available spaces (minimum 1)');
-      setShowErrorModal(true);
-      return;
-    }
-
-    if (!driverGender) {
-      setErrorMessage('Please select driver gender');
-      setShowErrorModal(true);
-      return;
-    }
-
     try {
       setLoading(true);
+
+      // Strict payload construction
       const serviceData = {
-        start_area: startArea,
-        end_area: endArea,
         schedule_type: scheduleType,
         selected_days: scheduleType === 'custom' ? selectedDays : null,
         is_roundtrip: isRoundTrip,
-        departure_date: scheduleType === 'once' ? formatDate(departureDate) : null,
-        departure_time: formatTime(departureTime),
-        return_time: isRoundTrip ? formatTime(returnTime) : null,
-        contact_name: contactName || null,
-        contact_number: contactPhone || null,
-        available_spaces: parseInt(availableSpaces),
+        departure_date: scheduleType === 'once' ? formatDate(departureDate) : "",
+        departure_time: departureTime.toISOString().split('.')[0], // "2000-01-01T07:03:00" format
+        return_time: isRoundTrip ? formatTime(returnTime) : "",
+
+        // Location (IDs are critical)
+        pickup_area_id: startAreaId,
+        pickup_city_id: 197, // Hardcoded as per request
+        dropoff_area_id: endAreaId,
+        dropoff_city_id: 197, // Hardcoded as per request
+        start_location: startArea,
+        end_location: endArea,
+
+        // Contact
+        name: contactName || "",
+        contact: contactPhone || "",
+
+        // Service Details
+        available_spaces: parseInt(availableSpaces) || 1,
         driver_gender: driverGender.toLowerCase(),
-        price_per_person: pricePerPerson ? parseFloat(pricePerPerson) : null,
-        currency: currency,
-        active: active,
-        description: description || null,
-        car_brand: carBrand || null,
-        car_model: carModel || null,
-        car_color: carColor || null,
-        seats: seats ? parseInt(seats) : null,
-        transmission: transmission || null,
-        fuel_type: fuelType || null,
+        price_per_person: pricePerPerson ? parseFloat(pricePerPerson) : 0,
+        currency: 'PKR',
+        is_active: active, // "is_active" not "active"
+        description: description || "",
+        is_everyday: scheduleType === 'everyday',
+
+        // Car Details
+        car_brand: carBrand || "",
+        car_model: carModel || "",
+        car_color: carColor || "",
+        car_seats: seats ? parseInt(seats) : null,
+        car_transmission: transmission || "",
+        car_fuel_type: fuelType || "",
+
+        // Stops
         stops: stops.length > 0 ? stops.map((stop) => ({
           location: stop.location,
           stop_time: stop.stop_time,
-        })) : null,
+        })) : [],
       };
 
       if (isEditing) {
@@ -287,7 +367,8 @@ const CreatePickDropServiceScreen = () => {
     }
   };
 
-  const renderDropdown = (items, selectedValue, onSelect, visible, setVisible) => (
+  // Helper renderers
+  const renderDropdown = (items, selectedValue, onSelect, visible, setVisible, isObject = false, labelKey = 'name', valueKey = 'id') => (
     <Modal
       visible={visible}
       transparent
@@ -300,45 +381,43 @@ const CreatePickDropServiceScreen = () => {
         onPress={() => setVisible(false)}
       >
         <View style={[styles.dropdownModal, { backgroundColor: theme.colors.cardBackground }]}>
-          {items.map((item) => (
-            <TouchableOpacity
-              key={item}
-              style={[
-                styles.dropdownOption,
-                selectedValue === item && { backgroundColor: theme.colors.primary + '20' },
-              ]}
-              onPress={() => {
-                onSelect(item);
-                setVisible(false);
-              }}
-            >
-              <Text
-                style={[
-                  styles.dropdownOptionText,
-                  { color: theme.colors.text },
-                  selectedValue === item && { color: theme.colors.primary, fontWeight: '600' },
-                ]}
-              >
-                {item}
-              </Text>
-              {selectedValue === item && (
-                <Icon name="check" size={20} color={theme.colors.primary} />
-              )}
-            </TouchableOpacity>
-          ))}
+          <ScrollView style={{ maxHeight: 300 }}>
+            {items.map((item, index) => {
+              const itemLabel = isObject ? item[labelKey] : item;
+              const itemValue = isObject ? item[valueKey] : item;
+              const isSelected = isObject ? selectedValue === itemValue : selectedValue === itemValue;
+
+              return (
+                <TouchableOpacity
+                  key={index}
+                  style={[
+                    styles.dropdownOption,
+                    isSelected && { backgroundColor: theme.colors.primary + '20' },
+                  ]}
+                  onPress={() => {
+                    onSelect(item);
+                    setVisible(false);
+                  }}
+                >
+                  <Text
+                    style={[
+                      styles.dropdownOptionText,
+                      { color: theme.colors.text },
+                      isSelected && { color: theme.colors.primary, fontWeight: '600' },
+                    ]}
+                  >
+                    {itemLabel}
+                  </Text>
+                  {isSelected && (
+                    <Icon name="check" size={20} color={theme.colors.primary} />
+                  )}
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
         </View>
       </TouchableOpacity>
     </Modal>
-  );
-
-  const renderSection = (title, icon, children) => (
-    <View style={[styles.section, { backgroundColor: theme.colors.cardBackground, borderColor: theme.colors.border }]}>
-      <View style={styles.sectionHeader}>
-        <Icon name={icon} size={20} color={theme.colors.primary} />
-        <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>{title}</Text>
-      </View>
-      {children}
-    </View>
   );
 
   const scheduleOptions = [
@@ -361,30 +440,12 @@ const CreatePickDropServiceScreen = () => {
     }
   };
 
-  return (
-    <View style={[styles.container, { backgroundColor: theme.colors.backgroundTertiary }]}>
-      <View style={[styles.header, { backgroundColor: theme.colors.cardBackground, borderBottomColor: theme.colors.border }]}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Icon name="arrow-back" size={24} color={theme.colors.text} />
-        </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: theme.colors.text }]}>
-          {isEditing ? 'Edit Pick & Drop Service' : 'Create Pick & Drop Service'}
-        </Text>
-        <View style={styles.placeholder} />
-      </View>
-
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* Info Banner */}
-        <View style={[styles.infoBanner, { backgroundColor: theme.colors.backgroundSecondary, borderColor: theme.colors.border }]}>
-          <Icon name="info" size={20} color={theme.colors.primary} />
-          <Text style={[styles.infoText, { color: theme.colors.text }]}>
-            Currently available in Karachi only. We'll be expanding to other cities soon!
-          </Text>
-        </View>
-
-        {/* Route Information */}
-        {renderSection('Route Information', 'location-on', (
-          <>
+  // Render Steps Content
+  const renderStepContent = () => {
+    switch (currentStep) {
+      case 0: // Route
+        return (
+          <View>
             <View style={styles.row}>
               <View style={[styles.inputGroup, styles.flex1, { marginRight: 8 }]}>
                 <Text style={[styles.label, { color: theme.colors.text }]}>Start Area *</Text>
@@ -515,44 +576,12 @@ const CreatePickDropServiceScreen = () => {
                 </TouchableOpacity>
               </View>
             )}
-          </>
-        ))}
+          </View>
+        );
 
-        {/* Contact Information (Optional) */}
-        {renderSection('Contact Information (Optional)', 'contact-phone', (
-          <>
-            <Text style={[styles.helperText, { color: theme.colors.textSecondary, marginBottom: 12 }]}>
-              If provided, these will be used as contact information. Otherwise, your account information will be used.
-            </Text>
-            <View style={styles.row}>
-              <View style={[styles.inputGroup, styles.flex1, { marginRight: 8 }]}>
-                <Text style={[styles.label, { color: theme.colors.text }]}>Contact Name</Text>
-                <TextInput
-                  style={[styles.input, { borderColor: theme.colors.border, color: theme.colors.text, backgroundColor: theme.colors.inputBackground }]}
-                  value={contactName}
-                  onChangeText={setContactName}
-                  placeholder="Name (Optional)"
-                  placeholderTextColor={theme.colors.placeholder}
-                />
-              </View>
-              <View style={[styles.inputGroup, styles.flex1, { marginLeft: 8 }]}>
-                <Text style={[styles.label, { color: theme.colors.text }]}>Contact Number</Text>
-                <TextInput
-                  style={[styles.input, { borderColor: theme.colors.border, color: theme.colors.text, backgroundColor: theme.colors.inputBackground }]}
-                  value={contactPhone}
-                  onChangeText={setContactPhone}
-                  keyboardType="phone-pad"
-                  placeholder="Number (Optional)"
-                  placeholderTextColor={theme.colors.placeholder}
-                />
-              </View>
-            </View>
-          </>
-        ))}
-
-        {/* Service Details */}
-        {renderSection('Service Details', 'group', (
-          <>
+      case 1: // Service (Was 2)
+        return (
+          <View>
             <View style={styles.row}>
               <View style={[styles.inputGroup, styles.flex1, { marginRight: 8 }]}>
                 <Text style={[styles.label, { color: theme.colors.text }]}>Available Spaces *</Text>
@@ -592,13 +621,11 @@ const CreatePickDropServiceScreen = () => {
                     placeholderTextColor={theme.colors.placeholder}
                   />
                   <View style={{ width: 1, backgroundColor: theme.colors.border, height: '60%' }} />
-                  <TouchableOpacity
+                  <View
                     style={[styles.currencyButton]}
-                    onPress={() => setShowCurrencyDropdown(true)}
                   >
-                    <Text style={[styles.currencyText, { color: theme.colors.text }]}>{currency}</Text>
-                    <Icon name="keyboard-arrow-down" size={20} color={theme.colors.textSecondary} />
-                  </TouchableOpacity>
+                    <Text style={[styles.currencyText, { color: theme.colors.text }]}>PKR</Text>
+                  </View>
                 </View>
               </View>
 
@@ -626,12 +653,12 @@ const CreatePickDropServiceScreen = () => {
                 placeholderTextColor={theme.colors.placeholder}
               />
             </View>
-          </>
-        ))}
+          </View>
+        );
 
-        {/* Car Details (Optional) */}
-        {renderSection('Car Details (Optional)', 'directions-car', (
-          <>
+      case 2: // Car (Was 3)
+        return (
+          <View>
             <View style={styles.row}>
               <View style={[styles.inputGroup, styles.flex1, { marginRight: 8 }]}>
                 <Text style={[styles.label, { color: theme.colors.text }]}>Car Brand</Text>
@@ -705,12 +732,12 @@ const CreatePickDropServiceScreen = () => {
                 </TouchableOpacity>
               </View>
             </View>
-          </>
-        ))}
+          </View>
+        );
 
-        {/* Stops (Optional) */}
-        {renderSection('Stops (Optional)', 'location-on', (
-          <>
+      case 3: // Stops (Was 4)
+        return (
+          <View>
             {stops.length === 0 ? (
               <Text style={[styles.infoText, { color: theme.colors.textSecondary, fontStyle: 'italic', marginBottom: 12 }]}>
                 No stops added. Click "Add Stop" to add intermediate stops.
@@ -744,61 +771,132 @@ const CreatePickDropServiceScreen = () => {
                 <Text style={styles.addStopButtonText}>Add Stop</Text>
               </TouchableOpacity>
             </View>
-          </>
-        ))}
+          </View>
+        );
 
-        {/* Action Buttons */}
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <View style={[styles.container, { backgroundColor: theme.colors.backgroundTertiary }]}>
+      <View style={[styles.header, { backgroundColor: theme.colors.cardBackground, borderBottomColor: theme.colors.border }]}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+          <Icon name="arrow-back" size={24} color={theme.colors.text} />
+        </TouchableOpacity>
+        <Text style={[styles.headerTitle, { color: theme.colors.text }]}>
+          {isEditing ? 'Edit Service' : 'Create Service'}
+        </Text>
+        <View style={styles.placeholder} />
+      </View>
+
+      {/* Stepper Header */}
+      <View style={[styles.stepperContainer, { backgroundColor: theme.colors.background }]}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.stepperContent}
+        >
+          {steps.map((step, index) => (
+            <View key={index} style={styles.stepItem}>
+              <View style={[
+                styles.stepCircle,
+                {
+                  borderColor: index <= currentStep ? theme.colors.primary : theme.colors.border,
+                  backgroundColor: index <= currentStep ? theme.colors.primary : 'transparent'
+                }
+              ]}>
+                {index < currentStep ? (
+                  <Icon name="check" size={12} color="#fff" />
+                ) : (
+                  <Text style={[
+                    styles.stepNumber,
+                    { color: index === currentStep ? '#fff' : theme.colors.textSecondary }
+                  ]}>
+                    {index + 1}
+                  </Text>
+                )}
+              </View>
+              <Text style={[
+                styles.stepTitle,
+                { color: index === currentStep ? theme.colors.primary : theme.colors.textSecondary }
+              ]}>
+                {step.title}
+              </Text>
+              {index < steps.length - 1 && (
+                <View style={[styles.stepLine, { backgroundColor: index < currentStep ? theme.colors.primary : theme.colors.border }]} />
+              )}
+            </View>
+          ))}
+        </ScrollView>
+      </View>
+
+      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        {/* Step Content */}
+        <View style={[styles.section, { backgroundColor: theme.colors.cardBackground, borderColor: theme.colors.border }]}>
+          <Text style={[styles.sectionTitle, { color: theme.colors.text, marginBottom: 4 }]}>
+            {steps[currentStep].title}
+          </Text>
+          <Text style={[styles.sectionSubtitle, { color: theme.colors.textSecondary, marginBottom: 16 }]}>
+            {steps[currentStep].subtitle}
+          </Text>
+          {renderStepContent()}
+        </View>
+
+        {/* Navigation Buttons */}
         <View style={styles.actionButtons}>
-          <TouchableOpacity
-            style={[styles.createButton, { backgroundColor: theme.colors.primary }]}
-            onPress={handleSubmit}
-            disabled={loading}
-          >
-            {loading ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <>
-                <Icon name="description" size={20} color="#fff" />
-                <Text style={styles.createButtonText}>
-                  {isEditing ? 'Update Service' : 'Create Service'}
-                </Text>
-              </>
+          <View style={styles.navButtonsRow}>
+            {currentStep > 0 && (
+              <TouchableOpacity
+                style={[styles.navButton, { borderColor: theme.colors.border, backgroundColor: theme.colors.backgroundSecondary }]}
+                onPress={handleBack}
+              >
+                <Text style={[styles.navButtonText, { color: theme.colors.text }]}>Back</Text>
+              </TouchableOpacity>
             )}
-          </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.cancelButton, { backgroundColor: theme.colors.backgroundSecondary }]}
-            onPress={() => navigation.goBack()}
-            disabled={loading}
-          >
-            <Text style={[styles.cancelButtonText, { color: theme.colors.text }]}>Cancel</Text>
-          </TouchableOpacity>
+            {!steps[currentStep].required && (
+              <TouchableOpacity
+                style={[styles.navButton, { borderColor: theme.colors.border, backgroundColor: theme.colors.background }]}
+                onPress={handleSkip}
+              >
+                <Text style={[styles.navButtonText, { color: theme.colors.textSecondary }]}>Skip</Text>
+              </TouchableOpacity>
+            )}
+
+            <TouchableOpacity
+              style={[styles.navButton, { backgroundColor: theme.colors.primary, flex: 1, marginLeft: 8 }]}
+              onPress={handleNext}
+              disabled={loading}
+            >
+              {loading ? (
+                <ActivityIndicator color="#fff" size="small" />
+              ) : (
+                <Text style={[styles.navButtonText, { color: '#fff', fontWeight: 'bold' }]}>
+                  {currentStep === steps.length - 1 ? (isEditing ? 'Update' : 'Create') : 'Next'}
+                </Text>
+              )}
+            </TouchableOpacity>
+          </View>
         </View>
       </ScrollView>
 
       {/* Dropdowns */}
-      {renderDropdown(areas, startArea, setStartArea, showStartAreaDropdown, setShowStartAreaDropdown)}
-      {renderDropdown(areas, endArea, setEndArea, showEndAreaDropdown, setShowEndAreaDropdown)}
+      {renderDropdown(areaList, startAreaId, (item) => {
+        setStartArea(item.name);
+        setStartAreaId(item.id);
+      }, showStartAreaDropdown, setShowStartAreaDropdown, true, 'name', 'id')}
+
+      {renderDropdown(areaList, endAreaId, (item) => {
+        setEndArea(item.name);
+        setEndAreaId(item.id);
+      }, showEndAreaDropdown, setShowEndAreaDropdown, true, 'name', 'id')}
+
       {renderDropdown(driverGenders, driverGender.charAt(0).toUpperCase() + driverGender.slice(1), (val) => setDriverGender(val.toLowerCase()), showDriverGenderDropdown, setShowDriverGenderDropdown)}
-      {renderDropdown(currencies, currency, setCurrency, showCurrencyDropdown, setShowCurrencyDropdown)}
+
       {renderDropdown(transmissions, transmission, setTransmission, showTransmissionDropdown, setShowTransmissionDropdown)}
       {renderDropdown(fuelTypes, fuelType, setFuelType, showFuelTypeDropdown, setShowFuelTypeDropdown)}
-
-      {/* Date/Time Pickers */}
-      {showDatePicker && (
-        <DateTimePicker
-          value={departureDate}
-          mode="date"
-          display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-          onChange={(event, selectedDate) => {
-            setShowDatePicker(Platform.OS === 'ios');
-            if (selectedDate) {
-              setDepartureDate(selectedDate);
-            }
-          }}
-          minimumDate={new Date()}
-        />
-      )}
 
       {/* Date/Time Pickers */}
       {showDatePicker && (
@@ -934,29 +1032,50 @@ const styles = StyleSheet.create({
   placeholder: {
     width: 32,
   },
+  stepperContainer: {
+    paddingVertical: 12,
+  },
+  stepperContent: {
+    paddingHorizontal: 16,
+    alignItems: 'center',
+  },
+  stepItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  stepCircle: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 8,
+  },
+  stepNumber: {
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  stepTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginRight: 8,
+  },
+  stepLine: {
+    width: 24,
+    height: 2,
+    marginRight: 8,
+  },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
     padding: 16,
   },
-  infoBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 12,
-    borderRadius: 8,
-    borderWidth: 1,
-    marginBottom: 16,
-    gap: 8,
-  },
-  infoText: {
-    fontSize: 14,
-    flex: 1,
-  },
   section: {
     borderRadius: 12,
     padding: 16,
-    marginBottom: 16,
+    marginBottom: 24,
     borderWidth: 1,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -964,15 +1083,12 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-    gap: 8,
-  },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
+  },
+  sectionSubtitle: {
+    fontSize: 14,
   },
   inputGroup: {
     marginBottom: 16,
@@ -998,7 +1114,7 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 0, // Inputs have their own margin
+    marginBottom: 0,
   },
   flex1: {
     flex: 1,
@@ -1108,30 +1224,24 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   actionButtons: {
-    marginTop: 8,
     marginBottom: 32,
+  },
+  navButtonsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     gap: 12,
   },
-  createButton: {
-    flexDirection: 'row',
+  navButton: {
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 16,
-    borderRadius: 12,
-    gap: 8,
+    borderWidth: 1,
+    borderColor: 'transparent',
   },
-  createButtonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  cancelButton: {
-    paddingVertical: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  cancelButtonText: {
-    fontSize: 18,
+  navButtonText: {
+    fontSize: 16,
     fontWeight: '600',
   },
   modalOverlay: {
@@ -1186,21 +1296,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
+  priceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  priceInputText: {
+    fontSize: 16,
+  },
 });
 
 export default CreatePickDropServiceScreen;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

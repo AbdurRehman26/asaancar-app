@@ -11,40 +11,6 @@ const ServiceTabs = ({ activeTab, onTabChange }) => {
       <TouchableOpacity
         style={[
           styles.tab,
-          activeTab === 'rental' && [
-            styles.activeTab,
-            { borderBottomColor: theme.colors.primary },
-          ],
-        ]}
-        onPress={() => onTabChange('rental')}
-      >
-        <Icon
-          name="directions-car"
-          size={20}
-          color={
-            activeTab === 'rental'
-              ? theme.colors.primary
-              : theme.colors.textSecondary
-          }
-        />
-        <Text
-          style={[
-            styles.tabText,
-            {
-              color:
-                activeTab === 'rental'
-                  ? theme.colors.primary
-                  : theme.colors.textSecondary,
-            },
-          ]}
-        >
-          Rental Cars
-        </Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        style={[
-          styles.tab,
           activeTab === 'pickdrop' && [
             styles.activeTab,
             { borderBottomColor: theme.colors.primary },
@@ -73,6 +39,40 @@ const ServiceTabs = ({ activeTab, onTabChange }) => {
           ]}
         >
           Pick & Drop
+        </Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={[
+          styles.tab,
+          activeTab === 'rental' && [
+            styles.activeTab,
+            { borderBottomColor: theme.colors.primary },
+          ],
+        ]}
+        onPress={() => onTabChange('rental')}
+      >
+        <Icon
+          name="directions-car"
+          size={20}
+          color={
+            activeTab === 'rental'
+              ? theme.colors.primary
+              : theme.colors.textSecondary
+          }
+        />
+        <Text
+          style={[
+            styles.tabText,
+            {
+              color:
+                activeTab === 'rental'
+                  ? theme.colors.primary
+                  : theme.colors.textSecondary,
+            },
+          ]}
+        >
+          Rental Cars
         </Text>
       </TouchableOpacity>
     </View>

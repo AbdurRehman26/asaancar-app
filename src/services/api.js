@@ -304,7 +304,7 @@ export const pickDropAPI = {
 
   // Create pick and drop service
   createPickAndDropService: async (serviceData) => {
-    const response = await api.post('/pick-and-drop', serviceData);
+    const response = await api.post('/customer/pick-and-drop', serviceData);
     return response.data;
   },
 
@@ -341,7 +341,7 @@ export const pickDropAPI = {
 
   // Delete pick and drop service
   deletePickDropService: async (id) => {
-    const response = await api.delete(`/pick-and-drop/${id}`);
+    const response = await api.delete(`/customer/pick-and-drop/${id}`);
     return response.data;
   },
 };
