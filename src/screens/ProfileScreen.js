@@ -9,12 +9,15 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  Image,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import * as ImagePicker from 'expo-image-picker';
 import { authAPI } from '@/services/api';
 import ErrorModal from '@/components/ErrorModal';
 import SuccessModal from '@/components/SuccessModal';
@@ -24,6 +27,8 @@ const ProfileScreen = () => {
   const { user, setUserFromStorage } = useAuth();
   const { theme } = useTheme();
   const [name, setName] = useState(user?.name || '');
+  const [email, setEmail] = useState(user?.email || '');
+  const [profileImageUri, setProfileImageUri] = useState(user?.profile_image || '');
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -40,7 +45,38 @@ const ProfileScreen = () => {
     if (user?.name) {
       setName(user.name);
     }
+    if (user?.email) {
+      setEmail(user.email);
+    }
+    if (user?.profile_image) {
+      setProfileImageUri(user.profile_image);
+    }
   }, [user]);
+
+  const pickImage = async () => {
+    try {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission needed', 'Please grant camera roll permissions to upload images');
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+
+      if (!result.canceled) {
+        setProfileImageUri(result.assets[0].uri);
+      }
+    } catch (error) {
+      console.error('Error picking image:', error);
+      setErrorMessage('Failed to pick image');
+      setShowErrorModal(true);
+    }
+  };
 
   const handleSaveProfile = async () => {
     if (!name.trim()) {
@@ -49,9 +85,37 @@ const ProfileScreen = () => {
       return;
     }
 
+    if (!email.trim()) {
+      setErrorMessage('Please enter your email');
+      setShowErrorModal(true);
+      return;
+    }
+
     try {
       setLoading(true);
-      await authAPI.updateProfile({ name: name.trim() });
+
+      let finalProfileImage = profileImageUri;
+
+      // If a new local image is selected, upload it first
+      if (profileImageUri && !profileImageUri.startsWith('http')) {
+        const fileName = profileImageUri.split('/').pop();
+
+        // Fetch the image and convert to blob for binary upload
+        const response = await fetch(profileImageUri);
+        const blob = await response.blob();
+
+        const uploadResult = await authAPI.uploadImage(blob, fileName);
+        // Assuming the API returns the path/URL in 'url' or 'path' or 'data.url'
+        finalProfileImage = uploadResult.url || uploadResult.path || uploadResult.data?.url || uploadResult.data?.path || uploadResult.image;
+      }
+
+      const updateData = {
+        name: name.trim(),
+        email: email.trim(),
+        profile_image: finalProfileImage,
+      };
+
+      await authAPI.updateProfile(updateData);
       await setUserFromStorage();
       setSuccessMessage('Profile updated successfully');
       setShowSuccessModal(true);
@@ -124,6 +188,25 @@ const ProfileScreen = () => {
           <View style={[styles.card, { backgroundColor: theme.colors.cardBackground }]}>
             <Text style={[styles.cardTitle, { color: theme.colors.text }]}>Personal Information</Text>
 
+            {/* Profile Image Section */}
+            <View style={styles.imageContainer}>
+              <TouchableOpacity onPress={pickImage} style={styles.imageWrapper}>
+                {profileImageUri ? (
+                  <Image source={{ uri: profileImageUri }} style={styles.profileImage} />
+                ) : (
+                  <View style={[styles.placeholderImage, { backgroundColor: theme.colors.backgroundTertiary }]}>
+                    <Icon name="person" size={50} color={theme.colors.textSecondary} />
+                  </View>
+                )}
+                <View style={[styles.editBadge, { backgroundColor: theme.colors.primary }]}>
+                  <Icon name="camera-alt" size={16} color="#fff" />
+                </View>
+              </TouchableOpacity>
+              <Text style={[styles.imageHint, { color: theme.colors.textSecondary }]}>
+                Tap to change profile picture
+              </Text>
+            </View>
+
             <View style={styles.inputSection}>
               <Text style={[styles.label, { color: theme.colors.text }]}>Name</Text>
               <TextInput
@@ -139,6 +222,26 @@ const ProfileScreen = () => {
                 placeholderTextColor={theme.colors.placeholder}
                 value={name}
                 onChangeText={setName}
+              />
+            </View>
+
+            <View style={styles.inputSection}>
+              <Text style={[styles.label, { color: theme.colors.text }]}>Email</Text>
+              <TextInput
+                style={[
+                  styles.input,
+                  {
+                    color: theme.colors.text,
+                    borderColor: theme.colors.border,
+                    backgroundColor: theme.colors.inputBackground,
+                  }
+                ]}
+                placeholder="Enter your email"
+                placeholderTextColor={theme.colors.placeholder}
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
               />
             </View>
 
@@ -401,6 +504,46 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
+  },
+  imageContainer: {
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  imageWrapper: {
+    position: 'relative',
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+  },
+  profileImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+  },
+  placeholderImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+  },
+  editBadge: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#fff',
+  },
+  imageHint: {
+    fontSize: 12,
+    marginTop: 8,
   },
 });
 

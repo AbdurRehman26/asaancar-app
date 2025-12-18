@@ -408,10 +408,41 @@ export const authAPI = {
 
   // Update user profile
   updateProfile: async (userData) => {
-    const response = await api.put('/user/profile', userData);
+    let response;
+    // The user specified /settings/profile for saving profile
+    const endpoint = '/settings/profile';
+
+    if (userData instanceof FormData) {
+      // Use POST with _method: 'PUT' for multipart/form-data
+      userData.append('_method', 'PUT');
+      response = await api.post(endpoint, userData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+    } else {
+      // If we are passing a plain object, use PUT
+      response = await api.put(endpoint, userData);
+    }
+
     if (response.data.user) {
       await AsyncStorage.setItem('user', JSON.stringify(response.data.user));
     }
+    return response.data;
+  },
+
+  // Generic image upload API as specified: api/upload/images
+  uploadImage: async (blob, fileName) => {
+    const formData = new FormData();
+    // Use 'images[]' and add directory field as specified
+    formData.append('images[]', blob, fileName);
+    formData.append('directory', 'profile-images');
+
+    const response = await api.post('/upload/images', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
     return response.data;
   },
 
