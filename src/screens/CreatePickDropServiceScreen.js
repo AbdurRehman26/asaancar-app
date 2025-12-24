@@ -205,9 +205,22 @@ const CreatePickDropServiceScreen = () => {
   };
 
   const formatTime = (date) => {
-    const hours = String(date.getHours()).padStart(2, '0');
+    let hours = date.getHours();
     const minutes = String(date.getMinutes()).padStart(2, '0');
-    return `${hours}:${minutes}`;
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12;
+    hours = hours ? hours : 12; // 0 should be 12
+    return `${hours}:${minutes} ${ampm}`;
+  };
+
+  const formatTimeString = (timeStr) => {
+    if (!timeStr) return '';
+    const [hours, minutes] = timeStr.split(':');
+    let h = parseInt(hours);
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    h = h % 12;
+    h = h ? h : 12;
+    return `${h}:${minutes} ${ampm}`;
   };
 
   const handleAddStop = () => {
@@ -513,7 +526,7 @@ const CreatePickDropServiceScreen = () => {
                       >
                         <Text style={[styles.stopInlineText, { color: theme.colors.text }]} numberOfLines={1}>{stop.location}</Text>
                         <Text style={[styles.stopInlineTime, { color: stop.stop_time ? theme.colors.textSecondary : theme.colors.primary }]}>
-                          {stop.stop_time || '+ Add time'}
+                          {stop.stop_time ? formatTimeString(stop.stop_time) : '+ Add time'}
                         </Text>
                       </TouchableOpacity>
                       <TouchableOpacity onPress={() => handleRemoveStop(stop.id)} style={styles.stopRemoveBtn}>
@@ -834,7 +847,7 @@ const CreatePickDropServiceScreen = () => {
                   </View>
                   <View style={styles.routeTimelineContent}>
                     <Text style={[styles.routeTimelineLabel, { color: theme.colors.textSecondary }]}>
-                      STOP {index + 1}{stop.stop_time ? ` • ${stop.stop_time}` : ''}
+                      STOP {index + 1}{stop.stop_time ? ` • ${formatTimeString(stop.stop_time)}` : ''}
                     </Text>
                     <Text style={[styles.routeTimelineValue, { color: theme.colors.text }]} numberOfLines={1}>
                       {stop.location}
