@@ -176,7 +176,8 @@ const PickDropDetailScreen = () => {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom + 24 }}>
+      <ScrollView
+        contentContainerStyle={{ paddingBottom: insets.bottom + 24 }}>
         {/* Back Button */}
         <TouchableOpacity
           style={styles.backButton}
@@ -234,6 +235,14 @@ const PickDropDetailScreen = () => {
                   <Text style={[styles.largeLocationTitle, { color: theme.colors.text }]}>
                     {startLocation}
                   </Text>
+                  {service.pin_address && (
+                    <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
+                      <Icon name="location-on" size={12} color={theme.colors.textSecondary} style={{ marginRight: 4 }} />
+                      <Text style={[styles.largeLocationLabel, { color: theme.colors.textSecondary, marginBottom: 0, textTransform: 'none' }]}>
+                        {service.pin_address}
+                      </Text>
+                    </View>
+                  )}
                 </View>
               </View>
 
@@ -271,6 +280,14 @@ const PickDropDetailScreen = () => {
                   <Text style={[styles.largeLocationTitle, { color: theme.colors.text }]}>
                     {endLocation}
                   </Text>
+                  {service.dropoff_pin_address && (
+                    <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
+                      <Icon name="location-on" size={12} color={theme.colors.textSecondary} style={{ marginRight: 4 }} />
+                      <Text style={[styles.largeLocationLabel, { color: theme.colors.textSecondary, marginBottom: 0, textTransform: 'none' }]}>
+                        {service.dropoff_pin_address}
+                      </Text>
+                    </View>
+                  )}
                 </View>
               </View>
 

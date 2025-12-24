@@ -5,6 +5,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Screens
 import HomeScreen from '@/screens/HomeScreen';
@@ -39,82 +40,82 @@ const MainStack = () => {
     <Stack.Navigator
       initialRouteName="RentalCars"
     >
-      <Stack.Screen 
-        name="RentalCars" 
+      <Stack.Screen
+        name="RentalCars"
         component={HomeScreen}
         options={{ headerShown: false }}
       />
-      <Stack.Screen 
-        name="PickDrop" 
+      <Stack.Screen
+        name="PickDrop"
         component={PickDropScreen}
         options={{ headerShown: false }}
       />
-      <Stack.Screen 
-        name="PickDropDetail" 
+      <Stack.Screen
+        name="PickDropDetail"
         component={PickDropDetailScreen}
-        options={{ 
+        options={{
           headerShown: false,
           presentation: 'card'
         }}
       />
-      <Stack.Screen 
-        name="CreatePickDropService" 
+      <Stack.Screen
+        name="CreatePickDropService"
         component={CreatePickDropServiceScreen}
-        options={{ 
+        options={{
           headerShown: false,
           presentation: 'card'
         }}
       />
-      <Stack.Screen 
-        name="CarDetail" 
+      <Stack.Screen
+        name="CarDetail"
         component={CarDetailScreen}
-        options={{ 
+        options={{
           title: 'Car Details',
           headerBackTitle: 'Back'
         }}
       />
-      <Stack.Screen 
-        name="StoreProfile" 
+      <Stack.Screen
+        name="StoreProfile"
         component={StoreProfileScreen}
-        options={{ 
+        options={{
           headerShown: false
         }}
       />
-      <Stack.Screen 
-        name="Booking" 
+      <Stack.Screen
+        name="Booking"
         component={BookingScreen}
-        options={{ 
+        options={{
           title: 'Book Car',
           headerBackTitle: 'Back'
         }}
       />
-      <Stack.Screen 
-        name="Conversations" 
+      <Stack.Screen
+        name="Conversations"
         component={ConversationsScreen}
-        options={{ 
+        options={{
           headerShown: false
         }}
       />
-      <Stack.Screen 
-        name="Chat" 
+      <Stack.Screen
+        name="Chat"
         component={ChatScreen}
-        options={{ 
+        options={{
           headerShown: false
         }}
       />
-      <Stack.Screen 
-        name="Login" 
+      <Stack.Screen
+        name="Login"
         component={LoginScreen}
-        options={{ 
+        options={{
           headerShown: false,
           presentation: 'modal',
           gestureEnabled: false
         }}
       />
-      <Stack.Screen 
-        name="Register" 
+      <Stack.Screen
+        name="Register"
         component={RegisterScreen}
-        options={{ 
+        options={{
           headerShown: false,
           presentation: 'modal',
           gestureEnabled: false
@@ -205,7 +206,7 @@ const SettingsStack = () => {
 // Authenticated tabs (only shown when logged in)
 const AuthenticatedTabs = () => {
   const { theme } = useTheme();
-  
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -233,8 +234,8 @@ const AuthenticatedTabs = () => {
     >
       <Tab.Screen name="Home" component={MainStack} />
       <Tab.Screen name="Bookings" component={MyBookingsScreen} />
-      <Tab.Screen 
-        name="Dashboard" 
+      <Tab.Screen
+        name="Dashboard"
         component={SettingsStack}
         listeners={({ navigation }) => ({
           tabPress: (e) => {
@@ -242,7 +243,7 @@ const AuthenticatedTabs = () => {
             // This ensures we always go to the default dashboard state
             const state = navigation.getState();
             const dashboardTab = state.routes.find(r => r.name === 'Dashboard');
-            
+
             if (dashboardTab?.state) {
               const stackState = dashboardTab.state;
               // If we're not on SettingsMain, navigate to it
@@ -262,14 +263,45 @@ const AuthenticatedTabs = () => {
 
 const AppNavigator = () => {
   const { user, loading } = useAuth();
+  const [isFirstLaunch, setIsFirstLaunch] = React.useState(null);
 
-  if (loading) {
+  React.useEffect(() => {
+    checkFirstLaunch();
+  }, []);
+
+  const checkFirstLaunch = async () => {
+    try {
+      const value = await AsyncStorage.getItem('hasLaunched');
+      if (value === null) {
+        setIsFirstLaunch(true);
+      } else {
+        setIsFirstLaunch(false);
+      }
+    } catch (error) {
+      setIsFirstLaunch(false);
+    }
+  };
+
+  if (loading || isFirstLaunch === null) {
     return null; // You can add a loading screen here
   }
 
+  // If user is logged in, show Authenticated Tabs (skip onboarding)
+  // If not logged in AND first launch, show Onboarding
+  // Otherwise show MainStack
+
   return (
     <NavigationContainer>
-      {user ? <AuthenticatedTabs /> : <MainStack />}
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
+        {isFirstLaunch && !user ? (
+          <Stack.Screen name="Onboarding" component={OnboardingScreen} />
+        ) : null}
+        {user ? (
+          <Stack.Screen name="Root" component={AuthenticatedTabs} />
+        ) : (
+          <Stack.Screen name="Root" component={MainStack} />
+        )}
+      </Stack.Navigator>
     </NavigationContainer>
   );
 };

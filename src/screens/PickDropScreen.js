@@ -339,6 +339,7 @@ const PickDropScreen = () => {
         </View>
       )}
 
+      {/* Reverting to use ScrollView with ref for minimal impact */}
       <ScrollView>
         {/* Services List */}
         {loading ? (
@@ -648,7 +649,6 @@ const PickDropScreen = () => {
         onApply={handleApplyFilters}
       />
 
-      {/* Error Modal */}
       <ErrorModal
         visible={showErrorModal}
         onClose={() => setShowErrorModal(false)}

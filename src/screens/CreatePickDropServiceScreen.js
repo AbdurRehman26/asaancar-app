@@ -39,7 +39,7 @@ const CreatePickDropServiceScreen = () => {
     { title: 'Route', required: true, subtitle: 'Locations & Schedule' },
     { title: 'Service', required: true, subtitle: 'Details & Price' },
     { title: 'Car', required: false, subtitle: 'Optional' },
-    { title: 'Stops', required: false, subtitle: 'Optional' },
+    { title: 'Preview', required: true, subtitle: 'Review & Submit' },
   ];
 
   // Route Information
@@ -90,6 +90,10 @@ const CreatePickDropServiceScreen = () => {
   // Currency dropdown removed
   const [showTransmissionDropdown, setShowTransmissionDropdown] = useState(false);
   const [showFuelTypeDropdown, setShowFuelTypeDropdown] = useState(false);
+  const [showStopAreaDropdown, setShowStopAreaDropdown] = useState(false);
+  const [showStopTimePicker, setShowStopTimePicker] = useState(false);
+  const [editingStopId, setEditingStopId] = useState(null);
+  const [stopTime, setStopTime] = useState(new Date());
 
 
 
@@ -446,32 +450,96 @@ const CreatePickDropServiceScreen = () => {
       case 0: // Route
         return (
           <View>
-            <View style={styles.row}>
-              <View style={[styles.inputGroup, styles.flex1, { marginRight: 8 }]}>
-                <Text style={[styles.label, { color: theme.colors.text }]}>Start Area *</Text>
-                <TouchableOpacity
-                  style={[styles.input, { borderColor: theme.colors.border, backgroundColor: theme.colors.inputBackground }]}
-                  onPress={() => setShowStartAreaDropdown(true)}
-                >
-                  <Text style={[styles.inputText, { color: startArea ? theme.colors.text : theme.colors.placeholder }]} numberOfLines={1}>
-                    {startArea || 'Search area...'}
+            {/* Timeline-style Route Container */}
+            <View style={[styles.routeTimelineContainer, { backgroundColor: theme.colors.cardBackground, borderColor: theme.colors.border }]}>
+              {/* Pick-up Point */}
+              <TouchableOpacity
+                style={styles.routeTimelineItem}
+                onPress={() => setShowStartAreaDropdown(true)}
+                activeOpacity={0.7}
+              >
+                <View style={styles.routeTimelineIconContainer}>
+                  <View style={[styles.pickupIconOuter, { borderColor: '#E91E63' }]}>
+                    <View style={[styles.pickupIconInner, { backgroundColor: '#E91E63' }]} />
+                  </View>
+                  {/* Vertical Line */}
+                  <View style={[styles.routeTimelineLine, { backgroundColor: theme.colors.border }]} />
+                </View>
+                <View style={styles.routeTimelineContent}>
+                  <Text style={[styles.routeTimelineLabel, { color: theme.colors.textSecondary }]}>PICK-UP POINT</Text>
+                  <Text style={[styles.routeTimelineValue, { color: startArea ? theme.colors.text : theme.colors.placeholder }]} numberOfLines={1}>
+                    {startArea || 'Select pick-up location'}
                   </Text>
-                  <Icon name="keyboard-arrow-down" size={20} color={theme.colors.textSecondary} />
+                </View>
+              </TouchableOpacity>
+
+              {/* Add Stop Button */}
+              <View style={styles.addStopRowContainer}>
+                <View style={styles.routeTimelineIconContainer}>
+                  <View style={[styles.routeTimelineLine, { backgroundColor: theme.colors.border, height: 8, marginTop: 0 }]} />
+                </View>
+                <TouchableOpacity
+                  style={[styles.addStopInlineButton, { backgroundColor: 'transparent', borderColor: theme.colors.border }]}
+                  onPress={() => setShowStopAreaDropdown(true)}
+                >
+                  <Icon name="add" size={16} color={theme.colors.primary} />
+                  <Text style={[styles.addStopInlineText, { color: theme.colors.text }]}>Add Stop</Text>
                 </TouchableOpacity>
               </View>
 
-              <View style={[styles.inputGroup, styles.flex1, { marginLeft: 8 }]}>
-                <Text style={[styles.label, { color: theme.colors.text }]}>End Area *</Text>
-                <TouchableOpacity
-                  style={[styles.input, { borderColor: theme.colors.border, backgroundColor: theme.colors.inputBackground }]}
-                  onPress={() => setShowEndAreaDropdown(true)}
-                >
-                  <Text style={[styles.inputText, { color: endArea ? theme.colors.text : theme.colors.placeholder }]} numberOfLines={1}>
-                    {endArea || 'Search area...'}
+              {/* Stops display */}
+              {stops.length > 0 && (
+                <View style={styles.stopsListInline}>
+                  {stops.map((stop, index) => (
+                    <View key={stop.id} style={styles.stopInlineItem}>
+                      <View style={styles.routeTimelineIconContainer}>
+                        <View style={[styles.stopDot, { backgroundColor: theme.colors.primary, borderColor: theme.colors.cardBackground }]} />
+                        <View style={[styles.routeTimelineLine, { backgroundColor: theme.colors.border, height: 20 }]} />
+                      </View>
+                      <TouchableOpacity
+                        style={styles.stopInlineContent}
+                        onPress={() => {
+                          setEditingStopId(stop.id);
+                          if (stop.stop_time) {
+                            const [hours, minutes] = stop.stop_time.split(':');
+                            const date = new Date();
+                            date.setHours(parseInt(hours), parseInt(minutes));
+                            setStopTime(date);
+                          } else {
+                            setStopTime(new Date());
+                          }
+                          setShowStopTimePicker(true);
+                        }}
+                      >
+                        <Text style={[styles.stopInlineText, { color: theme.colors.text }]} numberOfLines={1}>{stop.location}</Text>
+                        <Text style={[styles.stopInlineTime, { color: stop.stop_time ? theme.colors.textSecondary : theme.colors.primary }]}>
+                          {stop.stop_time || '+ Add time'}
+                        </Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity onPress={() => handleRemoveStop(stop.id)} style={styles.stopRemoveBtn}>
+                        <Icon name="close" size={16} color={theme.colors.error || '#FF5252'} />
+                      </TouchableOpacity>
+                    </View>
+                  ))}
+                </View>
+              )}
+
+              {/* Drop-off Point */}
+              <TouchableOpacity
+                style={styles.routeTimelineItem}
+                onPress={() => setShowEndAreaDropdown(true)}
+                activeOpacity={0.7}
+              >
+                <View style={styles.routeTimelineIconContainer}>
+                  <Icon name="location-on" size={22} color="#FF5252" style={{ marginLeft: -2 }} />
+                </View>
+                <View style={styles.routeTimelineContent}>
+                  <Text style={[styles.routeTimelineLabel, { color: theme.colors.textSecondary }]}>DROP-OFF POINT</Text>
+                  <Text style={[styles.routeTimelineValue, { color: endArea ? theme.colors.text : theme.colors.placeholder }]} numberOfLines={1}>
+                    {endArea || 'Where to?'}
                   </Text>
-                  <Icon name="keyboard-arrow-down" size={20} color={theme.colors.textSecondary} />
-                </TouchableOpacity>
-              </View>
+                </View>
+              </TouchableOpacity>
             </View>
 
             <View style={styles.inputGroup}>
@@ -735,42 +803,151 @@ const CreatePickDropServiceScreen = () => {
           </View>
         );
 
-      case 3: // Stops (Was 4)
+      case 3: // Preview
         return (
           <View>
-            {stops.length === 0 ? (
-              <Text style={[styles.infoText, { color: theme.colors.textSecondary, fontStyle: 'italic', marginBottom: 12 }]}>
-                No stops added. Click "Add Stop" to add intermediate stops.
-              </Text>
-            ) : (
-              stops.map((stop) => (
-                <View key={stop.id} style={[styles.stopItem, { backgroundColor: theme.colors.backgroundSecondary }]}>
-                  <View style={styles.stopInfo}>
-                    <Text style={[styles.stopLocation, { color: theme.colors.text }]}>
+            <Text style={[styles.previewSectionTitle, { color: theme.colors.primary, marginTop: 0 }]}>Route</Text>
+            {/* Timeline-style Route Preview (non-editable) */}
+            <View style={[styles.routeTimelineContainer, { backgroundColor: theme.colors.cardBackground, borderColor: theme.colors.border }]}>
+              {/* Pick-up Point */}
+              <View style={styles.routeTimelineItem}>
+                <View style={styles.routeTimelineIconContainer}>
+                  <View style={[styles.pickupIconOuter, { borderColor: '#E91E63' }]}>
+                    <View style={[styles.pickupIconInner, { backgroundColor: '#E91E63' }]} />
+                  </View>
+                  <View style={[styles.routeTimelineLine, { backgroundColor: theme.colors.border }]} />
+                </View>
+                <View style={styles.routeTimelineContent}>
+                  <Text style={[styles.routeTimelineLabel, { color: theme.colors.textSecondary }]}>PICK-UP POINT</Text>
+                  <Text style={[styles.routeTimelineValue, { color: theme.colors.text }]} numberOfLines={1}>
+                    {startArea || 'Not set'}
+                  </Text>
+                </View>
+              </View>
+
+              {/* Stops display */}
+              {stops.length > 0 && stops.map((stop, index) => (
+                <View key={stop.id} style={styles.routeTimelineItem}>
+                  <View style={styles.routeTimelineIconContainer}>
+                    <View style={[styles.stopDot, { backgroundColor: theme.colors.primary, borderColor: theme.colors.cardBackground }]} />
+                    <View style={[styles.routeTimelineLine, { backgroundColor: theme.colors.border }]} />
+                  </View>
+                  <View style={styles.routeTimelineContent}>
+                    <Text style={[styles.routeTimelineLabel, { color: theme.colors.textSecondary }]}>
+                      STOP {index + 1}{stop.stop_time ? ` • ${stop.stop_time}` : ''}
+                    </Text>
+                    <Text style={[styles.routeTimelineValue, { color: theme.colors.text }]} numberOfLines={1}>
                       {stop.location}
                     </Text>
-                    <Text style={[styles.stopTime, { color: theme.colors.textSecondary }]}>
-                      {stop.stop_time}
-                    </Text>
                   </View>
-                  <TouchableOpacity
-                    onPress={() => handleRemoveStop(stop.id)}
-                    style={styles.removeStopButton}
-                  >
-                    <Icon name="close" size={20} color={theme.colors.error} />
-                  </TouchableOpacity>
                 </View>
-              ))
-            )}
-            <View style={{ alignItems: 'flex-end' }}>
-              <TouchableOpacity
-                style={[styles.addStopButton, { backgroundColor: theme.colors.primary }]}
-                onPress={() => setShowStopModal(true)}
-              >
-                <Icon name="add" size={18} color="#fff" />
-                <Text style={styles.addStopButtonText}>Add Stop</Text>
-              </TouchableOpacity>
+              ))}
+
+              {/* Drop-off Point */}
+              <View style={styles.routeTimelineItem}>
+                <View style={styles.routeTimelineIconContainer}>
+                  <Icon name="location-on" size={22} color="#FF5252" style={{ marginLeft: -2 }} />
+                </View>
+                <View style={styles.routeTimelineContent}>
+                  <Text style={[styles.routeTimelineLabel, { color: theme.colors.textSecondary }]}>DROP-OFF POINT</Text>
+                  <Text style={[styles.routeTimelineValue, { color: theme.colors.text }]} numberOfLines={1}>
+                    {endArea || 'Not set'}
+                  </Text>
+                </View>
+              </View>
             </View>
+
+            {/* Schedule Info */}
+            <View style={[styles.previewCard, { backgroundColor: theme.colors.backgroundSecondary, marginTop: 8 }]}>
+              <View style={styles.previewRow}>
+                <Text style={[styles.previewLabel, { color: theme.colors.textSecondary }]}>Schedule</Text>
+                <Text style={[styles.previewValue, { color: theme.colors.text }]}>
+                  {scheduleType === 'once' ? formatDate(departureDate) : scheduleType.charAt(0).toUpperCase() + scheduleType.slice(1)}
+                </Text>
+              </View>
+              <View style={styles.previewRow}>
+                <Text style={[styles.previewLabel, { color: theme.colors.textSecondary }]}>Departure</Text>
+                <Text style={[styles.previewValue, { color: theme.colors.text }]}>{formatTime(departureTime)}</Text>
+              </View>
+              {isRoundTrip && (
+                <View style={styles.previewRow}>
+                  <Text style={[styles.previewLabel, { color: theme.colors.textSecondary }]}>Return</Text>
+                  <Text style={[styles.previewValue, { color: theme.colors.text }]}>{formatTime(returnTime)}</Text>
+                </View>
+              )}
+            </View>
+
+            <Text style={[styles.previewSectionTitle, { color: theme.colors.primary }]}>Service Details</Text>
+            <View style={[styles.previewCard, { backgroundColor: theme.colors.backgroundSecondary }]}>
+              <View style={styles.previewRow}>
+                <Text style={[styles.previewLabel, { color: theme.colors.textSecondary }]}>Available Spaces</Text>
+                <Text style={[styles.previewValue, { color: theme.colors.text }]}>{availableSpaces}</Text>
+              </View>
+              <View style={styles.previewRow}>
+                <Text style={[styles.previewLabel, { color: theme.colors.textSecondary }]}>Driver Gender</Text>
+                <Text style={[styles.previewValue, { color: theme.colors.text }]}>{driverGender.charAt(0).toUpperCase() + driverGender.slice(1)}</Text>
+              </View>
+              {pricePerPerson && (
+                <View style={styles.previewRow}>
+                  <Text style={[styles.previewLabel, { color: theme.colors.textSecondary }]}>Price/Person</Text>
+                  <Text style={[styles.previewValue, { color: theme.colors.text }]}>PKR {pricePerPerson}</Text>
+                </View>
+              )}
+              <View style={styles.previewRow}>
+                <Text style={[styles.previewLabel, { color: theme.colors.textSecondary }]}>Status</Text>
+                <Text style={[styles.previewValue, { color: active ? '#4CAF50' : theme.colors.textSecondary }]}>{active ? 'Active' : 'Inactive'}</Text>
+              </View>
+              {description && (
+                <View style={[styles.previewRow, { flexDirection: 'column', alignItems: 'flex-start' }]}>
+                  <Text style={[styles.previewLabel, { color: theme.colors.textSecondary, marginBottom: 4 }]}>Description</Text>
+                  <Text style={[styles.previewValue, { color: theme.colors.text }]}>{description}</Text>
+                </View>
+              )}
+            </View>
+
+            {(carBrand || carModel || carColor) && (
+              <>
+                <Text style={[styles.previewSectionTitle, { color: theme.colors.primary }]}>Car Details</Text>
+                <View style={[styles.previewCard, { backgroundColor: theme.colors.backgroundSecondary }]}>
+                  {carBrand && (
+                    <View style={styles.previewRow}>
+                      <Text style={[styles.previewLabel, { color: theme.colors.textSecondary }]}>Brand</Text>
+                      <Text style={[styles.previewValue, { color: theme.colors.text }]}>{carBrand}</Text>
+                    </View>
+                  )}
+                  {carModel && (
+                    <View style={styles.previewRow}>
+                      <Text style={[styles.previewLabel, { color: theme.colors.textSecondary }]}>Model</Text>
+                      <Text style={[styles.previewValue, { color: theme.colors.text }]}>{carModel}</Text>
+                    </View>
+                  )}
+                  {carColor && (
+                    <View style={styles.previewRow}>
+                      <Text style={[styles.previewLabel, { color: theme.colors.textSecondary }]}>Color</Text>
+                      <Text style={[styles.previewValue, { color: theme.colors.text }]}>{carColor}</Text>
+                    </View>
+                  )}
+                  {seats && (
+                    <View style={styles.previewRow}>
+                      <Text style={[styles.previewLabel, { color: theme.colors.textSecondary }]}>Seats</Text>
+                      <Text style={[styles.previewValue, { color: theme.colors.text }]}>{seats}</Text>
+                    </View>
+                  )}
+                  {transmission && (
+                    <View style={styles.previewRow}>
+                      <Text style={[styles.previewLabel, { color: theme.colors.textSecondary }]}>Transmission</Text>
+                      <Text style={[styles.previewValue, { color: theme.colors.text }]}>{transmission}</Text>
+                    </View>
+                  )}
+                  {fuelType && (
+                    <View style={styles.previewRow}>
+                      <Text style={[styles.previewLabel, { color: theme.colors.textSecondary }]}>Fuel Type</Text>
+                      <Text style={[styles.previewValue, { color: theme.colors.text }]}>{fuelType}</Text>
+                    </View>
+                  )}
+                </View>
+              </>
+            )}
           </View>
         );
 
@@ -898,6 +1075,11 @@ const CreatePickDropServiceScreen = () => {
       {renderDropdown(transmissions, transmission, setTransmission, showTransmissionDropdown, setShowTransmissionDropdown)}
       {renderDropdown(fuelTypes, fuelType, setFuelType, showFuelTypeDropdown, setShowFuelTypeDropdown)}
 
+      {/* Stop Area Dropdown - adds stop directly when selected */}
+      {renderDropdown(areaList, null, (item) => {
+        setStops([...stops, { location: item.name, stop_time: '', id: Date.now() }]);
+      }, showStopAreaDropdown, setShowStopAreaDropdown, true, 'name', 'id')}
+
       {/* Date/Time Pickers */}
       {showDatePicker && (
         <DateTimePicker
@@ -942,6 +1124,25 @@ const CreatePickDropServiceScreen = () => {
         />
       )}
 
+      {/* Stop Time Picker */}
+      {showStopTimePicker && (
+        <DateTimePicker
+          value={stopTime}
+          mode="time"
+          display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+          onChange={(event, selectedTime) => {
+            setShowStopTimePicker(Platform.OS === 'ios');
+            if (selectedTime && editingStopId) {
+              const timeString = `${String(selectedTime.getHours()).padStart(2, '0')}:${String(selectedTime.getMinutes()).padStart(2, '0')}`;
+              setStops(stops.map(s =>
+                s.id === editingStopId ? { ...s, stop_time: timeString } : s
+              ));
+              setEditingStopId(null);
+            }
+          }}
+        />
+      )}
+
       {/* Add Stop Modal */}
       <Modal
         visible={showStopModal}
@@ -954,13 +1155,15 @@ const CreatePickDropServiceScreen = () => {
             <Text style={[styles.modalTitle, { color: theme.colors.text }]}>Add Stop</Text>
             <View style={styles.inputGroup}>
               <Text style={[styles.label, { color: theme.colors.text }]}>Location</Text>
-              <TextInput
-                style={[styles.input, { borderColor: theme.colors.border, color: theme.colors.text, backgroundColor: theme.colors.inputBackground }]}
-                value={newStop.location}
-                onChangeText={(text) => setNewStop({ ...newStop, location: text })}
-                placeholder="Enter stop location"
-                placeholderTextColor={theme.colors.placeholder}
-              />
+              <TouchableOpacity
+                style={[styles.input, { borderColor: theme.colors.border, backgroundColor: theme.colors.inputBackground }]}
+                onPress={() => setShowStopAreaDropdown(true)}
+              >
+                <Text style={[styles.inputText, { color: newStop.location ? theme.colors.text : theme.colors.placeholder }]} numberOfLines={1}>
+                  {newStop.location || 'Select stop location'}
+                </Text>
+                <Icon name="keyboard-arrow-down" size={20} color={theme.colors.textSecondary} />
+              </TouchableOpacity>
             </View>
             <View style={styles.inputGroup}>
               <Text style={[styles.label, { color: theme.colors.text }]}>Stop Time</Text>
@@ -1302,6 +1505,130 @@ const styles = StyleSheet.create({
   },
   priceInputText: {
     fontSize: 16,
+  },
+  // Timeline-style Route Container
+  routeTimelineContainer: {
+    borderRadius: 16,
+    borderWidth: 1,
+    padding: 16,
+    marginBottom: 16,
+  },
+  routeTimelineItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
+  routeTimelineIconContainer: {
+    width: 24,
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  pickupIconOuter: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  pickupIconInner: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  routeTimelineLine: {
+    width: 2,
+    height: 24,
+    marginTop: 4,
+  },
+  routeTimelineContent: {
+    flex: 1,
+    paddingBottom: 8,
+  },
+  routeTimelineLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    letterSpacing: 0.5,
+    marginBottom: 2,
+  },
+  routeTimelineValue: {
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  addStopRowContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 4,
+  },
+  addStopInlineButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+    borderWidth: 1,
+    gap: 4,
+  },
+  addStopInlineText: {
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  stopsListInline: {
+    marginLeft: 36,
+    marginBottom: 8,
+  },
+  stopInlineItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginLeft: -36,
+  },
+  stopDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    borderWidth: 2,
+  },
+  stopInlineContent: {
+    flex: 1,
+    paddingVertical: 4,
+  },
+  stopInlineText: {
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  stopInlineTime: {
+    fontSize: 12,
+  },
+  stopRemoveBtn: {
+    padding: 4,
+  },
+  // Preview styles
+  previewSectionTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 8,
+    marginTop: 16,
+  },
+  previewCard: {
+    borderRadius: 12,
+    padding: 12,
+  },
+  previewRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 8,
+    borderBottomWidth: 0.5,
+    borderBottomColor: 'rgba(255,255,255,0.1)',
+  },
+  previewLabel: {
+    fontSize: 14,
+    flex: 1,
+  },
+  previewValue: {
+    fontSize: 14,
+    fontWeight: '500',
+    flex: 2,
+    textAlign: 'right',
   },
 });
 
