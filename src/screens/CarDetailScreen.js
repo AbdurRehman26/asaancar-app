@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   TextInput,
 } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
@@ -26,7 +27,7 @@ const CarDetailScreen = () => {
   const [loading, setLoading] = useState(true);
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-  
+
   // Booking form state
   const [pickupAddress, setPickupAddress] = useState('');
   const [pickupTime, setPickupTime] = useState('');
@@ -34,7 +35,7 @@ const CarDetailScreen = () => {
   const [notes, setNotes] = useState('');
   const [numberOfDays, setNumberOfDays] = useState('1');
   const [bookAsGuest, setBookAsGuest] = useState(false);
-  
+
   // Inquiry form state
   const [inquiryName, setInquiryName] = useState('');
   const [inquiryContact, setInquiryContact] = useState('');
@@ -62,7 +63,7 @@ const CarDetailScreen = () => {
   const formatPrice = (pricePerDay, price) => {
     let priceValue = '0';
     let currency = 'PKR';
-    
+
     if (pricePerDay) {
       if (typeof pricePerDay === 'object') {
         if (pricePerDay.perDay) {
@@ -96,7 +97,7 @@ const CarDetailScreen = () => {
         priceValue = price;
       }
     }
-    
+
     return { priceValue, currency };
   };
 
@@ -144,6 +145,49 @@ const CarDetailScreen = () => {
     // TODO: Implement inquiry API call
   };
 
+  const handleConfirmBooking = () => {
+    if (!pickupAddress || !pickupDate || !pickupTime) {
+      setErrorMessage('Please fill in all required fields');
+      setShowErrorModal(true);
+      return;
+    }
+    // TODO: Implement booking API call
+    console.log('Confirm Booking:', { pickupAddress, pickupDate, pickupTime, notes, numberOfDays });
+    // For now show success or something, but just log is fine for placeholder
+  };
+
+  const handleMessageStore = () => {
+    if (!user) {
+      navigation.navigate('Login');
+      return;
+    }
+    const storeId = car.store?.id || car.store_id;
+    const storeName = car.store?.name || 'Store';
+
+    // Check if we have a user associated with the store to chat with
+    // For now, we'll navigate to Chat with placeholders or StoreProfile logic
+    // Assuming backend will support store chat, or we pass store owner ID if available.
+    // If not, we might need to rely on the Inquiry form. 
+    // But since requested "Message Store" button, we will try to navigate to Chat.
+
+    // Ideally we need store.user_id. Checking car object structure from logs would be good, 
+    // but we'll try to use storeId as userId for now or similar pattern, 
+    // OR just navigate to ChatScreen with type 'store' if supported.
+
+    if (car.store?.user_id) {
+      navigation.navigate('Chat', {
+        userId: car.store.user_id,
+        userName: storeName,
+        type: 'car_rental',
+        serviceId: car.id // or storeId
+      });
+    } else {
+      // Fallback to inquiry section focus or error
+      setErrorMessage('Chat not available for this store. Please use the inquiry form.');
+      setShowErrorModal(true);
+    }
+  };
+
   if (loading) {
     return (
       <View style={[styles.loadingContainer, { backgroundColor: theme.colors.background }]}>
@@ -164,294 +208,334 @@ const CarDetailScreen = () => {
   const totalAmount = calculateTotal();
   const carName = `${car.brand?.name || 'Brand'} ${car.name || 'Car Name'}`;
 
+  const insets = useSafeAreaInsets();
+
   return (
-    <ScrollView style={[styles.container, { backgroundColor: theme.colors.backgroundTertiary }]}>
-      <View style={styles.contentContainer}>
-        {/* Left Panel */}
-        <View style={styles.leftPanel}>
-          {/* Car Image */}
-          <View style={[styles.imageContainer, { backgroundColor: theme.colors.border }]}>
-            <Image
-              source={{ uri: getCarImageUrl(car) }}
-              style={styles.carImage}
-              resizeMode="contain"
-            />
-          </View>
-
-          {/* Car Name */}
-          <Text style={[styles.carName, { color: theme.colors.primary }]}>
-            {carName}
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <ScrollView
+        style={[styles.container, { backgroundColor: theme.colors.backgroundTertiary }]}
+        contentContainerStyle={{ paddingBottom: insets.bottom + 24 }}
+      >
+        {/* Back Button */}
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
+          <Icon name="arrow-back" size={24} color={theme.colors.text} />
+          <Text style={[styles.backButtonText, { color: theme.colors.text }]}>
+            Back to Listing
           </Text>
-
-          {/* Rate Details */}
-          <View style={[styles.card, { backgroundColor: theme.colors.cardBackground, borderColor: theme.colors.border }]}>
-            <Text style={[styles.cardTitle, { color: theme.colors.text }]}>Rate Details</Text>
-            <View style={[styles.rateTable, { borderColor: theme.colors.border }]}>
-              <View style={[styles.tableHeader, { backgroundColor: theme.colors.backgroundSecondary, borderBottomColor: theme.colors.border }]}>
-                <Text style={[styles.tableHeaderText, { color: theme.colors.text }]}>
-                  Hours/Day
-                </Text>
-                <Text style={[styles.tableHeaderText, { color: theme.colors.text }]}>
-                  Amount
-                </Text>
-              </View>
-              <View style={styles.tableRow}>
-                <Text style={[styles.tableCell, { color: theme.colors.text }]}>
-                  10 hrs/day
-                </Text>
-                <Text style={[styles.tableCell, { color: theme.colors.text }]}>
-                  {currency} {priceValue}
-                </Text>
-              </View>
-            </View>
-          </View>
-
-          {/* Additional Terms and Conditions */}
-          <View style={[styles.infoCard, { backgroundColor: theme.colors.backgroundSecondary, borderColor: theme.colors.border }]}>
-            <Icon name="info" size={20} color={theme.colors.primary} />
-            <Text style={[styles.infoText, { color: theme.colors.text }]}>
-              Additional terms and conditions including fuel charges, overtime rates, and other service details will be discussed verbally with the store owner upon booking confirmation. Please contact the store directly for any specific requirements or questions.
-            </Text>
-          </View>
-
-          {/* Store Information */}
-          {car.store && (
-            <TouchableOpacity
-              style={[styles.card, styles.clickableCard, { backgroundColor: theme.colors.cardBackground, borderColor: theme.colors.border }]}
-              onPress={() => {
-                const storeId = car.store?.id || car.store_id;
-                if (storeId) {
-                  navigation.navigate('StoreProfile', { storeId });
-                }
-              }}
-              activeOpacity={0.7}
-            >
-              <View style={styles.storeHeader}>
-                <Text style={[styles.cardTitle, { color: theme.colors.text }]}>
-                  Store Information
-                </Text>
-                <Icon name="chevron-right" size={24} color={theme.colors.primary} />
-              </View>
-              <Text style={[styles.storeName, { color: theme.colors.primary }]}>
-                {car.store.name || 'Store Name'}
-              </Text>
-              <Text style={[styles.storeDescription, { color: theme.colors.textSecondary }]}>
-                {car.store.description || 'Professional car rental and transport services'}
-              </Text>
-              
-              {car.store.address && (
-                <View style={styles.storeInfoRow}>
-                  <Icon name="location-on" size={18} color={theme.colors.textSecondary} />
-                  <Text style={[styles.storeInfoText, { color: theme.colors.textSecondary }]}>
-                    {car.store.address}
-                  </Text>
-                </View>
-              )}
-              
-              {car.store.phone && (
-                <View style={styles.storeInfoRow}>
-                  <Icon name="phone" size={18} color={theme.colors.textSecondary} />
-                  <Text style={[styles.storeInfoText, { color: theme.colors.textSecondary }]}>
-                    {car.store.phone}
-                  </Text>
-                </View>
-              )}
-              
-              {car.store.rating && (
-                <View style={styles.storeInfoRow}>
-                  <Icon name="star" size={18} color="#ffa500" />
-                  <Text style={[styles.storeInfoText, { color: theme.colors.textSecondary }]}>
-                    {car.store.rating}/5 ({car.store.reviews || 0} reviews)
-                  </Text>
-                </View>
-              )}
-            </TouchableOpacity>
-          )}
-        </View>
-
-        {/* Right Panel */}
-        <View style={styles.rightPanel}>
-          {/* Pick-up & Drop-off Details */}
-          <View style={[styles.card, { backgroundColor: theme.colors.cardBackground, borderColor: theme.colors.border }]}>
-            <Text style={[styles.cardTitle, { color: theme.colors.text }]}>
-              Pick-up & Drop-off Details
-            </Text>
-
-            {/* Pick-up Detail */}
-            <View style={styles.pickupSection}>
-              <View style={styles.sectionHeader}>
-                <Icon name="location-on" size={20} color={theme.colors.primary} />
-                <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
-                  Pick-up Detail
-                </Text>
-              </View>
-
-              <View style={[styles.inputContainer, { borderColor: theme.colors.border, backgroundColor: theme.colors.inputBackground }]}>
-                <TextInput
-                  style={[styles.input, { color: theme.colors.text }]}
-                  placeholder="Pick-up address"
-                  placeholderTextColor={theme.colors.placeholder}
-                  value={pickupAddress}
-                  onChangeText={setPickupAddress}
-                />
-                <Icon name="location-on" size={20} color={theme.colors.textSecondary} />
-              </View>
-
-              <View style={[styles.inputContainer, { borderColor: theme.colors.border, backgroundColor: theme.colors.inputBackground }]}>
-                <Icon name="access-time" size={20} color={theme.colors.textSecondary} />
-                <TextInput
-                  style={[styles.input, { color: theme.colors.text }]}
-                  placeholder="--:-- --"
-                  placeholderTextColor={theme.colors.placeholder}
-                  value={pickupTime}
-                  onChangeText={setPickupTime}
-                />
-                <Icon name="access-time" size={20} color={theme.colors.textSecondary} />
-              </View>
-
-              <View style={[styles.inputContainer, { borderColor: theme.colors.border, backgroundColor: theme.colors.inputBackground }]}>
-                <Icon name="calendar-today" size={20} color={theme.colors.textSecondary} />
-                <TextInput
-                  style={[styles.input, { color: theme.colors.text }]}
-                  placeholder="dd.mm.yyyy"
-                  placeholderTextColor={theme.colors.placeholder}
-                  value={pickupDate}
-                  onChangeText={setPickupDate}
-                />
-                <Icon name="calendar-today" size={20} color={theme.colors.textSecondary} />
-              </View>
-
-              <View style={[styles.textAreaContainer, { borderColor: theme.colors.border, backgroundColor: theme.colors.inputBackground }]}>
-                <TextInput
-                  style={[styles.textArea, { color: theme.colors.text }]}
-                  placeholder="Notes (optional)"
-                  placeholderTextColor={theme.colors.placeholder}
-                  value={notes}
-                  onChangeText={setNotes}
-                  multiline
-                  numberOfLines={4}
-                />
-              </View>
-            </View>
-
-            {/* No. of Days */}
-            <View style={styles.daysSection}>
-              <Text style={[styles.label, { color: theme.colors.text }]}>No. of Days</Text>
-              <View style={[styles.inputContainer, { borderColor: theme.colors.border, backgroundColor: theme.colors.inputBackground }]}>
-                <TextInput
-                  style={[styles.input, { color: theme.colors.text }]}
-                  value={numberOfDays}
-                  onChangeText={setNumberOfDays}
-                  keyboardType="numeric"
-                />
-              </View>
-            </View>
-          </View>
-
-          {/* Total Amount */}
-          <View style={[styles.totalCard, { backgroundColor: theme.colors.cardBackground, borderColor: theme.colors.border }]}>
-            <Text style={[styles.totalLabel, { color: theme.colors.text }]}>Total Amount</Text>
-            <Text style={[styles.totalAmount, { color: theme.colors.primary }]}>
-              {currency} {totalAmount}
-            </Text>
-          </View>
-
-          {/* Booking Options */}
-          <View style={[styles.card, { backgroundColor: theme.colors.cardBackground, borderColor: theme.colors.border }]}>
-            <TouchableOpacity
-              style={styles.checkboxContainer}
-              onPress={() => setBookAsGuest(!bookAsGuest)}
-            >
-              <View style={[
-                styles.checkbox,
-                { borderColor: theme.colors.primary },
-                bookAsGuest && { backgroundColor: theme.colors.primary }
-              ]}>
-                {bookAsGuest && (
-                  <Icon name="check" size={16} color="#fff" />
-                )}
-              </View>
-              <Text style={[styles.checkboxLabel, { color: theme.colors.text }]}>
-                Book as guest
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.bookButton, { backgroundColor: theme.colors.primary + '80' }]}
-              onPress={handleBookAsGuest}
-            >
-              <Text style={styles.bookButtonText}>Book as Guest</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.loginButton, { backgroundColor: theme.colors.primary }]}
-              onPress={handleLoginToBook}
-            >
-              <Text style={styles.loginButtonText}>Please Login to Book</Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Send an Inquiry */}
-          <View style={[styles.card, { backgroundColor: theme.colors.cardBackground, borderColor: theme.colors.border }]}>
-            <Text style={[styles.cardTitle, { color: theme.colors.text }]}>
-              Send an Inquiry to Store Owner
-            </Text>
-
-            <View style={[styles.inputContainer, { borderColor: theme.colors.border, backgroundColor: theme.colors.inputBackground }]}>
-              <TextInput
-                style={[styles.input, { color: theme.colors.text }]}
-                placeholder="Your Name"
-                placeholderTextColor={theme.colors.placeholder}
-                value={inquiryName}
-                onChangeText={setInquiryName}
+        </TouchableOpacity>
+        <View style={styles.contentContainer}>
+          {/* Left Panel */}
+          <View style={styles.leftPanel}>
+            {/* Car Image */}
+            <View style={[styles.imageContainer, { backgroundColor: theme.colors.border }]}>
+              <Image
+                source={{ uri: getCarImageUrl(car) }}
+                style={styles.carImage}
+                resizeMode="contain"
               />
-              <Icon name="lock" size={16} color={theme.colors.textSecondary} />
             </View>
 
-            <View style={[styles.inputContainer, { borderColor: theme.colors.border, backgroundColor: theme.colors.inputBackground }]}>
-              <TextInput
-                style={[styles.input, { color: theme.colors.text }]}
-                placeholder="Phone Number"
-                placeholderTextColor={theme.colors.placeholder}
-                value={inquiryContact}
-                onChangeText={(text) => {
-                  // Only allow numeric characters
-                  const numericText = text.replace(/[^0-9+]/g, '');
-                  setInquiryContact(numericText);
+            {/* Car Name */}
+            <Text style={[styles.carName, { color: theme.colors.primary }]}>
+              {carName}
+            </Text>
+
+            {/* Rate Details */}
+            <View style={[styles.card, { backgroundColor: theme.colors.cardBackground, borderColor: theme.colors.border }]}>
+              <Text style={[styles.cardTitle, { color: theme.colors.text }]}>Rate Details</Text>
+              <View style={[styles.rateTable, { borderColor: theme.colors.border }]}>
+                <View style={[styles.tableHeader, { backgroundColor: theme.colors.backgroundSecondary, borderBottomColor: theme.colors.border }]}>
+                  <Text style={[styles.tableHeaderText, { color: theme.colors.text }]}>
+                    Hours/Day
+                  </Text>
+                  <Text style={[styles.tableHeaderText, { color: theme.colors.text }]}>
+                    Amount
+                  </Text>
+                </View>
+                <View style={styles.tableRow}>
+                  <Text style={[styles.tableCell, { color: theme.colors.text }]}>
+                    10 hrs/day
+                  </Text>
+                  <Text style={[styles.tableCell, { color: theme.colors.text }]}>
+                    {currency} {priceValue}
+                  </Text>
+                </View>
+              </View>
+            </View>
+
+            {/* Additional Terms and Conditions */}
+            <View style={[styles.infoCard, { backgroundColor: theme.colors.backgroundSecondary, borderColor: theme.colors.border }]}>
+              <Icon name="info" size={20} color={theme.colors.primary} />
+              <Text style={[styles.infoText, { color: theme.colors.text }]}>
+                Additional terms and conditions including fuel charges, overtime rates, and other service details will be discussed verbally with the store owner upon booking confirmation. Please contact the store directly for any specific requirements or questions.
+              </Text>
+            </View>
+
+            {/* Store Information */}
+            {car.store && (
+              <TouchableOpacity
+                style={[styles.card, styles.clickableCard, { backgroundColor: theme.colors.cardBackground, borderColor: theme.colors.border }]}
+                onPress={() => {
+                  const storeId = car.store?.id || car.store_id;
+                  if (storeId) {
+                    navigation.navigate('StoreProfile', { storeId });
+                  }
                 }}
-                keyboardType="phone-pad"
-              />
-              <Icon name="lock" size={16} color={theme.colors.textSecondary} />
+                activeOpacity={0.7}
+              >
+                <View style={styles.storeHeader}>
+                  <Text style={[styles.cardTitle, { color: theme.colors.text }]}>
+                    Store Information
+                  </Text>
+                  <Icon name="chevron-right" size={24} color={theme.colors.primary} />
+                </View>
+                <Text style={[styles.storeName, { color: theme.colors.primary }]}>
+                  {car.store.name || 'Store Name'}
+                </Text>
+                <Text style={[styles.storeDescription, { color: theme.colors.textSecondary }]}>
+                  {car.store.description || 'Professional car rental and transport services'}
+                </Text>
+
+                {car.store.address && (
+                  <View style={styles.storeInfoRow}>
+                    <Icon name="location-on" size={18} color={theme.colors.textSecondary} />
+                    <Text style={[styles.storeInfoText, { color: theme.colors.textSecondary }]}>
+                      {car.store.address}
+                    </Text>
+                  </View>
+                )}
+
+                {car.store.phone && (
+                  <View style={styles.storeInfoRow}>
+                    <Icon name="phone" size={18} color={theme.colors.textSecondary} />
+                    <Text style={[styles.storeInfoText, { color: theme.colors.textSecondary }]}>
+                      {car.store.phone}
+                    </Text>
+                  </View>
+                )}
+
+                {car.store.rating && (
+                  <View style={styles.storeInfoRow}>
+                    <Icon name="star" size={18} color="#ffa500" />
+                    <Text style={[styles.storeInfoText, { color: theme.colors.textSecondary }]}>
+                      {car.store.rating}/5 ({car.store.reviews || 0} reviews)
+                    </Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+            )}
+          </View>
+
+          {/* Right Panel */}
+          <View style={styles.rightPanel}>
+            {/* Pick-up & Drop-off Details */}
+            <View style={[styles.card, { backgroundColor: theme.colors.cardBackground, borderColor: theme.colors.border }]}>
+              <Text style={[styles.cardTitle, { color: theme.colors.text }]}>
+                Pick-up & Drop-off Details
+              </Text>
+
+              {/* Pick-up Detail */}
+              <View style={styles.pickupSection}>
+                <View style={styles.sectionHeader}>
+                  <Icon name="location-on" size={20} color={theme.colors.primary} />
+                  <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
+                    Pick-up Detail
+                  </Text>
+                </View>
+
+                <View style={[styles.inputContainer, { borderColor: theme.colors.border, backgroundColor: theme.colors.inputBackground }]}>
+                  <TextInput
+                    style={[styles.input, { color: theme.colors.text }]}
+                    placeholder="Pick-up address"
+                    placeholderTextColor={theme.colors.placeholder}
+                    value={pickupAddress}
+                    onChangeText={setPickupAddress}
+                  />
+                  <Icon name="location-on" size={20} color={theme.colors.textSecondary} />
+                </View>
+
+                <View style={[styles.inputContainer, { borderColor: theme.colors.border, backgroundColor: theme.colors.inputBackground }]}>
+                  <Icon name="access-time" size={20} color={theme.colors.textSecondary} />
+                  <TextInput
+                    style={[styles.input, { color: theme.colors.text }]}
+                    placeholder="--:-- --"
+                    placeholderTextColor={theme.colors.placeholder}
+                    value={pickupTime}
+                    onChangeText={setPickupTime}
+                  />
+                  <Icon name="access-time" size={20} color={theme.colors.textSecondary} />
+                </View>
+
+                <View style={[styles.inputContainer, { borderColor: theme.colors.border, backgroundColor: theme.colors.inputBackground }]}>
+                  <Icon name="calendar-today" size={20} color={theme.colors.textSecondary} />
+                  <TextInput
+                    style={[styles.input, { color: theme.colors.text }]}
+                    placeholder="dd.mm.yyyy"
+                    placeholderTextColor={theme.colors.placeholder}
+                    value={pickupDate}
+                    onChangeText={setPickupDate}
+                  />
+                  <Icon name="calendar-today" size={20} color={theme.colors.textSecondary} />
+                </View>
+
+                <View style={[styles.textAreaContainer, { borderColor: theme.colors.border, backgroundColor: theme.colors.inputBackground }]}>
+                  <TextInput
+                    style={[styles.textArea, { color: theme.colors.text }]}
+                    placeholder="Notes (optional)"
+                    placeholderTextColor={theme.colors.placeholder}
+                    value={notes}
+                    onChangeText={setNotes}
+                    multiline
+                    numberOfLines={4}
+                  />
+                </View>
+              </View>
+
+              {/* No. of Days */}
+              <View style={styles.daysSection}>
+                <Text style={[styles.label, { color: theme.colors.text }]}>No. of Days</Text>
+                <View style={[styles.inputContainer, { borderColor: theme.colors.border, backgroundColor: theme.colors.inputBackground }]}>
+                  <TextInput
+                    style={[styles.input, { color: theme.colors.text }]}
+                    value={numberOfDays}
+                    onChangeText={setNumberOfDays}
+                    keyboardType="numeric"
+                  />
+                </View>
+              </View>
             </View>
 
-            <View style={[styles.textAreaContainer, { borderColor: theme.colors.border, backgroundColor: theme.colors.inputBackground }]}>
-              <TextInput
-                style={[styles.textArea, { color: theme.colors.text }]}
-                placeholder="Your Message"
-                placeholderTextColor={theme.colors.placeholder}
-                value={inquiryMessage}
-                onChangeText={setInquiryMessage}
-                multiline
-                numberOfLines={4}
-              />
+            {/* Total Amount */}
+            <View style={[styles.totalCard, { backgroundColor: theme.colors.cardBackground, borderColor: theme.colors.border }]}>
+              <Text style={[styles.totalLabel, { color: theme.colors.text }]}>Total Amount</Text>
+              <Text style={[styles.totalAmount, { color: theme.colors.primary }]}>
+                {currency} {totalAmount}
+              </Text>
             </View>
 
-            <TouchableOpacity
-              style={[styles.inquiryButton, { backgroundColor: theme.colors.primary }]}
-              onPress={handleSendInquiry}
-            >
-              <Text style={styles.inquiryButtonText}>Send Inquiry</Text>
-            </TouchableOpacity>
+            {/* Booking Options */}
+            <View style={[styles.card, { backgroundColor: theme.colors.cardBackground, borderColor: theme.colors.border }]}>
+              {!user ? (
+                <>
+                  <TouchableOpacity
+                    style={styles.checkboxContainer}
+                    onPress={() => setBookAsGuest(!bookAsGuest)}
+                  >
+                    <View style={[
+                      styles.checkbox,
+                      { borderColor: theme.colors.primary },
+                      bookAsGuest && { backgroundColor: theme.colors.primary }
+                    ]}>
+                      {bookAsGuest && (
+                        <Icon name="check" size={16} color="#fff" />
+                      )}
+                    </View>
+                    <Text style={[styles.checkboxLabel, { color: theme.colors.text }]}>
+                      Book as guest
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[styles.bookButton, { backgroundColor: theme.colors.primary + '80' }]}
+                    onPress={handleBookAsGuest}
+                  >
+                    <Text style={styles.bookButtonText}>Book as Guest</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[styles.loginButton, { backgroundColor: theme.colors.primary }]}
+                    onPress={handleLoginToBook}
+                  >
+                    <Text style={styles.loginButtonText}>Please Login to Book</Text>
+                  </TouchableOpacity>
+                </>
+              ) : (
+                <>
+                  <TouchableOpacity
+                    style={[styles.bookButton, { backgroundColor: theme.colors.primary, marginBottom: 16 }]}
+                    onPress={handleConfirmBooking}
+                  >
+                    <Text style={styles.bookButtonText}>Confirm Booking</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[styles.inquiryButton, { backgroundColor: theme.colors.secondary, marginTop: 0 }]}
+                    onPress={handleMessageStore}
+                  >
+                    <Icon name="chat" size={20} color="#fff" style={{ marginRight: 8 }} />
+                    <Text style={styles.inquiryButtonText}>Message Store</Text>
+                  </TouchableOpacity>
+                </>
+              )}
+            </View>
+
+            {/* Send an Inquiry */}
+            {!user && (
+              <View style={[styles.card, { backgroundColor: theme.colors.cardBackground, borderColor: theme.colors.border }]}>
+                <Text style={[styles.cardTitle, { color: theme.colors.text }]}>
+                  Send an Inquiry to Store Owner
+                </Text>
+
+                <View style={[styles.inputContainer, { borderColor: theme.colors.border, backgroundColor: theme.colors.inputBackground }]}>
+                  <TextInput
+                    style={[styles.input, { color: theme.colors.text }]}
+                    placeholder="Your Name"
+                    placeholderTextColor={theme.colors.placeholder}
+                    value={inquiryName}
+                    onChangeText={setInquiryName}
+                  />
+                  <Icon name="lock" size={16} color={theme.colors.textSecondary} />
+                </View>
+
+                <View style={[styles.inputContainer, { borderColor: theme.colors.border, backgroundColor: theme.colors.inputBackground }]}>
+                  <TextInput
+                    style={[styles.input, { color: theme.colors.text }]}
+                    placeholder="Phone Number"
+                    placeholderTextColor={theme.colors.placeholder}
+                    value={inquiryContact}
+                    onChangeText={(text) => {
+                      // Only allow numeric characters
+                      const numericText = text.replace(/[^0-9+]/g, '');
+                      setInquiryContact(numericText);
+                    }}
+                    keyboardType="phone-pad"
+                  />
+                  <Icon name="lock" size={16} color={theme.colors.textSecondary} />
+                </View>
+
+                <View style={[styles.textAreaContainer, { borderColor: theme.colors.border, backgroundColor: theme.colors.inputBackground }]}>
+                  <TextInput
+                    style={[styles.textArea, { color: theme.colors.text }]}
+                    placeholder="Your Message"
+                    placeholderTextColor={theme.colors.placeholder}
+                    value={inquiryMessage}
+                    onChangeText={setInquiryMessage}
+                    multiline
+                    numberOfLines={4}
+                  />
+                </View>
+
+                <TouchableOpacity
+                  style={[styles.inquiryButton, { backgroundColor: theme.colors.primary }]}
+                  onPress={handleSendInquiry}
+                >
+                  <Text style={styles.inquiryButtonText}>Send Inquiry</Text>
+                </TouchableOpacity>
+              </View>
+            )}
           </View>
         </View>
-      </View>
 
-      <ErrorModal
-        visible={showErrorModal}
-        onClose={() => setShowErrorModal(false)}
-        message={errorMessage}
-      />
-    </ScrollView>
+        <ErrorModal
+          visible={showErrorModal}
+          onClose={() => setShowErrorModal(false)}
+          message={errorMessage}
+        />
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 
@@ -468,6 +552,17 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     padding: 16,
     gap: 16,
+  },
+  backButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    gap: 8,
+    zIndex: 10,
+  },
+  backButtonText: {
+    fontSize: 16,
+    fontWeight: '500',
   },
   leftPanel: {
     width: '100%',
@@ -679,6 +774,8 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   inquiryButton: {
+    flexDirection: 'row',
+    justifyContent: 'center',
     paddingVertical: 14,
     borderRadius: 8,
     alignItems: 'center',

@@ -30,7 +30,7 @@
         "WRITE_EXTERNAL_STORAGE",
         "READ_MEDIA_IMAGES"
       ],
-      "versionCode": 22
+      "versionCode": 25
     },
     "web": {
       "bundler": "metro"

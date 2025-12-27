@@ -37,6 +37,8 @@ const Tab = createBottomTabNavigator();
 
 // Main stack accessible without login
 const MainStack = () => {
+  const { theme } = useTheme();
+
   return (
     <Stack.Navigator
       initialRouteName="RentalCars"
@@ -71,8 +73,7 @@ const MainStack = () => {
         name="CarDetail"
         component={CarDetailScreen}
         options={{
-          title: 'Car Details',
-          headerBackTitle: 'Back'
+          headerShown: false,
         }}
       />
       <Stack.Screen
@@ -87,7 +88,14 @@ const MainStack = () => {
         component={BookingScreen}
         options={{
           title: 'Book Car',
-          headerBackTitle: 'Back'
+          headerBackTitle: 'Back',
+          headerStyle: {
+            backgroundColor: theme.colors.background,
+          },
+          headerTintColor: theme.colors.text,
+          headerTitleStyle: {
+            color: theme.colors.text,
+          },
         }}
       />
       <Stack.Screen

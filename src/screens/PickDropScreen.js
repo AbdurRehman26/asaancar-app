@@ -275,16 +275,7 @@ const PickDropScreen = () => {
           <View style={styles.headerTitleSection}>
           </View>
           <View style={styles.headerActions}>
-            <TouchableOpacity
-              onPress={toggleTheme}
-              style={styles.themeToggleButton}
-            >
-              <Icon
-                name={isDark ? 'light-mode' : 'dark-mode'}
-                size={24}
-                color={theme.colors.primary}
-              />
-            </TouchableOpacity>
+
           </View>
         </View>
         <ServiceTabs
