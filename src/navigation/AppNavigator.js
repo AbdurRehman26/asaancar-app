@@ -5,7 +5,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+
 
 // Screens
 import HomeScreen from '@/screens/HomeScreen';
@@ -30,6 +30,7 @@ import ContactUsScreen from '@/screens/ContactUsScreen';
 import NotificationsScreen from '@/screens/NotificationsScreen';
 import AboutUsScreen from '@/screens/AboutUsScreen';
 import CreateStoreScreen from '@/screens/CreateStoreScreen';
+
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -263,26 +264,8 @@ const AuthenticatedTabs = () => {
 
 const AppNavigator = () => {
   const { user, loading } = useAuth();
-  const [isFirstLaunch, setIsFirstLaunch] = React.useState(null);
 
-  React.useEffect(() => {
-    checkFirstLaunch();
-  }, []);
-
-  const checkFirstLaunch = async () => {
-    try {
-      const value = await AsyncStorage.getItem('hasLaunched');
-      if (value === null) {
-        setIsFirstLaunch(true);
-      } else {
-        setIsFirstLaunch(false);
-      }
-    } catch (error) {
-      setIsFirstLaunch(false);
-    }
-  };
-
-  if (loading || isFirstLaunch === null) {
+  if (loading) {
     return null; // You can add a loading screen here
   }
 
@@ -293,9 +276,6 @@ const AppNavigator = () => {
   return (
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
-        {isFirstLaunch && !user ? (
-          <Stack.Screen name="Onboarding" component={OnboardingScreen} />
-        ) : null}
         {user ? (
           <Stack.Screen name="Root" component={AuthenticatedTabs} />
         ) : (
