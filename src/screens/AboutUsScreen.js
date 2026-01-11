@@ -9,22 +9,17 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '@/context/ThemeContext';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import { useTranslation } from 'react-i18next';
+import PageHeader from '@/components/PageHeader';
 
 const AboutUsScreen = () => {
   const navigation = useNavigation();
   const { theme } = useTheme();
+  const { t } = useTranslation();
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.backgroundTertiary }]}>
-      <View style={[styles.header, { backgroundColor: theme.colors.cardBackground }]}>
-        <View style={styles.headerContent}>
-          <TouchableOpacity onPress={() => navigation.navigate('SettingsMain')} style={styles.backButton}>
-            <Icon name="arrow-back" size={24} color={theme.colors.text} />
-          </TouchableOpacity>
-          <Text style={[styles.headerTitle, { color: theme.colors.text }]}>About Us</Text>
-          <View style={styles.placeholder} />
-        </View>
-      </View>
+      <PageHeader title={t('aboutUs.title')} backDestination="SettingsMain" />
 
       <ScrollView
         style={styles.scrollView}
@@ -32,72 +27,72 @@ const AboutUsScreen = () => {
         showsVerticalScrollIndicator={false}
       >
         <View style={[styles.card, { backgroundColor: theme.colors.cardBackground }]}>
-          <Text style={[styles.title, { color: theme.colors.text }]}>About Us</Text>
+          <Text style={[styles.title, { color: theme.colors.text }]}>{t('aboutUs.title')}</Text>
           <Text style={[styles.description, { color: theme.colors.textSecondary }]}>
-            AsaanCar is honored to be a two-time recipient of the "Pakistan Consumer Choice Award," recognized for redefining car rental across the country.
+            {t('aboutUs.intro')}
           </Text>
         </View>
 
         <View style={[styles.card, { backgroundColor: theme.colors.cardBackground }]}>
-          <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Who We Are</Text>
+          <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>{t('aboutUs.whoWeAre')}</Text>
           <Text style={[styles.description, { color: theme.colors.textSecondary }]}>
-            Gone are the days of stressful car rental — endless searching, unpredictable prices, and questionable quality. AsaanCar is Pakistan's first on-demand car rental platform, designed to make your journey smooth, reliable, and hassle-free.
+            {t('aboutUs.whoWeAreDesc')}
           </Text>
         </View>
 
         <View style={[styles.card, { backgroundColor: theme.colors.cardBackground }]}>
-          <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>What We Offer</Text>
+          <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>{t('aboutUs.whatWeOffer')}</Text>
           <Text style={[styles.description, { color: theme.colors.textSecondary }]}>
-            With AsaanCar, booking a car is just a few clicks away. Whether you need a ride for a business meeting, a family trip, a wedding, or simply to get around town, we have you covered. Our services are tailored for:
+            {t('aboutUs.whatWeOfferDesc')}
           </Text>
           <View style={styles.listContainer}>
             <View style={styles.listItem}>
               <Icon name="check-circle" size={20} color={theme.colors.primary} style={styles.listIcon} />
               <Text style={[styles.listText, { color: theme.colors.textSecondary }]}>
-                Corporate teams & office staff
+                {t('aboutUs.corporateTeams')}
               </Text>
             </View>
             <View style={styles.listItem}>
               <Icon name="check-circle" size={20} color={theme.colors.primary} style={styles.listIcon} />
               <Text style={[styles.listText, { color: theme.colors.textSecondary }]}>
-                Travelers and tourists
+                {t('aboutUs.travelers')}
               </Text>
             </View>
             <View style={styles.listItem}>
               <Icon name="check-circle" size={20} color={theme.colors.primary} style={styles.listIcon} />
               <Text style={[styles.listText, { color: theme.colors.textSecondary }]}>
-                Special occasions & events
+                {t('aboutUs.specialOccasions')}
               </Text>
             </View>
             <View style={styles.listItem}>
               <Icon name="check-circle" size={20} color={theme.colors.primary} style={styles.listIcon} />
               <Text style={[styles.listText, { color: theme.colors.textSecondary }]}>
-                Families and individuals
+                {t('aboutUs.families')}
               </Text>
             </View>
           </View>
           <Text style={[styles.description, { color: theme.colors.textSecondary, marginTop: 16 }]}>
-            Choose from a wide selection of the latest, well-maintained vehicles — available with a professional chauffeur or for self-drive. Our flexible options ensure you get exactly what you need, when you need it.
+            {t('aboutUs.vehicleSelection')}
           </Text>
         </View>
 
         <View style={[styles.card, { backgroundColor: theme.colors.cardBackground }]}>
-          <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Our Mission</Text>
+          <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>{t('aboutUs.ourMission')}</Text>
           <Text style={[styles.description, { color: theme.colors.textSecondary }]}>
-            Car rental, made simple. AsaanCar was founded with a single goal: to put you, the customer, at the heart of everything we do. We set out to transform the car rental experience into something modern, transparent, and truly customer-centric.
+            {t('aboutUs.ourMissionDesc1')}
           </Text>
           <Text style={[styles.description, { color: theme.colors.textSecondary, marginTop: 16 }]}>
-            Every vehicle and driver on our platform is carefully vetted through our "AsaanCar Quality Check" — so you can book with confidence, knowing your safety and comfort are our top priorities.
+            {t('aboutUs.ourMissionDesc2')}
           </Text>
         </View>
 
         <View style={[styles.card, { backgroundColor: theme.colors.cardBackground }]}>
-          <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Our Vision</Text>
+          <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>{t('aboutUs.ourVision')}</Text>
           <Text style={[styles.description, { color: theme.colors.textSecondary }]}>
-            What started as a bold idea to revolutionize car rentals in Pakistan has grown into a movement to set new standards for the entire industry. AsaanCar leverages technology to make car rentals accessible, affordable, and enjoyable for everyone.
+            {t('aboutUs.ourVisionDesc1')}
           </Text>
           <Text style={[styles.description, { color: theme.colors.textSecondary, marginTop: 16 }]}>
-            We're passionate about driving progress — not just for our customers, but for the next generation of entrepreneurs and innovators in Pakistan.
+            {t('aboutUs.ourVisionDesc2')}
           </Text>
         </View>
       </ScrollView>

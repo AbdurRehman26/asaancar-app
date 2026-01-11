@@ -20,12 +20,14 @@ import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import ServiceTabs from '@/components/ServiceTabs';
 import PickDropFilterDrawer from '@/components/PickDropFilterDrawer';
 import ErrorModal from '@/components/ErrorModal';
+import { useTranslation } from 'react-i18next';
 
 const PickDropScreen = () => {
   const { theme, isDark, toggleTheme } = useTheme();
   const { user } = useAuth();
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState('');
   const [filters, setFilters] = useState({
     startLocation: '',
@@ -307,7 +309,7 @@ const PickDropScreen = () => {
             style={[styles.addServiceButton, { backgroundColor: theme.colors.primary }]}
           >
             <Icon name="add" size={18} color="#fff" />
-            <Text style={styles.addServiceButtonText}>Add Service</Text>
+            <Text style={styles.addServiceButtonText}>{t('pickdrop.addService')}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -335,7 +337,7 @@ const PickDropScreen = () => {
         {/* Services List */}
         {loading ? (
           <View style={styles.loadingContainer}>
-            <Text style={[styles.loadingText, { color: theme.colors.textSecondary }]}>Loading services...</Text>
+            <Text style={[styles.loadingText, { color: theme.colors.textSecondary }]}>{t('common.loading')}</Text>
           </View>
         ) : services.length > 0 ? (
           <View style={styles.servicesContainer}>
@@ -367,7 +369,7 @@ const PickDropScreen = () => {
                         <Text style={[styles.locationTitle, { color: theme.colors.text }]} numberOfLines={1}>
                           {service.start_location || 'Start Location'}
                         </Text>
-                        <Text style={[styles.locationLabel, { color: theme.colors.textLight }]}>Start Point</Text>
+                        <Text style={[styles.locationLabel, { color: theme.colors.textLight }]}>{t('pickdrop.startPoint')}</Text>
                       </View>
                     </View>
 
@@ -391,14 +393,14 @@ const PickDropScreen = () => {
                         <Text style={[styles.locationTitle, { color: theme.colors.text }]} numberOfLines={1}>
                           {service.end_location || 'End Location'}
                         </Text>
-                        <Text style={[styles.locationLabel, { color: theme.colors.textLight }]}>Destination</Text>
+                        <Text style={[styles.locationLabel, { color: theme.colors.textLight }]}>{t('pickdrop.destination')}</Text>
                       </View>
                     </View>
                   </View>
 
                   {/* Right: Price */}
                   <View style={[styles.priceContainer, { backgroundColor: isDark ? 'rgba(126, 36, 108, 0.2)' : 'rgba(126, 36, 108, 0.08)', borderWidth: 1, borderColor: isDark ? 'rgba(126, 36, 108, 0.4)' : 'transparent' }]}>
-                    <Text style={[styles.priceLabel, { color: theme.colors.textSecondary }]}>Per Person</Text>
+                    <Text style={[styles.priceLabel, { color: theme.colors.textSecondary }]}>{t('pickdrop.perPerson')}</Text>
                     {(() => {
                       const price =
                         service.price_per_person ||
@@ -559,7 +561,7 @@ const PickDropScreen = () => {
                       navigation.navigate('PickDropDetail', { serviceId: service.id, serviceData: service });
                     }}
                   >
-                    <Text style={styles.viewDetailsText}>View Details</Text>
+                    <Text style={styles.viewDetailsText}>{t('common.viewDetails')}</Text>
                   </TouchableOpacity>
                 </View>
               </TouchableOpacity>
@@ -568,7 +570,7 @@ const PickDropScreen = () => {
         ) : (
           <View style={styles.emptyContainer}>
             <Icon name="directions-car" size={64} color={theme.colors.textLight} />
-            <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>No services found</Text>
+            <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>{t('pickdrop.noServicesFound')}</Text>
           </View>
         )}
 
@@ -599,7 +601,7 @@ const PickDropScreen = () => {
             disabled={currentPage === 1}
           >
             <Icon name="chevron-left" size={20} color={currentPage === 1 ? theme.colors.textLight : theme.colors.text} />
-            <Text style={[styles.paginationButtonText, { color: currentPage === 1 ? theme.colors.textLight : theme.colors.text }]}>Back</Text>
+            <Text style={[styles.paginationButtonText, { color: currentPage === 1 ? theme.colors.textLight : theme.colors.text }]}>{t('common.back')}</Text>
           </TouchableOpacity>
 
           {!user && (
@@ -607,7 +609,7 @@ const PickDropScreen = () => {
               onPress={() => navigation.navigate('Login')}
               style={[styles.loginButton, { backgroundColor: theme.colors.primary }]}
             >
-              <Text style={styles.loginButtonText}>Login</Text>
+              <Text style={styles.loginButtonText}>{t('common.login')}</Text>
             </TouchableOpacity>
           )}
 
@@ -624,7 +626,7 @@ const PickDropScreen = () => {
             }}
             disabled={currentPage >= totalPages}
           >
-            <Text style={[styles.paginationButtonText, { color: currentPage >= totalPages ? theme.colors.textLight : theme.colors.text }]}>Next</Text>
+            <Text style={[styles.paginationButtonText, { color: currentPage >= totalPages ? theme.colors.textLight : theme.colors.text }]}>{t('common.next')}</Text>
             <Icon name="chevron-right" size={20} color={currentPage >= totalPages ? theme.colors.textLight : theme.colors.text} />
           </TouchableOpacity>
         </View>

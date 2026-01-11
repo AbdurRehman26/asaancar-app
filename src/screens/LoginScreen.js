@@ -17,11 +17,14 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import ErrorModal from '@/components/ErrorModal';
 import SuccessModal from '@/components/SuccessModal';
 import { authAPI } from '@/services/api';
+import { useTranslation } from 'react-i18next';
+import { LANGUAGES, changeLanguage } from '@/i18n';
 
 const LoginScreen = () => {
   const navigation = useNavigation();
   const { theme, isDark, toggleTheme } = useTheme();
   const { login, loginWithOtp, setUserFromStorage } = useAuth();
+  const { t, i18n } = useTranslation();
   const [authMethod, setAuthMethod] = useState('otp'); // 'otp' or 'password'
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
@@ -46,7 +49,7 @@ const LoginScreen = () => {
       // Format phone number with country code (Pakistan: +92)
       const formattedPhone = `+92${phone}`;
       const response = await authAPI.sendLoginOtp(formattedPhone);
-      
+
       // Check if user is returned in response (auto-login scenario)
       if (response.user && response.token) {
         // User is automatically logged in, no OTP verification needed
@@ -56,7 +59,7 @@ const LoginScreen = () => {
         // Navigation will happen automatically when user state updates
         return;
       }
-      
+
       // If no user in response, show OTP input field
       setOtpSent(true);
       setSuccessMessage('OTP has been sent to your phone number');
@@ -138,14 +141,28 @@ const LoginScreen = () => {
             <Text style={[styles.logoText, { color: theme.colors.primary }]}>AsaanCar</Text>
           </View>
           <View style={styles.headerActions}>
+            {/* Language Selector */}
+            <TouchableOpacity
+              onPress={() => {
+                const currentIndex = LANGUAGES.findIndex(l => l.code === i18n.language);
+                const nextIndex = (currentIndex + 1) % LANGUAGES.length;
+                changeLanguage(LANGUAGES[nextIndex].code);
+              }}
+              style={styles.langButton}
+            >
+              <Icon name="language" size={20} color={theme.colors.primary} />
+              <Text style={[styles.langText, { color: theme.colors.primary }]}>
+                {LANGUAGES.find(l => l.code === i18n.language)?.code.toUpperCase() || 'EN'}
+              </Text>
+            </TouchableOpacity>
             <TouchableOpacity
               onPress={toggleTheme}
               style={styles.themeToggleButton}
             >
-              <Icon 
-                name={isDark ? 'light-mode' : 'dark-mode'} 
-                size={24} 
-                color={theme.colors.primary} 
+              <Icon
+                name={isDark ? 'light-mode' : 'dark-mode'}
+                size={24}
+                color={theme.colors.primary}
               />
             </TouchableOpacity>
             <TouchableOpacity
@@ -157,11 +174,22 @@ const LoginScreen = () => {
           </View>
         </View>
 
+        {/* Back to Listing */}
+        <TouchableOpacity
+          style={styles.backToListing}
+          onPress={() => navigation.navigate('RentalCars')}
+        >
+          <Icon name="arrow-back" size={20} color={theme.colors.primary} />
+          <Text style={[styles.backToListingText, { color: theme.colors.primary }]}>
+            {t('common.backToListing')}
+          </Text>
+        </TouchableOpacity>
+
         {/* Main Content */}
         <View style={styles.content}>
-          <Text style={[styles.welcomeTitle, { color: theme.colors.text }]}>Welcome Back</Text>
+          <Text style={[styles.welcomeTitle, { color: theme.colors.text }]}>{t('common.welcome')}</Text>
           <Text style={[styles.subtitle, { color: theme.colors.textSecondary }]}>
-            Log in to your account
+            {t('auth.signIn')}
           </Text>
 
           {/* Authentication Method Toggle */}
@@ -210,7 +238,7 @@ const LoginScreen = () => {
                   authMethod !== 'password' && { color: theme.colors.text },
                 ]}
               >
-                Password
+                {t('auth.password')}
               </Text>
             </TouchableOpacity>
           </View>
@@ -219,7 +247,7 @@ const LoginScreen = () => {
           {authMethod === 'otp' && (
             <>
               <View style={styles.labelContainer}>
-                <Text style={[styles.label, { color: theme.colors.text }]}>Phone Number</Text>
+                <Text style={[styles.label, { color: theme.colors.text }]}>{t('auth.phone')}</Text>
               </View>
               <View style={[styles.phoneInputContainer, { borderColor: theme.colors.border, backgroundColor: theme.colors.inputBackground }]}>
                 <View style={styles.countryCodeContainer}>
@@ -253,26 +281,26 @@ const LoginScreen = () => {
                   <View style={styles.labelContainer}>
                     <Text style={[styles.label, { color: theme.colors.text }]}>Enter OTP</Text>
                   </View>
-              <View style={[styles.inputContainer, { borderColor: theme.colors.border, backgroundColor: theme.colors.inputBackground }]}>
-                <TextInput
-                  style={[styles.input, { color: theme.colors.text }]}
-                  placeholder="Enter 6-digit OTP"
-                  placeholderTextColor={theme.colors.placeholder}
-                  value={otp}
-                  onChangeText={setOtp}
-                  keyboardType="number-pad"
-                  maxLength={6}
-                />
-                <View style={styles.inputIcons}>
-                  <Icon name="lock" size={16} color={theme.colors.textSecondary} />
-                </View>
-              </View>
+                  <View style={[styles.inputContainer, { borderColor: theme.colors.border, backgroundColor: theme.colors.inputBackground }]}>
+                    <TextInput
+                      style={[styles.input, { color: theme.colors.text }]}
+                      placeholder="Enter 6-digit OTP"
+                      placeholderTextColor={theme.colors.placeholder}
+                      value={otp}
+                      onChangeText={setOtp}
+                      keyboardType="number-pad"
+                      maxLength={6}
+                    />
+                    <View style={styles.inputIcons}>
+                      <Icon name="lock" size={16} color={theme.colors.textSecondary} />
+                    </View>
+                  </View>
                   <TouchableOpacity
                     onPress={handleSendOTP}
                     style={styles.resendButton}
                   >
                     <Text style={[styles.resendText, { color: theme.colors.primary }]}>
-                      Resend OTP
+                      {t('common.resendOtp')}
                     </Text>
                   </TouchableOpacity>
                 </>
@@ -284,7 +312,7 @@ const LoginScreen = () => {
           {authMethod === 'password' && (
             <>
               <View style={styles.labelContainer}>
-                <Text style={[styles.label, { color: theme.colors.text }]}>Phone Number</Text>
+                <Text style={[styles.label, { color: theme.colors.text }]}>{t('auth.phone')}</Text>
               </View>
               <View style={[styles.phoneInputContainer, { borderColor: theme.colors.border, backgroundColor: theme.colors.inputBackground }]}>
                 <View style={styles.countryCodeContainer}>
@@ -314,7 +342,7 @@ const LoginScreen = () => {
               </Text>
 
               <View style={styles.labelContainer}>
-                <Text style={[styles.label, { color: theme.colors.text }]}>Password</Text>
+                <Text style={[styles.label, { color: theme.colors.text }]}>{t('auth.password')}</Text>
               </View>
               <View style={[styles.inputContainer, { borderColor: theme.colors.border, backgroundColor: theme.colors.inputBackground }]}>
                 <TextInput
@@ -354,7 +382,7 @@ const LoginScreen = () => {
               <ActivityIndicator color="#fff" />
             ) : (
               <Text style={styles.buttonText}>
-                {authMethod === 'otp' ? (otpSent ? 'Verify OTP' : 'Send OTP') : 'Login'}
+                {authMethod === 'otp' ? (otpSent ? t('common.verifyOtp') : t('common.sendOtp')) : t('common.login')}
               </Text>
             )}
           </TouchableOpacity>
@@ -362,10 +390,10 @@ const LoginScreen = () => {
           {/* Sign Up Link */}
           <View style={styles.linkContainer}>
             <Text style={[styles.linkText, { color: theme.colors.textSecondary }]}>
-              Don't have an account?{' '}
+              {t('auth.noAccount')}{' '}
             </Text>
             <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-              <Text style={[styles.link, { color: theme.colors.primary }]}>Sign up</Text>
+              <Text style={[styles.link, { color: theme.colors.primary }]}>{t('auth.signUp')}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -383,7 +411,7 @@ const LoginScreen = () => {
         title="OTP Sent"
         message={successMessage}
       />
-    </KeyboardAvoidingView>
+    </KeyboardAvoidingView >
   );
 };
 
@@ -409,6 +437,16 @@ const styles = StyleSheet.create({
   },
   themeToggleButton: {
     padding: 4,
+  },
+  langButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 4,
+    gap: 2,
+  },
+  langText: {
+    fontSize: 12,
+    fontWeight: '600',
   },
   homeButton: {
     padding: 4,
@@ -454,6 +492,17 @@ const styles = StyleSheet.create({
   authMethodText: {
     fontSize: 16,
     fontWeight: '600',
+  },
+  backToListing: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginBottom: 16,
+    paddingVertical: 8,
+  },
+  backToListingText: {
+    fontSize: 14,
+    fontWeight: '500',
   },
   labelContainer: {
     marginBottom: 8,

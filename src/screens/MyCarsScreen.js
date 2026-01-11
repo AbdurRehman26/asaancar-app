@@ -22,6 +22,7 @@ import ErrorModal from '@/components/ErrorModal';
 import SuccessModal from '@/components/SuccessModal';
 import ConfirmModal from '@/components/ConfirmModal';
 import { useAuth } from '@/context/AuthContext';
+import PageHeader from '@/components/PageHeader';
 
 const { width } = Dimensions.get('window');
 
@@ -272,12 +273,7 @@ const MyCarsScreen = () => {
   if (!user) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.backgroundTertiary }]} edges={['top']}>
-        <View style={[styles.header, { backgroundColor: theme.colors.cardBackground }]}>
-          <TouchableOpacity onPress={() => navigation.navigate('SettingsMain')} style={styles.backButton}>
-            <Icon name="arrow-back" size={24} color={theme.colors.text} />
-          </TouchableOpacity>
-          <View style={{ flex: 1 }} />
-        </View>
+        <PageHeader title="My Cars" backDestination="SettingsMain" />
         <View style={styles.emptyContainer}>
           <Icon name="lock" size={64} color={theme.colors.border} />
           <Text style={[styles.emptyText, { color: theme.colors.text }]}>Login Required</Text>
@@ -295,23 +291,23 @@ const MyCarsScreen = () => {
     );
   }
 
+  const addCarButton = (
+    <TouchableOpacity
+      style={[styles.addButton, { backgroundColor: theme.colors.primary }]}
+      onPress={() => navigation.navigate('AddCar')}
+    >
+      <Icon name="add" size={20} color="#fff" />
+      <Text style={styles.addButtonText}>Add Car</Text>
+    </TouchableOpacity>
+  );
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.backgroundTertiary }]} edges={['top']}>
-      <View style={[styles.header, { backgroundColor: theme.colors.cardBackground, borderBottomColor: theme.colors.border }]}>
-        <TouchableOpacity onPress={() => navigation.navigate('SettingsMain')} style={styles.backButton}>
-          <Icon name="arrow-back" size={24} color={theme.colors.text} />
-        </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: theme.colors.text }]}>My Cars</Text>
-        <TouchableOpacity
-          style={[styles.addButton, { backgroundColor: theme.colors.primary }]}
-          onPress={() => {
-            navigation.navigate('AddCar');
-          }}
-        >
-          <Icon name="add" size={20} color="#fff" />
-          <Text style={styles.addButtonText}>Add Car</Text>
-        </TouchableOpacity>
-      </View>
+      <PageHeader
+        title="My Cars"
+        backDestination="SettingsMain"
+        rightAction={addCarButton}
+      />
 
       <FlatList
         data={cars}

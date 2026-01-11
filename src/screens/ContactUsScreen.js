@@ -16,10 +16,13 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import { contactAPI } from '@/services/api';
 import SuccessModal from '@/components/SuccessModal';
 import ErrorModal from '@/components/ErrorModal';
+import { useTranslation } from 'react-i18next';
+import PageHeader from '@/components/PageHeader';
 
 const ContactUsScreen = () => {
   const navigation = useNavigation();
   const { theme } = useTheme();
+  const { t } = useTranslation();
   const [name, setName] = useState('');
   const [contactInfo, setContactInfo] = useState('');
   const [message, setMessage] = useState('');
@@ -55,7 +58,7 @@ const ContactUsScreen = () => {
         contact_info: contactInfo.trim(),
         message: message.trim(),
       });
-      
+
       setShowSuccessModal(true);
       // Reset form
       setName('');
@@ -63,8 +66,8 @@ const ContactUsScreen = () => {
       setMessage('');
     } catch (error) {
       setErrorMessage(
-        error.response?.data?.message || 
-        error.message || 
+        error.response?.data?.message ||
+        error.message ||
         'Failed to send message. Please try again.'
       );
       setShowErrorModal(true);
@@ -79,17 +82,7 @@ const ContactUsScreen = () => {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
     >
-      {/* Header */}
-      <View style={[styles.header, { backgroundColor: theme.colors.cardBackground, borderBottomColor: theme.colors.border }]}>
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          style={styles.backButton}
-        >
-          <Icon name="arrow-back" size={24} color={theme.colors.text} />
-        </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: theme.colors.text }]}>Contact Us</Text>
-        <View style={styles.placeholder} />
-      </View>
+      <PageHeader title={t('contactUs.title')} />
 
       <ScrollView
         style={styles.scrollView}
@@ -98,9 +91,9 @@ const ContactUsScreen = () => {
       >
         {/* Title Section */}
         <View style={styles.titleSection}>
-          <Text style={[styles.title, { color: theme.colors.text }]}>Contact Us</Text>
+          <Text style={[styles.title, { color: theme.colors.text }]}>{t('contactUs.title')}</Text>
           <Text style={[styles.subtitle, { color: theme.colors.textSecondary }]}>
-            Have a question or need help? Fill out the form below and our team will get back to you soon.
+            {t('contactUs.subtitle')}
           </Text>
         </View>
 
@@ -108,10 +101,10 @@ const ContactUsScreen = () => {
         <View style={[styles.formCard, { backgroundColor: theme.colors.cardBackground, borderWidth: 1, borderColor: theme.colors.border }]}>
           {/* Name Field */}
           <View style={styles.fieldContainer}>
-            <Text style={[styles.label, { color: theme.colors.text }]}>Name</Text>
+            <Text style={[styles.label, { color: theme.colors.text }]}>{t('contactUs.name')}</Text>
             <TextInput
               style={[styles.input, { color: theme.colors.text, borderColor: theme.colors.border, backgroundColor: theme.colors.inputBackground }]}
-              placeholder="Enter your name"
+              placeholder={t('contactUs.enterName')}
               placeholderTextColor={theme.colors.placeholder}
               value={name}
               onChangeText={setName}
@@ -121,10 +114,10 @@ const ContactUsScreen = () => {
 
           {/* Contact Information Field */}
           <View style={styles.fieldContainer}>
-            <Text style={[styles.label, { color: theme.colors.text }]}>Contact Information</Text>
+            <Text style={[styles.label, { color: theme.colors.text }]}>{t('contactUs.contactInfo')}</Text>
             <TextInput
               style={[styles.input, { color: theme.colors.text, borderColor: theme.colors.border, backgroundColor: theme.colors.inputBackground }]}
-              placeholder="Email or phone number"
+              placeholder={t('contactUs.emailOrPhone')}
               placeholderTextColor={theme.colors.placeholder}
               value={contactInfo}
               onChangeText={setContactInfo}
@@ -135,10 +128,10 @@ const ContactUsScreen = () => {
 
           {/* Message Field */}
           <View style={styles.fieldContainer}>
-            <Text style={[styles.label, { color: theme.colors.text }]}>Message</Text>
+            <Text style={[styles.label, { color: theme.colors.text }]}>{t('contactUs.message')}</Text>
             <TextInput
               style={[styles.textArea, { color: theme.colors.text, borderColor: theme.colors.border, backgroundColor: theme.colors.inputBackground }]}
-              placeholder="Enter your message"
+              placeholder={t('contactUs.enterMessage')}
               placeholderTextColor={theme.colors.placeholder}
               value={message}
               onChangeText={setMessage}
@@ -161,7 +154,7 @@ const ContactUsScreen = () => {
             {loading ? (
               <ActivityIndicator color="#fff" />
             ) : (
-              <Text style={styles.sendButtonText}>Send Message</Text>
+              <Text style={styles.sendButtonText}>{t('contactUs.sendMessage')}</Text>
             )}
           </TouchableOpacity>
         </View>
@@ -170,8 +163,8 @@ const ContactUsScreen = () => {
       <SuccessModal
         visible={showSuccessModal}
         onClose={() => setShowSuccessModal(false)}
-        title="Message Sent"
-        message="Thank you for contacting us! We'll get back to you soon."
+        title={t('contactUs.messageSent')}
+        message={t('contactUs.thankYou')}
       />
 
       <ErrorModal

@@ -18,6 +18,7 @@ import * as ImagePicker from 'expo-image-picker';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import ErrorModal from '@/components/ErrorModal';
 import SuccessModal from '@/components/SuccessModal';
+import PageHeader from '@/components/PageHeader';
 
 const AddCarScreen = () => {
   const navigation = useNavigation();
@@ -29,7 +30,7 @@ const AddCarScreen = () => {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
-  
+
   // Edit mode variables
   const [isEditing, setIsEditing] = useState(false);
   const [currentCarId, setCurrentCarId] = useState(null);
@@ -165,7 +166,7 @@ const AddCarScreen = () => {
   const loadCarForEdit = async () => {
     try {
       const carData = await carAPI.getCarById(currentCarId);
-      
+
       // Extract car data from response
       let car = carData;
       if (carData?.data) {
@@ -177,11 +178,11 @@ const AddCarScreen = () => {
       setStore(car.store_id || '');
       setType(car.car_type_id || '');
       setBrand(car.car_brand_id || '');
-      
+
       // Get model ID from carModel object
       const modelId = car.carModel?.id || car.model_id || car.model;
       setModel(modelId || '');
-      
+
       setYear(car.year?.toString() || '');
       setColor(car.color || '');
       setSeats(car.seats?.toString() || '');
@@ -190,7 +191,7 @@ const AddCarScreen = () => {
       setWithDriver(car.withDriver?.toString() || '');
       setWithoutDriver(car.withoutDriver?.toString() || '');
       setDescription(car.description || '');
-      
+
       // Load models for the selected brand
       if (car.car_brand_id) {
         await loadModels(car.car_brand_id);
@@ -205,7 +206,7 @@ const AddCarScreen = () => {
   const loadModels = async (brandId) => {
     try {
       const modelsData = await carModelAPI.getModelsByBrand(brandId);
-      
+
       // Process models from API
       let modelsArray = [];
       if (modelsData) {
@@ -315,11 +316,11 @@ const AddCarScreen = () => {
 
     try {
       setLoading(true);
-      
+
       // Get model name from selected model
       const selectedModel = models.find((m) => m.id === model);
       const modelName = selectedModel ? selectedModel.name : '';
-      
+
       const carData = {
         name: name || 'Car',
         store_id: store,
@@ -345,9 +346,9 @@ const AddCarScreen = () => {
         await carAPI.createCar(carData);
         setSuccessMessage('Car added successfully!');
       }
-      
+
       setShowSuccessModal(true);
-      
+
       // Navigate back after success
       setTimeout(() => {
         navigation.goBack();
@@ -382,7 +383,7 @@ const AddCarScreen = () => {
               const value = item.id || item;
               const label = getLabel(item);
               const isSelected = selectedValue === value || selectedValue === item;
-              
+
               return (
                 <TouchableOpacity
                   key={value || index}
@@ -432,13 +433,10 @@ const AddCarScreen = () => {
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.backgroundTertiary }]}>
-      <View style={[styles.header, { backgroundColor: theme.colors.cardBackground, borderBottomColor: theme.colors.border }]}>
-        <TouchableOpacity onPress={() => navigation.navigate('SettingsMain')} style={styles.backButton}>
-          <Icon name="arrow-back" size={24} color={theme.colors.text} />
-        </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: theme.colors.text }]}>{isEditing ? 'Edit Car' : 'Add Car'}</Text>
-        <View style={styles.placeholder} />
-      </View>
+      <PageHeader
+        title={isEditing ? 'Edit Car' : 'Add Car'}
+        backDestination="SettingsMain"
+      />
 
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
         {/* Name */}
@@ -592,7 +590,7 @@ const AddCarScreen = () => {
         {/* Rate Details Section */}
         <View style={[styles.rateSection, { backgroundColor: theme.colors.cardBackground, borderColor: theme.colors.border }]}>
           <Text style={[styles.rateSectionTitle, { color: theme.colors.text }]}>Rate Details</Text>
-          
+
           <View style={styles.inputGroup}>
             <Text style={[styles.label, { color: theme.colors.text }]}>With Driver (10 hrs/day)</Text>
             <TextInput
@@ -647,7 +645,7 @@ const AddCarScreen = () => {
           <Text style={[styles.imageInfo, { color: theme.colors.textSecondary }]}>
             Images are displayed in upload order. Use ↑↓ buttons to reorder.
           </Text>
-          
+
           <TouchableOpacity
             style={[styles.uploadArea, { borderColor: theme.colors.border, backgroundColor: theme.colors.backgroundSecondary }]}
             onPress={handleImageUpload}

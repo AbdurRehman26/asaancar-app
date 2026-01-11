@@ -18,12 +18,14 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import LoginModal from '@/components/LoginModal';
 import ErrorModal from '@/components/ErrorModal';
 import SuccessModal from '@/components/SuccessModal';
+import { useTranslation } from 'react-i18next';
 
 const BookingScreen = () => {
   const route = useRoute();
   const navigation = useNavigation();
   const { user } = useAuth();
   const { theme } = useTheme();
+  const { t } = useTranslation();
   const { car } = route.params;
   const [loading, setLoading] = useState(false);
   const [startDate, setStartDate] = useState(new Date());
@@ -108,11 +110,11 @@ const BookingScreen = () => {
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Rental Period</Text>
+        <Text style={styles.sectionTitle}>{t('booking.rentalPeriod')}</Text>
 
         <View style={styles.dateRow}>
           <View style={styles.dateContainer}>
-            <Text style={styles.dateLabel}>Start Date</Text>
+            <Text style={styles.dateLabel}>{t('booking.startDate')}</Text>
             <TouchableOpacity
               style={styles.dateButton}
               onPress={() => setShowStartPicker(true)}
@@ -149,14 +151,14 @@ const BookingScreen = () => {
                   onPress={() => setShowStartPicker(false)}
                   style={styles.pickerButton}
                 >
-                  <Text style={styles.pickerButtonText}>Done</Text>
+                  <Text style={styles.pickerButtonText}>{t('common.done')}</Text>
                 </TouchableOpacity>
               </View>
             )}
           </View>
 
           <View style={styles.dateContainer}>
-            <Text style={styles.dateLabel}>End Date</Text>
+            <Text style={styles.dateLabel}>{t('booking.endDate')}</Text>
             <TouchableOpacity
               style={styles.dateButton}
               onPress={() => setShowEndPicker(true)}
@@ -193,7 +195,7 @@ const BookingScreen = () => {
                   onPress={() => setShowEndPicker(false)}
                   style={styles.pickerButton}
                 >
-                  <Text style={styles.pickerButtonText}>Done</Text>
+                  <Text style={styles.pickerButtonText}>{t('common.done')}</Text>
                 </TouchableOpacity>
               </View>
             )}
@@ -208,13 +210,13 @@ const BookingScreen = () => {
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Locations</Text>
+        <Text style={styles.sectionTitle}>{t('booking.locations')}</Text>
 
         <View style={styles.inputContainer}>
           <Icon name="location-on" size={20} color="#666" style={styles.inputIcon} />
           <TextInput
             style={styles.input}
-            placeholder="Pickup Location"
+            placeholder={t('booking.pickupLocation')}
             placeholderTextColor="#999"
             value={pickupLocation}
             onChangeText={setPickupLocation}
@@ -225,7 +227,7 @@ const BookingScreen = () => {
           <Icon name="location-on" size={20} color="#666" style={styles.inputIcon} />
           <TextInput
             style={styles.input}
-            placeholder="Dropoff Location"
+            placeholder={t('booking.dropoffLocation')}
             placeholderTextColor="#999"
             value={dropoffLocation}
             onChangeText={setDropoffLocation}
@@ -234,7 +236,7 @@ const BookingScreen = () => {
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Options</Text>
+        <Text style={styles.sectionTitle}>{t('booking.options')}</Text>
         <TouchableOpacity
           style={styles.optionRow}
           onPress={() => setWithDriver(!withDriver)}
@@ -244,7 +246,7 @@ const BookingScreen = () => {
             size={24}
             color={withDriver ? '#7e246c' : '#ccc'}
           />
-          <Text style={styles.optionText}>With Driver</Text>
+          <Text style={styles.optionText}>{t('booking.withDriver')}</Text>
         </TouchableOpacity>
       </View>
 
@@ -256,7 +258,7 @@ const BookingScreen = () => {
           </Text>
         </View>
         <View style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>Total</Text>
+          <Text style={styles.summaryLabel}>{t('booking.total')}</Text>
           <Text style={styles.summaryTotal}>
             PKR {calculateTotal().toLocaleString()}
           </Text>
@@ -275,7 +277,7 @@ const BookingScreen = () => {
         {loading ? (
           <ActivityIndicator color="#fff" />
         ) : (
-          <Text style={styles.bookButtonText}>Confirm Booking</Text>
+          <Text style={styles.bookButtonText}>{t('booking.confirmBooking')}</Text>
         )}
       </TouchableOpacity>
 

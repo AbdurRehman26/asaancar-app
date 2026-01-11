@@ -21,11 +21,14 @@ import * as ImagePicker from 'expo-image-picker';
 import { authAPI } from '@/services/api';
 import ErrorModal from '@/components/ErrorModal';
 import SuccessModal from '@/components/SuccessModal';
+import { useTranslation } from 'react-i18next';
+import PageHeader from '@/components/PageHeader';
 
 const ProfileScreen = () => {
   const navigation = useNavigation();
   const { user, setUserFromStorage } = useAuth();
   const { theme } = useTheme();
+  const { t } = useTranslation();
   const [name, setName] = useState(user?.name || '');
   const [email, setEmail] = useState(user?.email || '');
   const [profileImageUri, setProfileImageUri] = useState(user?.profile_image || '');
@@ -170,14 +173,7 @@ const ProfileScreen = () => {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.backgroundTertiary }]} edges={['top']}>
-      {/* Header */}
-      <View style={[styles.header, { backgroundColor: theme.colors.cardBackground }]}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Icon name="arrow-back" size={24} color={theme.colors.text} />
-        </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: theme.colors.text }]}>Profile</Text>
-        <View style={{ width: 28 }} />{/* Spacer for centering */}
-      </View>
+      <PageHeader title={t('profile.title')} />
 
       <KeyboardAvoidingView
         style={styles.keyboardView}
@@ -186,7 +182,7 @@ const ProfileScreen = () => {
         <ScrollView contentContainerStyle={styles.scrollContent}>
           {/* Personal Information Card */}
           <View style={[styles.card, { backgroundColor: theme.colors.cardBackground }]}>
-            <Text style={[styles.cardTitle, { color: theme.colors.text }]}>Personal Information</Text>
+            <Text style={[styles.cardTitle, { color: theme.colors.text }]}>{t('profile.personalInfo')}</Text>
 
             {/* Profile Image Section */}
             <View style={styles.imageContainer}>
@@ -203,12 +199,12 @@ const ProfileScreen = () => {
                 </View>
               </TouchableOpacity>
               <Text style={[styles.imageHint, { color: theme.colors.textSecondary }]}>
-                Tap to change profile picture
+                {t('profile.tapToChange')}
               </Text>
             </View>
 
             <View style={styles.inputSection}>
-              <Text style={[styles.label, { color: theme.colors.text }]}>Name</Text>
+              <Text style={[styles.label, { color: theme.colors.text }]}>{t('profile.name')}</Text>
               <TextInput
                 style={[
                   styles.input,
@@ -218,7 +214,7 @@ const ProfileScreen = () => {
                     backgroundColor: theme.colors.inputBackground,
                   }
                 ]}
-                placeholder="Enter your name"
+                placeholder={t('profile.enterName')}
                 placeholderTextColor={theme.colors.placeholder}
                 value={name}
                 onChangeText={setName}
@@ -226,7 +222,7 @@ const ProfileScreen = () => {
             </View>
 
             <View style={styles.inputSection}>
-              <Text style={[styles.label, { color: theme.colors.text }]}>Email</Text>
+              <Text style={[styles.label, { color: theme.colors.text }]}>{t('profile.email')}</Text>
               <TextInput
                 style={[
                   styles.input,
@@ -236,7 +232,7 @@ const ProfileScreen = () => {
                     backgroundColor: theme.colors.inputBackground,
                   }
                 ]}
-                placeholder="Enter your email"
+                placeholder={t('profile.enterEmail')}
                 placeholderTextColor={theme.colors.placeholder}
                 value={email}
                 onChangeText={setEmail}
@@ -257,18 +253,18 @@ const ProfileScreen = () => {
               {loading ? (
                 <ActivityIndicator color="#fff" />
               ) : (
-                <Text style={styles.buttonText}>Save</Text>
+                <Text style={styles.buttonText}>{t('common.save')}</Text>
               )}
             </TouchableOpacity>
           </View>
 
           {/* Change Password Card */}
           <View style={[styles.card, { backgroundColor: theme.colors.cardBackground }]}>
-            <Text style={[styles.cardTitle, { color: theme.colors.text }]}>Change Password</Text>
+            <Text style={[styles.cardTitle, { color: theme.colors.text }]}>{t('profile.changePassword')}</Text>
 
             {/* Current Password */}
             <View style={styles.inputSection}>
-              <Text style={[styles.label, { color: theme.colors.text }]}>Current Password</Text>
+              <Text style={[styles.label, { color: theme.colors.text }]}>{t('profile.currentPassword')}</Text>
               <View style={[
                 styles.passwordInputContainer,
                 {
@@ -278,7 +274,7 @@ const ProfileScreen = () => {
               ]}>
                 <TextInput
                   style={[styles.passwordInput, { color: theme.colors.text }]}
-                  placeholder="Enter your current password"
+                  placeholder={t('profile.enterCurrentPassword')}
                   placeholderTextColor={theme.colors.placeholder}
                   value={currentPassword}
                   onChangeText={setCurrentPassword}
@@ -303,7 +299,7 @@ const ProfileScreen = () => {
 
             {/* New Password */}
             <View style={styles.inputSection}>
-              <Text style={[styles.label, { color: theme.colors.text }]}>New Password</Text>
+              <Text style={[styles.label, { color: theme.colors.text }]}>{t('profile.newPassword')}</Text>
               <View style={[
                 styles.passwordInputContainer,
                 {
@@ -313,7 +309,7 @@ const ProfileScreen = () => {
               ]}>
                 <TextInput
                   style={[styles.passwordInput, { color: theme.colors.text }]}
-                  placeholder="New password"
+                  placeholder={t('profile.enterNewPassword')}
                   placeholderTextColor={theme.colors.placeholder}
                   value={newPassword}
                   onChangeText={setNewPassword}
@@ -338,7 +334,7 @@ const ProfileScreen = () => {
 
             {/* Confirm New Password */}
             <View style={styles.inputSection}>
-              <Text style={[styles.label, { color: theme.colors.text }]}>Confirm New Password</Text>
+              <Text style={[styles.label, { color: theme.colors.text }]}>{t('profile.confirmNewPassword')}</Text>
               <View style={[
                 styles.passwordInputContainer,
                 {
@@ -348,7 +344,7 @@ const ProfileScreen = () => {
               ]}>
                 <TextInput
                   style={[styles.passwordInput, { color: theme.colors.text }]}
-                  placeholder="Confirm new password"
+                  placeholder={t('profile.confirmNewPasswordPlaceholder')}
                   placeholderTextColor={theme.colors.placeholder}
                   value={confirmPassword}
                   onChangeText={setConfirmPassword}
@@ -383,7 +379,7 @@ const ProfileScreen = () => {
               {loading ? (
                 <ActivityIndicator color="#fff" />
               ) : (
-                <Text style={styles.buttonText}>Change Password</Text>
+                <Text style={styles.buttonText}>{t('profile.changePassword')}</Text>
               )}
             </TouchableOpacity>
           </View>

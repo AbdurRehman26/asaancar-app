@@ -5,6 +5,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import { useTranslation } from 'react-i18next';
 
 
 // Screens
@@ -215,6 +216,7 @@ const SettingsStack = () => {
 // Authenticated tabs (only shown when logged in)
 const AuthenticatedTabs = () => {
   const { theme } = useTheme();
+  const { t } = useTranslation();
 
   return (
     <Tab.Navigator
@@ -241,11 +243,12 @@ const AuthenticatedTabs = () => {
         headerShown: false,
       })}
     >
-      <Tab.Screen name="Home" component={MainStack} />
-      <Tab.Screen name="Bookings" component={MyBookingsScreen} />
+      <Tab.Screen name="Home" component={MainStack} options={{ tabBarLabel: t('navigation.home') }} />
+      <Tab.Screen name="Bookings" component={MyBookingsScreen} options={{ tabBarLabel: t('navigation.bookings') }} />
       <Tab.Screen
         name="Dashboard"
         component={SettingsStack}
+        options={{ tabBarLabel: t('navigation.dashboard') }}
         listeners={({ navigation }) => ({
           tabPress: (e) => {
             // Always navigate to SettingsMain when Dashboard tab is pressed

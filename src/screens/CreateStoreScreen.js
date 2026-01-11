@@ -18,6 +18,7 @@ import * as ImagePicker from 'expo-image-picker';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import ErrorModal from '@/components/ErrorModal';
 import SuccessModal from '@/components/SuccessModal';
+import PageHeader from '@/components/PageHeader';
 
 const CreateStoreScreen = () => {
   const navigation = useNavigation();
@@ -74,7 +75,7 @@ const CreateStoreScreen = () => {
 
     try {
       setLoading(true);
-      
+
       const formData = new FormData();
       formData.append('name', name);
       formData.append('city', city);
@@ -94,10 +95,10 @@ const CreateStoreScreen = () => {
       }
 
       const response = await storeAPI.createStore(formData);
-      
+
       // Check if response has data or is successful
       const hasData = response && (response.data || response.id || response.success !== false);
-      
+
       if (hasData) {
         setSuccessMessage('Store created successfully!');
         setShowSuccessModal(true);
@@ -113,7 +114,7 @@ const CreateStoreScreen = () => {
       if (error.response) {
         const status = error.response.status;
         const data = error.response.data;
-        
+
         // Handle 422 validation errors
         if (status === 422 && data.errors) {
           // Extract all validation error messages
@@ -140,15 +141,9 @@ const CreateStoreScreen = () => {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]} edges={['top']}>
-      <View style={[styles.header, { backgroundColor: theme.colors.background, borderBottomColor: theme.colors.border }]}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Icon name="arrow-back" size={24} color={theme.colors.text} />
-        </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: theme.colors.text }]}>Create Store</Text>
-        <View style={{ width: 24 }} />
-      </View>
+      <PageHeader title="Create Store" />
 
-      <ScrollView 
+      <ScrollView
         style={styles.content}
         contentContainerStyle={{ paddingBottom: insets.bottom + 20 }}
         showsVerticalScrollIndicator={false}
@@ -158,8 +153,8 @@ const CreateStoreScreen = () => {
           <View style={styles.section}>
             <Text style={[styles.label, { color: theme.colors.text }]}>Name</Text>
             <TextInput
-              style={[styles.input, { 
-                backgroundColor: theme.colors.backgroundSecondary, 
+              style={[styles.input, {
+                backgroundColor: theme.colors.backgroundSecondary,
                 color: theme.colors.text,
                 borderColor: theme.colors.border
               }]}
@@ -174,7 +169,7 @@ const CreateStoreScreen = () => {
           <View style={styles.row}>
             <View style={[styles.section, { flex: 1 }]}>
               <Text style={[styles.label, { color: theme.colors.text }]}>City</Text>
-              <View style={[styles.select, { 
+              <View style={[styles.select, {
                 backgroundColor: theme.colors.backgroundSecondary,
                 borderColor: theme.colors.border
               }]}>
@@ -190,8 +185,8 @@ const CreateStoreScreen = () => {
           <View style={styles.section}>
             <Text style={[styles.label, { color: theme.colors.text }]}>Store Username (optional)</Text>
             <TextInput
-              style={[styles.input, { 
-                backgroundColor: theme.colors.backgroundSecondary, 
+              style={[styles.input, {
+                backgroundColor: theme.colors.backgroundSecondary,
                 color: theme.colors.text,
                 borderColor: theme.colors.border
               }]}
@@ -206,8 +201,8 @@ const CreateStoreScreen = () => {
           <View style={styles.section}>
             <Text style={[styles.label, { color: theme.colors.text }]}>Description</Text>
             <TextInput
-              style={[styles.input, styles.textarea, { 
-                backgroundColor: theme.colors.backgroundSecondary, 
+              style={[styles.input, styles.textarea, {
+                backgroundColor: theme.colors.backgroundSecondary,
                 color: theme.colors.text,
                 borderColor: theme.colors.border
               }]}
@@ -223,8 +218,8 @@ const CreateStoreScreen = () => {
           {/* Logo Upload */}
           <View style={styles.section}>
             <Text style={[styles.label, { color: theme.colors.text }]}>Logo</Text>
-            <TouchableOpacity 
-              style={[styles.uploadBox, { 
+            <TouchableOpacity
+              style={[styles.uploadBox, {
                 borderColor: theme.colors.border,
                 backgroundColor: theme.colors.backgroundSecondary
               }]}
@@ -250,8 +245,8 @@ const CreateStoreScreen = () => {
           <View style={styles.section}>
             <Text style={[styles.label, { color: theme.colors.text }]}>Contact Phone</Text>
             <TextInput
-              style={[styles.input, { 
-                backgroundColor: theme.colors.backgroundSecondary, 
+              style={[styles.input, {
+                backgroundColor: theme.colors.backgroundSecondary,
                 color: theme.colors.text,
                 borderColor: theme.colors.border
               }]}
@@ -267,8 +262,8 @@ const CreateStoreScreen = () => {
           <View style={styles.section}>
             <Text style={[styles.label, { color: theme.colors.text }]}>Address</Text>
             <TextInput
-              style={[styles.input, styles.textarea, { 
-                backgroundColor: theme.colors.backgroundSecondary, 
+              style={[styles.input, styles.textarea, {
+                backgroundColor: theme.colors.backgroundSecondary,
                 color: theme.colors.text,
                 borderColor: theme.colors.border
               }]}

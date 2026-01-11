@@ -16,6 +16,7 @@ import { notificationAPI } from '@/services/api';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import ErrorModal from '@/components/ErrorModal';
 import ConfirmModal from '@/components/ConfirmModal';
+import PageHeader from '@/components/PageHeader';
 
 const NotificationsScreen = () => {
   const navigation = useNavigation();
@@ -263,19 +264,19 @@ const NotificationsScreen = () => {
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
+  const markAllButton = unreadCount > 0 ? (
+    <TouchableOpacity onPress={handleMarkAllAsRead} style={styles.markAllButton}>
+      <Text style={[styles.markAllText, { color: theme.colors.primary }]}>Mark all read</Text>
+    </TouchableOpacity>
+  ) : null;
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.backgroundTertiary }]} edges={['top']}>
-      <View style={[styles.header, { backgroundColor: theme.colors.cardBackground }]}>
-        <TouchableOpacity onPress={() => navigation.navigate('SettingsMain')} style={styles.backButton}>
-          <Icon name="arrow-back" size={24} color={theme.colors.text} />
-        </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: theme.colors.text }]}>Notifications</Text>
-        {unreadCount > 0 && (
-          <TouchableOpacity onPress={handleMarkAllAsRead} style={styles.markAllButton}>
-            <Text style={[styles.markAllText, { color: theme.colors.primary }]}>Mark all read</Text>
-          </TouchableOpacity>
-        )}
-      </View>
+      <PageHeader
+        title="Notifications"
+        backDestination="SettingsMain"
+        rightAction={markAllButton}
+      />
 
       <FlatList
         data={notifications}

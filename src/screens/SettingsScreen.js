@@ -13,11 +13,14 @@ import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import ConfirmModal from '@/components/ConfirmModal';
+import LanguageSelector from '@/components/LanguageSelector';
+import { useTranslation } from 'react-i18next';
 
 const SettingsScreen = () => {
   const navigation = useNavigation();
   const { user, logout } = useAuth();
   const { theme, isDark, toggleTheme } = useTheme();
+  const { t } = useTranslation();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   // Ensure we're on the SettingsMain screen when this screen is focused
@@ -40,28 +43,28 @@ const SettingsScreen = () => {
   const menuGridItems = [
     {
       id: 'myCars',
-      title: 'My Cars',
+      title: t('settings.myCars'),
       icon: 'directions-car',
       color: '#4F46E5', // Indigo
       onPress: () => navigation.navigate('MyCars'),
     },
     {
       id: 'myPickDrop',
-      title: 'My Pick & Drop',
+      title: t('settings.myPickDrop'),
       icon: 'directions-transit',
       color: '#0EA5E9', // Sky Blue
       onPress: () => navigation.navigate('MyPickDropServices'),
     },
     {
       id: 'myStores',
-      title: 'My Stores',
+      title: t('settings.myStores'),
       icon: 'store',
       color: '#EC4899', // Pink
       onPress: () => navigation.navigate('MyStores'),
     },
     {
       id: 'messages',
-      title: 'Messages',
+      title: t('settings.messages'),
       icon: 'chat-bubble',
       color: '#10B981', // Emerald
       onPress: () => navigation.navigate('Conversations'),
@@ -71,25 +74,25 @@ const SettingsScreen = () => {
   const secondaryMenuItems = [
     {
       id: 'profile',
-      title: 'Edit Profile',
+      title: t('settings.editProfile'),
       icon: 'person',
       onPress: () => navigation.navigate('Profile'),
     },
     {
       id: 'notifications',
-      title: 'Notifications',
+      title: t('settings.notifications'),
       icon: 'notifications',
       onPress: () => navigation.navigate('Notifications'),
     },
     {
       id: 'contact',
-      title: 'Contact Support',
+      title: t('settings.contactSupport'),
       icon: 'support-agent',
       onPress: () => navigation.navigate('ContactUs'),
     },
     {
       id: 'about',
-      title: 'About Us',
+      title: t('settings.aboutUs'),
       icon: 'info',
       onPress: () => navigation.navigate('AboutUs'),
     }
@@ -117,8 +120,8 @@ const SettingsScreen = () => {
         <View style={styles.headerSection}>
           <View style={styles.headerTop}>
             <View>
-              <Text style={[styles.welcomeText, { color: theme.colors.textSecondary }]}>Welcome back,</Text>
-              <Text style={[styles.headerName, { color: theme.colors.text }]}>{user?.name || 'Guest'}</Text>
+              <Text style={[styles.welcomeText, { color: theme.colors.textSecondary }]}>{t('settings.welcomeBack')}</Text>
+              <Text style={[styles.headerName, { color: theme.colors.text }]}>{user?.name || t('settings.guest')}</Text>
             </View>
             <TouchableOpacity onPress={() => navigation.navigate('Profile')} style={styles.avatarContainer}>
               <Icon name="person" size={32} color={theme.colors.primary} />
@@ -128,7 +131,7 @@ const SettingsScreen = () => {
 
         {/* Quick Actions Grid */}
         <View style={styles.sectionHeader}>
-          <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Quick Actions</Text>
+          <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>{t('settings.quickActions')}</Text>
         </View>
 
         <View style={styles.gridContainer}>
@@ -162,7 +165,7 @@ const SettingsScreen = () => {
               <View style={[styles.smallIconBox, { backgroundColor: theme.colors.backgroundTertiary }]}>
                 <Icon name={isDark ? "dark-mode" : "light-mode"} size={20} color={theme.colors.text} />
               </View>
-              <Text style={[styles.menuListText, { color: theme.colors.text }]}>Dark Mode</Text>
+              <Text style={[styles.menuListText, { color: theme.colors.text }]}>{t('settings.darkMode')}</Text>
             </View>
             <TouchableOpacity
               onPress={toggleTheme}
@@ -178,6 +181,9 @@ const SettingsScreen = () => {
               ]} />
             </TouchableOpacity>
           </View>
+
+          {/* Language Selector */}
+          <LanguageSelector />
         </View>
 
         {/* Logout Button */}
@@ -185,7 +191,7 @@ const SettingsScreen = () => {
           style={[styles.logoutButton, { borderColor: '#ff4444' }]}
           onPress={() => setShowLogoutModal(true)}
         >
-          <Text style={styles.logoutText}>Log Out</Text>
+          <Text style={styles.logoutText}>{t('common.logout')}</Text>
         </TouchableOpacity>
 
         <View style={{ height: 40 }} />
@@ -194,10 +200,10 @@ const SettingsScreen = () => {
       <ConfirmModal
         visible={showLogoutModal}
         onClose={() => setShowLogoutModal(false)}
-        title="Logout"
-        message="Are you sure you want to logout?"
-        confirmText="Logout"
-        cancelText="Cancel"
+        title={t('settings.logoutConfirmTitle')}
+        message={t('settings.logoutConfirmMessage')}
+        confirmText={t('common.logout')}
+        cancelText={t('common.cancel')}
         confirmColor="#ff4444"
         destructive={true}
         onConfirm={handleLogout}

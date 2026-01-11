@@ -2,9 +2,11 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useTheme } from '@/context/ThemeContext';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import { useTranslation } from 'react-i18next';
 
 const ServiceTabs = ({ activeTab, onTabChange }) => {
   const { theme } = useTheme();
+  const { t } = useTranslation();
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
@@ -38,7 +40,7 @@ const ServiceTabs = ({ activeTab, onTabChange }) => {
             },
           ]}
         >
-          Pick & Drop
+          {t('services.pickDrop')}
         </Text>
       </TouchableOpacity>
 
@@ -72,7 +74,7 @@ const ServiceTabs = ({ activeTab, onTabChange }) => {
             },
           ]}
         >
-          Rental Cars
+          {t('services.rentalCars')}
         </Text>
       </TouchableOpacity>
     </View>

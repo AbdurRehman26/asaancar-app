@@ -22,6 +22,7 @@ import ServiceTabs from '@/components/ServiceTabs';
 import Dropdown from '@/components/Dropdown';
 import FilterDrawer from '@/components/FilterDrawer';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useTranslation } from 'react-i18next';
 
 const { width } = Dimensions.get('window');
 
@@ -29,6 +30,7 @@ const HomeScreen = () => {
   const navigation = useNavigation();
   const { user } = useAuth();
   const { theme, isDark, toggleTheme } = useTheme();
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const [cars, setCars] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -322,7 +324,7 @@ const HomeScreen = () => {
               <Text style={styles.priceText}>
                 {(() => {
                   const { priceValue, currency } = formatPrice(item.pricePerDay, item.price);
-                  return `${currency} ${priceValue}/day`;
+                  return t('home.pricePerDay', { currency, price: priceValue });
                 })()}
               </Text>
             </View>
@@ -344,17 +346,17 @@ const HomeScreen = () => {
             <View style={styles.specsRow}>
               <View style={styles.specItem}>
                 <Icon name="local-gas-station" size={16} color={theme.colors.textSecondary} />
-                <Text style={[styles.specText, { color: theme.colors.textSecondary }]}>{item.fuel_type || 'Petrol'}</Text>
+                <Text style={[styles.specText, { color: theme.colors.textSecondary }]}>{item.fuel_type || t('home.petrol')}</Text>
               </View>
               <View style={styles.specDivider} />
               <View style={styles.specItem}>
                 <Icon name="settings" size={16} color={theme.colors.textSecondary} />
-                <Text style={[styles.specText, { color: theme.colors.textSecondary }]}>{item.transmission || 'Automatic'}</Text>
+                <Text style={[styles.specText, { color: theme.colors.textSecondary }]}>{item.transmission || t('home.automatic')}</Text>
               </View>
               <View style={styles.specDivider} />
               <View style={styles.specItem}>
                 <Icon name="people" size={16} color={theme.colors.textSecondary} />
-                <Text style={[styles.specText, { color: theme.colors.textSecondary }]}>{item.seats || '4 Seats'}</Text>
+                <Text style={[styles.specText, { color: theme.colors.textSecondary }]}>{item.seats || t('home.seats', { count: 4 })}</Text>
               </View>
             </View>
           </View>
@@ -376,9 +378,9 @@ const HomeScreen = () => {
                   <Icon name="store" size={18} color={theme.colors.primary} />
                 </View>
                 <View style={styles.dealerInfoText}>
-                  <Text style={[styles.dealerLabel, { color: theme.colors.textSecondary }]}>Provided by</Text>
+                  <Text style={[styles.dealerLabel, { color: theme.colors.textSecondary }]}>{t('home.providedBy')}</Text>
                   <Text style={[styles.dealerName, { color: theme.colors.text }]} numberOfLines={1}>
-                    {item.store?.name || item.dealer?.name || 'Verfied Partner'}
+                    {item.store?.name || item.dealer?.name || t('home.verifiedPartner')}
                   </Text>
                 </View>
                 <Icon name="chevron-right" size={20} color={theme.colors.textSecondary} />
@@ -431,7 +433,7 @@ const HomeScreen = () => {
         <View style={styles.infoBanner}>
           <Icon name="info" size={16} color={theme.colors.primary} />
           <Text style={[styles.infoText, { color: theme.colors.textSecondary }]}>
-            {totalCars} cars available
+            {t('home.carsAvailable', { count: totalCars })}
           </Text>
         </View>
       </View>
@@ -444,8 +446,8 @@ const HomeScreen = () => {
               const startNumber = (apiCurrentPage - 1) * pageSize + 1;
               const endNumber = Math.min(apiCurrentPage * pageSize, totalCars);
               return totalCars > 0
-                ? `Showing ${startNumber}-${endNumber} of ${totalCars}`
-                : `Showing ${startNumber}-${endNumber}`;
+                ? t('home.showing', { start: startNumber, end: endNumber, total: totalCars })
+                : t('home.showing', { start: startNumber, end: endNumber, total: endNumber });
             })()}
           </Text>
         </View>
@@ -472,7 +474,7 @@ const HomeScreen = () => {
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
               <Icon name="directions-car" size={64} color={theme.colors.textLight} />
-              <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>No cars found</Text>
+              <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>{t('home.noCarsFound')}</Text>
             </View>
           }
         />
@@ -495,7 +497,7 @@ const HomeScreen = () => {
             disabled={currentPage === 1}
           >
             <Icon name="chevron-left" size={20} color={currentPage === 1 ? theme.colors.textLight : theme.colors.text} />
-            <Text style={[styles.paginationButtonText, { color: currentPage === 1 ? theme.colors.textLight : theme.colors.text }]}>Back</Text>
+            <Text style={[styles.paginationButtonText, { color: currentPage === 1 ? theme.colors.textLight : theme.colors.text }]}>{t('common.back')}</Text>
           </TouchableOpacity>
 
           {!user && (
@@ -503,7 +505,7 @@ const HomeScreen = () => {
               onPress={() => navigation.navigate('Login')}
               style={[styles.loginButton, dynamicStyles.loginButton]}
             >
-              <Text style={styles.loginButtonText}>Login</Text>
+              <Text style={styles.loginButtonText}>{t('common.login')}</Text>
             </TouchableOpacity>
           )}
 
@@ -520,7 +522,7 @@ const HomeScreen = () => {
             }}
             disabled={currentPage >= lastPage}
           >
-            <Text style={[styles.paginationButtonText, { color: currentPage >= lastPage ? theme.colors.textLight : theme.colors.text }]}>Next</Text>
+            <Text style={[styles.paginationButtonText, { color: currentPage >= lastPage ? theme.colors.textLight : theme.colors.text }]}>{t('common.next')}</Text>
             <Icon name="chevron-right" size={20} color={currentPage >= lastPage ? theme.colors.textLight : theme.colors.text} />
           </TouchableOpacity>
         </View>

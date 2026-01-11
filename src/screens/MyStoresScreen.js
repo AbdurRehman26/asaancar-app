@@ -17,6 +17,7 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import ErrorModal from '@/components/ErrorModal';
 import SuccessModal from '@/components/SuccessModal';
 import ConfirmModal from '@/components/ConfirmModal';
+import PageHeader from '@/components/PageHeader';
 
 const MyStoresScreen = () => {
   const navigation = useNavigation();
@@ -42,7 +43,7 @@ const MyStoresScreen = () => {
       setLoading(true);
       const data = await storeAPI.getMyStores({ per_page: 50 });
       let storesData = [];
-      
+
       // Handle different response structures
       if (data) {
         if (Array.isArray(data.data)) {
@@ -55,7 +56,7 @@ const MyStoresScreen = () => {
           storesData = data.data.data;
         }
       }
-      
+
       setStores(storesData);
     } catch (error) {
       console.error('Error loading my stores:', error);
@@ -179,21 +180,23 @@ const MyStoresScreen = () => {
     );
   }
 
+  const createStoreButton = (
+    <TouchableOpacity
+      style={[styles.addButton, { backgroundColor: theme.colors.primary }]}
+      onPress={() => navigation.navigate('CreateStore')}
+    >
+      <Icon name="add" size={20} color="#fff" />
+      <Text style={styles.addButtonText}>Create Store</Text>
+    </TouchableOpacity>
+  );
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.backgroundTertiary }]} edges={['top']}>
-      <View style={[styles.header, { backgroundColor: theme.colors.cardBackground }]}>
-        <TouchableOpacity onPress={() => navigation.navigate('SettingsMain')} style={styles.backButton}>
-          <Icon name="arrow-back" size={24} color={theme.colors.text} />
-        </TouchableOpacity>
-        <View style={{ flex: 1 }} />
-        <TouchableOpacity
-          style={[styles.addButton, { backgroundColor: theme.colors.primary }]}
-          onPress={() => navigation.navigate('CreateStore')}
-        >
-          <Icon name="add" size={20} color="#fff" />
-          <Text style={styles.addButtonText}>Create Store</Text>
-        </TouchableOpacity>
-      </View>
+      <PageHeader
+        title="My Stores"
+        backDestination="SettingsMain"
+        rightAction={createStoreButton}
+      />
 
       <FlatList
         data={stores}

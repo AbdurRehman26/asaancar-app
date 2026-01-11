@@ -16,12 +16,14 @@ import { useTheme } from '@/context/ThemeContext';
 import { carAPI } from '@/services/api';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import ErrorModal from '@/components/ErrorModal';
+import { useTranslation } from 'react-i18next';
 
 const CarDetailScreen = () => {
   const route = useRoute();
   const navigation = useNavigation();
   const { theme } = useTheme();
   const { user } = useAuth();
+  const { t } = useTranslation();
   const { carId } = route.params;
   const [car, setCar] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -216,14 +218,13 @@ const CarDetailScreen = () => {
         style={[styles.container, { backgroundColor: theme.colors.backgroundTertiary }]}
         contentContainerStyle={{ paddingBottom: insets.bottom + 24 }}
       >
-        {/* Back Button */}
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
           <Icon name="arrow-back" size={24} color={theme.colors.text} />
           <Text style={[styles.backButtonText, { color: theme.colors.text }]}>
-            Back to Listing
+            {t('common.back')}
           </Text>
         </TouchableOpacity>
         <View style={styles.contentContainer}>
@@ -245,7 +246,7 @@ const CarDetailScreen = () => {
 
             {/* Rate Details */}
             <View style={[styles.card, { backgroundColor: theme.colors.cardBackground, borderColor: theme.colors.border }]}>
-              <Text style={[styles.cardTitle, { color: theme.colors.text }]}>Rate Details</Text>
+              <Text style={[styles.cardTitle, { color: theme.colors.text }]}>{t('carDetail.rateDetails')}</Text>
               <View style={[styles.rateTable, { borderColor: theme.colors.border }]}>
                 <View style={[styles.tableHeader, { backgroundColor: theme.colors.backgroundSecondary, borderBottomColor: theme.colors.border }]}>
                   <Text style={[styles.tableHeaderText, { color: theme.colors.text }]}>
@@ -288,7 +289,7 @@ const CarDetailScreen = () => {
               >
                 <View style={styles.storeHeader}>
                   <Text style={[styles.cardTitle, { color: theme.colors.text }]}>
-                    Store Information
+                    {t('carDetail.storeInfo')}
                   </Text>
                   <Icon name="chevron-right" size={24} color={theme.colors.primary} />
                 </View>
@@ -334,7 +335,7 @@ const CarDetailScreen = () => {
             {/* Pick-up & Drop-off Details */}
             <View style={[styles.card, { backgroundColor: theme.colors.cardBackground, borderColor: theme.colors.border }]}>
               <Text style={[styles.cardTitle, { color: theme.colors.text }]}>
-                Pick-up & Drop-off Details
+                {t('carDetail.pickupDetails')}
               </Text>
 
               {/* Pick-up Detail */}
@@ -342,7 +343,7 @@ const CarDetailScreen = () => {
                 <View style={styles.sectionHeader}>
                   <Icon name="location-on" size={20} color={theme.colors.primary} />
                   <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
-                    Pick-up Detail
+                    {t('carDetail.pickupDetail')}
                   </Text>
                 </View>
 
@@ -396,7 +397,7 @@ const CarDetailScreen = () => {
 
               {/* No. of Days */}
               <View style={styles.daysSection}>
-                <Text style={[styles.label, { color: theme.colors.text }]}>No. of Days</Text>
+                <Text style={[styles.label, { color: theme.colors.text }]}>{t('carDetail.noOfDays')}</Text>
                 <View style={[styles.inputContainer, { borderColor: theme.colors.border, backgroundColor: theme.colors.inputBackground }]}>
                   <TextInput
                     style={[styles.input, { color: theme.colors.text }]}
@@ -410,7 +411,7 @@ const CarDetailScreen = () => {
 
             {/* Total Amount */}
             <View style={[styles.totalCard, { backgroundColor: theme.colors.cardBackground, borderColor: theme.colors.border }]}>
-              <Text style={[styles.totalLabel, { color: theme.colors.text }]}>Total Amount</Text>
+              <Text style={[styles.totalLabel, { color: theme.colors.text }]}>{t('booking.totalPrice')}</Text>
               <Text style={[styles.totalAmount, { color: theme.colors.primary }]}>
                 {currency} {totalAmount}
               </Text>
@@ -434,7 +435,7 @@ const CarDetailScreen = () => {
                       )}
                     </View>
                     <Text style={[styles.checkboxLabel, { color: theme.colors.text }]}>
-                      Book as guest
+                      {t('carDetail.bookAsGuest')}
                     </Text>
                   </TouchableOpacity>
 
@@ -442,14 +443,14 @@ const CarDetailScreen = () => {
                     style={[styles.bookButton, { backgroundColor: theme.colors.primary + '80' }]}
                     onPress={handleBookAsGuest}
                   >
-                    <Text style={styles.bookButtonText}>Book as Guest</Text>
+                    <Text style={styles.bookButtonText}>{t('carDetail.bookAsGuest')}</Text>
                   </TouchableOpacity>
 
                   <TouchableOpacity
                     style={[styles.loginButton, { backgroundColor: theme.colors.primary }]}
                     onPress={handleLoginToBook}
                   >
-                    <Text style={styles.loginButtonText}>Please Login to Book</Text>
+                    <Text style={styles.loginButtonText}>{t('carDetail.loginToBook')}</Text>
                   </TouchableOpacity>
                 </>
               ) : (
@@ -458,7 +459,7 @@ const CarDetailScreen = () => {
                     style={[styles.bookButton, { backgroundColor: theme.colors.primary, marginBottom: 16 }]}
                     onPress={handleConfirmBooking}
                   >
-                    <Text style={styles.bookButtonText}>Confirm Booking</Text>
+                    <Text style={styles.bookButtonText}>{t('booking.confirmBooking')}</Text>
                   </TouchableOpacity>
 
                   <TouchableOpacity
@@ -466,7 +467,7 @@ const CarDetailScreen = () => {
                     onPress={handleMessageStore}
                   >
                     <Icon name="chat" size={20} color="#fff" style={{ marginRight: 8 }} />
-                    <Text style={styles.inquiryButtonText}>Message Store</Text>
+                    <Text style={styles.inquiryButtonText}>{t('carDetail.messageStore')}</Text>
                   </TouchableOpacity>
                 </>
               )}
@@ -476,7 +477,7 @@ const CarDetailScreen = () => {
             {!user && (
               <View style={[styles.card, { backgroundColor: theme.colors.cardBackground, borderColor: theme.colors.border }]}>
                 <Text style={[styles.cardTitle, { color: theme.colors.text }]}>
-                  Send an Inquiry to Store Owner
+                  {t('carDetail.sendInquiry')}
                 </Text>
 
                 <View style={[styles.inputContainer, { borderColor: theme.colors.border, backgroundColor: theme.colors.inputBackground }]}>
@@ -522,7 +523,7 @@ const CarDetailScreen = () => {
                   style={[styles.inquiryButton, { backgroundColor: theme.colors.primary }]}
                   onPress={handleSendInquiry}
                 >
-                  <Text style={styles.inquiryButtonText}>Send Inquiry</Text>
+                  <Text style={styles.inquiryButtonText}>{t('carDetail.sendInquiryBtn')}</Text>
                 </TouchableOpacity>
               </View>
             )}

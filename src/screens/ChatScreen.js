@@ -18,6 +18,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { chatAPI } from '@/services/api';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import ErrorModal from '@/components/ErrorModal';
+import PageHeader from '@/components/PageHeader';
 
 const ChatScreen = () => {
   const navigation = useNavigation();
@@ -25,7 +26,7 @@ const ChatScreen = () => {
   const { user } = useAuth();
   const { theme } = useTheme();
   const { conversationId, userId, userName, type, serviceId } = route.params || {};
-  
+
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
@@ -36,7 +37,7 @@ const ChatScreen = () => {
   const [currentConversationId, setCurrentConversationId] = useState(conversationId);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
-  
+
   const flatListRef = useRef(null);
 
   useFocusEffect(
@@ -87,7 +88,7 @@ const ChatScreen = () => {
         setLoading(true);
       }
       const data = await chatAPI.getMessages(convId, pageNum, 50);
-      
+
       let messagesData = [];
       if (data) {
         if (Array.isArray(data.data)) {
@@ -159,7 +160,7 @@ const ChatScreen = () => {
 
     try {
       const response = await chatAPI.sendMessage(currentConversationId, messageText);
-      
+
       // Handle different response structures
       let sentMessage = null;
       if (response) {
@@ -173,7 +174,7 @@ const ChatScreen = () => {
           sentMessage = response;
         }
       }
-      
+
       // Ensure the message has required fields
       const finalMessage = {
         ...tempMessage,
@@ -185,10 +186,10 @@ const ChatScreen = () => {
         created_at: sentMessage?.created_at || sentMessage?.created_at || tempMessage.created_at,
         is_sent: true,
       };
-      
+
       // Replace temp message with actual message
       setMessages((prev) => {
-        const updated = prev.map((msg) => 
+        const updated = prev.map((msg) =>
           msg.id === tempMessage.id ? finalMessage : msg
         );
         // If message wasn't found (shouldn't happen), add it
@@ -216,8 +217,8 @@ const ChatScreen = () => {
       console.error('Error sending message:', error);
       console.error('Error details:', error.response?.data);
       // Keep the temp message but mark it as failed
-      setMessages((prev) => 
-        prev.map((msg) => 
+      setMessages((prev) =>
+        prev.map((msg) =>
           msg.id === tempMessage.id ? { ...msg, is_sent: false, is_failed: true } : msg
         )
       );
@@ -231,11 +232,11 @@ const ChatScreen = () => {
 
   const renderMessage = ({ item }) => {
     const isMyMessage = item.sender_id === user?.id || item.sender?.id === user?.id;
-    const messageTime = item.created_at 
-      ? new Date(item.created_at).toLocaleTimeString('en-US', { 
-          hour: '2-digit', 
-          minute: '2-digit' 
-        })
+    const messageTime = item.created_at
+      ? new Date(item.created_at).toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit'
+      })
       : '';
 
     return (
@@ -290,17 +291,7 @@ const ChatScreen = () => {
         keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
       >
         {/* Header */}
-        <View style={[styles.header, { backgroundColor: theme.colors.cardBackground }]}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <Icon name="arrow-back" size={24} color={theme.colors.text} />
-          </TouchableOpacity>
-          <View style={styles.headerInfo}>
-            <Text style={[styles.headerTitle, { color: theme.colors.text }]}>
-              {userName || 'Chat'}
-            </Text>
-          </View>
-          <View style={styles.placeholder} />
-        </View>
+        <PageHeader title={userName || 'Chat'} />
 
         {/* Messages List */}
         <FlatList

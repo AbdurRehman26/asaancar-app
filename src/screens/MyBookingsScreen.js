@@ -13,10 +13,13 @@ import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '@/context/ThemeContext';
 import { bookingAPI } from '@/services/api';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import { useTranslation } from 'react-i18next';
+import PageHeader from '@/components/PageHeader';
 
 const MyBookingsScreen = () => {
   const navigation = useNavigation();
   const { theme } = useTheme();
+  const { t } = useTranslation();
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -34,17 +37,17 @@ const MyBookingsScreen = () => {
         setLoading(true);
       }
       const data = await bookingAPI.getBookings({ page: pageNum, per_page: perPage });
-      
+
       // Handle different response structures
       const bookingsList = data.data || data.bookings || data || [];
       const totalPages = data.last_page || data.total_pages || Math.ceil((data.total || bookingsList.length) / perPage);
-      
+
       if (append) {
         setBookings(prev => [...prev, ...bookingsList]);
       } else {
         setBookings(bookingsList);
       }
-      
+
       setHasMore(pageNum < totalPages);
       setPage(pageNum);
     } catch (error) {
@@ -90,7 +93,7 @@ const MyBookingsScreen = () => {
             {item.car?.brand?.name || 'Brand'}{' '}
             {item.car?.name || 'Car Name'}
           </Text>
-          <Text style={[styles.bookingId, { color: theme.colors.textSecondary }]}>Booking #{item.id}</Text>
+          <Text style={[styles.bookingId, { color: theme.colors.textSecondary }]}>{t('booking.bookingId', { id: item.id })}</Text>
         </View>
         <View
           style={[
@@ -125,7 +128,7 @@ const MyBookingsScreen = () => {
         {item.withDriver && (
           <View style={styles.detailRow}>
             <Icon name="person" size={16} color={theme.colors.textSecondary} />
-            <Text style={[styles.detailText, { color: theme.colors.textSecondary }]}>With Driver</Text>
+            <Text style={[styles.detailText, { color: theme.colors.textSecondary }]}>{t('booking.withDriver')}</Text>
           </View>
         )}
       </View>
@@ -148,9 +151,7 @@ const MyBookingsScreen = () => {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <View style={[styles.header, { backgroundColor: theme.colors.cardBackground, borderBottomColor: theme.colors.border }]}>
-        <Text style={[styles.headerTitle, { color: theme.colors.text }]}>My Bookings</Text>
-      </View>
+      <PageHeader title={t('booking.yourBookings')} showBack={false} />
 
       <FlatList
         data={bookings}
@@ -167,9 +168,9 @@ const MyBookingsScreen = () => {
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Icon name="book" size={64} color={theme.colors.textLight} />
-            <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>No bookings found</Text>
+            <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>{t('booking.noBookings')}</Text>
             <Text style={[styles.emptySubtext, { color: theme.colors.textLight }]}>
-              Start by booking a car from the home screen
+              {t('booking.startBooking')}
             </Text>
           </View>
         }

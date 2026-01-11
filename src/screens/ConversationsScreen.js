@@ -16,6 +16,7 @@ import { chatAPI } from '@/services/api';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import ErrorModal from '@/components/ErrorModal';
 import ConfirmModal from '@/components/ConfirmModal';
+import PageHeader from '@/components/PageHeader';
 
 const ConversationsScreen = () => {
   const navigation = useNavigation();
@@ -40,7 +41,7 @@ const ConversationsScreen = () => {
     try {
       setLoading(true);
       const data = await chatAPI.getConversations();
-      
+
       let conversationsData = [];
       if (data) {
         if (Array.isArray(data.data)) {
@@ -53,7 +54,7 @@ const ConversationsScreen = () => {
           conversationsData = data.data.data;
         }
       }
-      
+
       // Debug: Log conversation structure to understand API response
       if (conversationsData.length > 0) {
         console.log('Sample conversation:', JSON.stringify(conversationsData[0], null, 2));
@@ -64,7 +65,7 @@ const ConversationsScreen = () => {
           console.log('Recipient user:', JSON.stringify(conversationsData[0].recipientUser || conversationsData[0].recipient_user, null, 2));
         }
       }
-      
+
       setConversations(conversationsData);
     } catch (error) {
       console.error('Error loading conversations:', error);
@@ -90,14 +91,14 @@ const ConversationsScreen = () => {
     if (conversation.recipient_user) {
       return conversation.recipient_user;
     }
-    
+
     // Try different possible field names for participants
-    const participants = 
+    const participants =
       conversation.participants ||
       conversation.users ||
       conversation.members ||
       [];
-    
+
     if (!Array.isArray(participants) || participants.length === 0) {
       // Try user field directly
       if (conversation.user) {
@@ -111,14 +112,14 @@ const ConversationsScreen = () => {
       }
       return null;
     }
-    
+
     // Find the other user (not the current user)
-    const otherUser = participants.find((p) => 
-      p.id !== user?.id && 
+    const otherUser = participants.find((p) =>
+      p.id !== user?.id &&
       p.user_id !== user?.id &&
       p.id !== user?.user_id
     );
-    
+
     return otherUser || participants[0] || null;
   };
 
@@ -157,7 +158,7 @@ const ConversationsScreen = () => {
       if (minutes < 60) return `${minutes}m ago`;
       if (hours < 24) return `${hours}h ago`;
       if (days < 7) return `${days}d ago`;
-      
+
       return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     } catch (error) {
       return '';
@@ -185,19 +186,19 @@ const ConversationsScreen = () => {
     try {
       setDeleting(true);
       await chatAPI.deleteConversation(conversationToDelete.id);
-      
+
       // Remove the conversation from the list
-      setConversations((prev) => 
+      setConversations((prev) =>
         prev.filter((conv) => conv.id !== conversationToDelete.id)
       );
-      
+
       setShowDeleteModal(false);
       setConversationToDelete(null);
     } catch (error) {
       console.error('Error deleting conversation:', error);
       setErrorMessage(
-        error.response?.data?.message || 
-        error.message || 
+        error.response?.data?.message ||
+        error.message ||
         'Failed to delete conversation'
       );
       setShowErrorModal(true);
@@ -233,13 +234,13 @@ const ConversationsScreen = () => {
                 ]}
                 numberOfLines={1}
               >
-                {otherUser?.name || 
-                 otherUser?.username || 
-                 otherUser?.user?.name ||
-                 otherUser?.user?.username ||
-                 item.user_name ||
-                 item.username ||
-                 'Unknown User'}
+                {otherUser?.name ||
+                  otherUser?.username ||
+                  otherUser?.user?.name ||
+                  otherUser?.user?.username ||
+                  item.user_name ||
+                  item.username ||
+                  'Unknown User'}
               </Text>
               {lastMessage && (
                 <Text style={[styles.conversationTime, { color: theme.colors.textSecondary }]}>
@@ -258,13 +259,13 @@ const ConversationsScreen = () => {
                     ]}
                     numberOfLines={1}
                   >
-                    {lastMessage.message || 
-                     lastMessage.content || 
-                     lastMessage.text ||
-                     lastMessage.body ||
-                     lastMessage.message_text ||
-                     (typeof lastMessage === 'string' ? lastMessage : '') ||
-                     ''}
+                    {lastMessage.message ||
+                      lastMessage.content ||
+                      lastMessage.text ||
+                      lastMessage.body ||
+                      lastMessage.message_text ||
+                      (typeof lastMessage === 'string' ? lastMessage : '') ||
+                      ''}
                   </Text>
                   {isUnread && (
                     <View style={[styles.unreadBadge, { backgroundColor: theme.colors.primary }]}>
@@ -307,13 +308,7 @@ const ConversationsScreen = () => {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.backgroundTertiary }]} edges={['top']}>
-      <View style={[styles.header, { backgroundColor: theme.colors.cardBackground }]}>
-        <TouchableOpacity onPress={() => navigation.navigate('SettingsMain')} style={styles.backButton}>
-          <Icon name="arrow-back" size={24} color={theme.colors.text} />
-        </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: theme.colors.text }]}>Messages</Text>
-        <View style={styles.placeholder} />
-      </View>
+      <PageHeader title="Messages" backDestination="SettingsMain" />
 
       <FlatList
         data={conversations}

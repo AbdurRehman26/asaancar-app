@@ -16,11 +16,14 @@ import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import ErrorModal from '@/components/ErrorModal';
+import { useTranslation } from 'react-i18next';
+import { LANGUAGES, changeLanguage } from '@/i18n';
 
 const RegisterScreen = () => {
   const navigation = useNavigation();
   const { theme, isDark, toggleTheme } = useTheme();
   const { register } = useAuth();
+  const { t, i18n } = useTranslation();
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
@@ -71,14 +74,28 @@ const RegisterScreen = () => {
             <Text style={[styles.logoText, { color: theme.colors.primary }]}>AsaanCar</Text>
           </View>
           <View style={styles.headerActions}>
+            {/* Language Selector */}
+            <TouchableOpacity
+              onPress={() => {
+                const currentIndex = LANGUAGES.findIndex(l => l.code === i18n.language);
+                const nextIndex = (currentIndex + 1) % LANGUAGES.length;
+                changeLanguage(LANGUAGES[nextIndex].code);
+              }}
+              style={styles.langButton}
+            >
+              <Icon name="language" size={20} color={theme.colors.primary} />
+              <Text style={[styles.langText, { color: theme.colors.primary }]}>
+                {LANGUAGES.find(l => l.code === i18n.language)?.code.toUpperCase() || 'EN'}
+              </Text>
+            </TouchableOpacity>
             <TouchableOpacity
               onPress={toggleTheme}
               style={styles.themeToggleButton}
             >
-              <Icon 
-                name={isDark ? 'light-mode' : 'dark-mode'} 
-                size={24} 
-                color={theme.colors.primary} 
+              <Icon
+                name={isDark ? 'light-mode' : 'dark-mode'}
+                size={24}
+                color={theme.colors.primary}
               />
             </TouchableOpacity>
             <TouchableOpacity
@@ -90,23 +107,34 @@ const RegisterScreen = () => {
           </View>
         </View>
 
+        {/* Back to Listing */}
+        <TouchableOpacity
+          style={styles.backToListing}
+          onPress={() => navigation.navigate('RentalCars')}
+        >
+          <Icon name="arrow-back" size={20} color={theme.colors.primary} />
+          <Text style={[styles.backToListingText, { color: theme.colors.primary }]}>
+            {t('common.backToListing')}
+          </Text>
+        </TouchableOpacity>
+
         {/* Main Content */}
         <View style={styles.content}>
           <Text style={[styles.createAccountText, { color: theme.colors.textSecondary }]}>
-            Create your account
+            {t('auth.createAccount')}
           </Text>
           <Text style={[styles.accountInfoTitle, { color: theme.colors.text }]}>
-            Account Information
+            {t('auth.accountInfo')}
           </Text>
 
           {/* Name Input */}
           <View style={styles.labelContainer}>
-            <Text style={[styles.label, { color: theme.colors.text }]}>Name</Text>
+            <Text style={[styles.label, { color: theme.colors.text }]}>{t('auth.name')}</Text>
           </View>
           <View style={[styles.inputContainer, { borderColor: theme.colors.border, backgroundColor: theme.colors.inputBackground }]}>
             <TextInput
               style={[styles.input, styles.inputNoBorder, { color: theme.colors.text }]}
-              placeholder="Enter your name"
+              placeholder={t('auth.enterName')}
               placeholderTextColor={theme.colors.placeholder}
               value={formData.name}
               onChangeText={(text) => setFormData({ ...formData, name: text })}
@@ -118,7 +146,7 @@ const RegisterScreen = () => {
 
           {/* Phone Number Input */}
           <View style={styles.labelContainer}>
-            <Text style={[styles.label, { color: theme.colors.text }]}>Phone Number</Text>
+            <Text style={[styles.label, { color: theme.colors.text }]}>{t('auth.phone')}</Text>
           </View>
           <View style={[styles.phoneInputContainer, { borderColor: theme.colors.border, backgroundColor: theme.colors.inputBackground }]}>
             <View style={styles.countryCodeContainer}>
@@ -144,7 +172,7 @@ const RegisterScreen = () => {
             </View>
           </View>
           <Text style={[styles.helperText, { color: theme.colors.textSecondary }]}>
-            Enter your 10-digit phone number without the country code
+            {t('auth.phoneHelper')}
           </Text>
 
           {/* Submit Button */}
@@ -160,17 +188,17 @@ const RegisterScreen = () => {
             {loading ? (
               <ActivityIndicator color="#fff" />
             ) : (
-              <Text style={styles.buttonText}>Send OTP</Text>
+              <Text style={styles.buttonText}>{t('common.sendOtp')}</Text>
             )}
           </TouchableOpacity>
 
           {/* Login Link */}
           <View style={styles.linkContainer}>
             <Text style={[styles.linkText, { color: theme.colors.textSecondary }]}>
-              Already have an account?{' '}
+              {t('auth.haveAccount')}{' '}
             </Text>
             <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-              <Text style={[styles.link, { color: theme.colors.primary }]}>Log in</Text>
+              <Text style={[styles.link, { color: theme.colors.primary }]}>{t('common.login')}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -208,8 +236,29 @@ const styles = StyleSheet.create({
   themeToggleButton: {
     padding: 4,
   },
+  langButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 4,
+    gap: 2,
+  },
+  langText: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
   homeButton: {
     padding: 4,
+  },
+  backToListing: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginBottom: 16,
+    paddingVertical: 8,
+  },
+  backToListingText: {
+    fontSize: 14,
+    fontWeight: '500',
   },
   logoContainer: {
     flexDirection: 'row',

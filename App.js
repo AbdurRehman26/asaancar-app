@@ -5,6 +5,7 @@ import { AuthProvider } from '@/context/AuthContext';
 import { ThemeProvider, useTheme } from '@/context/ThemeContext';
 import AppNavigator from '@/navigation/AppNavigator';
 import SplashScreen from '@/components/SplashScreen';
+import '@/i18n'; // Initialize i18n
 
 const AppContent = () => {
   const { isDark } = useTheme();

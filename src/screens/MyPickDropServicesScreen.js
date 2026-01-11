@@ -17,6 +17,7 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import ErrorModal from '@/components/ErrorModal';
 import SuccessModal from '@/components/SuccessModal';
 import ConfirmModal from '@/components/ConfirmModal';
+import PageHeader from '@/components/PageHeader';
 
 const MyPickDropServicesScreen = () => {
   const navigation = useNavigation();
@@ -214,23 +215,23 @@ const MyPickDropServicesScreen = () => {
     );
   }
 
+  const addServiceButton = (
+    <TouchableOpacity
+      style={[styles.addButton, { backgroundColor: theme.colors.primary }]}
+      onPress={() => navigation.navigate('CreatePickDropService')}
+    >
+      <Icon name="add" size={20} color="#fff" style={{ marginRight: 6 }} />
+      <Text style={styles.addButtonText}>Add Service</Text>
+    </TouchableOpacity>
+  );
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.backgroundTertiary }]} edges={['top']}>
-      <View style={[styles.header, { backgroundColor: theme.colors.cardBackground }]}>
-        <TouchableOpacity onPress={() => navigation.navigate('SettingsMain')} style={styles.backButton}>
-          <Icon name="arrow-back" size={24} color={theme.colors.text} />
-        </TouchableOpacity>
-        <View style={{ flex: 1 }} />
-        <TouchableOpacity
-          style={[styles.addButton, { backgroundColor: theme.colors.primary }]}
-          onPress={() => {
-            navigation.navigate('CreatePickDropService');
-          }}
-        >
-          <Icon name="add" size={20} color="#fff" style={{ marginRight: 6 }} />
-          <Text style={styles.addButtonText}>Add Service</Text>
-        </TouchableOpacity>
-      </View>
+      <PageHeader
+        title="My Pick & Drop"
+        backDestination="SettingsMain"
+        rightAction={addServiceButton}
+      />
 
       <FlatList
         data={services}
