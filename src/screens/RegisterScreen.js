@@ -99,7 +99,7 @@ const RegisterScreen = () => {
               />
             </TouchableOpacity>
             <TouchableOpacity
-              onPress={() => navigation.navigate('RentalCars')}
+              onPress={() => navigation.navigate('PickDrop')}
               style={styles.homeButton}
             >
               <Icon name="home" size={24} color={theme.colors.primary} />
@@ -110,7 +110,7 @@ const RegisterScreen = () => {
         {/* Back to Listing */}
         <TouchableOpacity
           style={styles.backToListing}
-          onPress={() => navigation.navigate('RentalCars')}
+          onPress={() => navigation.navigate('PickDrop')}
         >
           <Icon name="arrow-back" size={20} color={theme.colors.primary} />
           <Text style={[styles.backToListingText, { color: theme.colors.primary }]}>

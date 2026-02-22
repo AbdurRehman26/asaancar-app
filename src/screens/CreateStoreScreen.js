@@ -103,7 +103,7 @@ const CreateStoreScreen = () => {
         setSuccessMessage('Store created successfully!');
         setShowSuccessModal(true);
         setTimeout(() => {
-          navigation.navigate('MyStores');
+          navigation.navigate('SettingsMain');
         }, 1500);
       } else {
         setErrorMessage(response?.message || 'Failed to create store');

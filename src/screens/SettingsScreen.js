@@ -42,25 +42,11 @@ const SettingsScreen = () => {
   /* Redesigned Dashboard Component */
   const menuGridItems = [
     {
-      id: 'myCars',
-      title: t('settings.myCars'),
-      icon: 'directions-car',
-      color: '#4F46E5', // Indigo
-      onPress: () => navigation.navigate('MyCars'),
-    },
-    {
       id: 'myPickDrop',
       title: t('settings.myPickDrop'),
       icon: 'directions-transit',
       color: '#0EA5E9', // Sky Blue
       onPress: () => navigation.navigate('MyPickDropServices'),
-    },
-    {
-      id: 'myStores',
-      title: t('settings.myStores'),
-      icon: 'store',
-      color: '#EC4899', // Pink
-      onPress: () => navigation.navigate('MyStores'),
     },
     {
       id: 'messages',

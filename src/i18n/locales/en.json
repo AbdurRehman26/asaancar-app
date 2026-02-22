@@ -204,5 +204,71 @@
         "enterNewPassword": "New password",
         "confirmNewPassword": "Confirm New Password",
         "confirmNewPasswordPlaceholder": "Confirm new password"
+    },
+    "chat": {
+        "title": "Chat",
+        "messages": "Messages",
+        "noMessagesYet": "No messages yet",
+        "startConversation": "Start the conversation by sending a message",
+        "typeMessage": "Type a message...",
+        "noConversationsYet": "No conversations yet",
+        "startConversationHint": "Start a conversation by messaging someone",
+        "noMessagesInConversation": "No messages yet",
+        "unknownUser": "Unknown User",
+        "deleteConversation": "Delete Conversation",
+        "deleteConversationMessage": "Are you sure you want to delete this conversation? This action cannot be undone.",
+        "failedToLoadConversations": "Failed to load conversations",
+        "failedToLoadMessages": "Failed to load messages",
+        "failedToStartConversation": "Failed to start conversation",
+        "failedToSendMessage": "Failed to send message"
+    },
+    "pickDropDetail": {
+        "serviceNotFound": "Service not found",
+        "pickUp": "Pick Up",
+        "dropOff": "Drop Off",
+        "stops": "Stops",
+        "routeDetails": "ROUTE DETAILS",
+        "tripInformation": "TRIP INFORMATION",
+        "pricePerPerson": "Price Per Person",
+        "everyday": "Everyday",
+        "weekday": "Mon-Fri",
+        "weekend": "Sat-Sun",
+        "once": "Once",
+        "flexible": "Flexible",
+        "availableSeats": "Available Seats",
+        "driverGender": "Driver Gender",
+        "femaleDriver": "Female Driver",
+        "maleDriver": "Male Driver",
+        "vehicleDetails": "VEHICLE DETAILS",
+        "color": "Color",
+        "brand": "Brand",
+        "model": "Model",
+        "totalSeats": "Total Seats",
+        "additionalNotes": "ADDITIONAL NOTES",
+        "serviceProvider": "SERVICE PROVIDER",
+        "verifiedDriver": "Verified Driver",
+        "callNow": "Call Now",
+        "whatsapp": "WhatsApp",
+        "chatInApp": "Chat in App",
+        "loginToContact": "Login to contact the driver",
+        "errorPhone": "Unable to open phone dialer on this device.",
+        "errorMsg": "Unable to open messaging app on this device."
+    },
+    "onboarding": {
+        "skip": "Skip",
+        "next": "Next",
+        "getStarted": "Get Started",
+        "slide1": {
+            "title": "Reliable Daily Commute",
+            "description": "Discover a seamless pick and drop service tailored for your daily routine. Join our community of riders and drivers."
+        },
+        "slide2": {
+            "title": "Flexible Scheduling",
+            "description": "Book your ride with multiple stops and flexible departure times. Your commute, your way."
+        },
+        "slide3": {
+            "title": "Safe & Verified",
+            "description": "Travel with peace of mind. All our drivers are verified and rides are monitored for your safety."
+        }
     }
 }

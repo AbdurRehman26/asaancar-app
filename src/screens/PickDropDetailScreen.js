@@ -16,8 +16,10 @@ import { pickDropAPI } from '@/services/api';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import ErrorModal from '@/components/ErrorModal';
+import { useTranslation } from 'react-i18next';
 
 const PickDropDetailScreen = () => {
+  const { t } = useTranslation();
   const route = useRoute();
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
@@ -49,13 +51,6 @@ const PickDropDetailScreen = () => {
     }
   }, [service]);
 
-  useEffect(() => {
-    // Only fetch if we don't have service data passed from listing
-    if (!serviceData && serviceId) {
-      loadServiceDetails();
-    }
-  }, [serviceId, serviceData]);
-
   const loadServiceDetails = async () => {
     try {
       setLoading(true);
@@ -78,7 +73,7 @@ const PickDropDetailScreen = () => {
       if (serviceData) {
         setService(serviceData);
       } else {
-        setErrorMessage('Service not found');
+        setErrorMessage(t('pickDropDetail.serviceNotFound'));
         setShowErrorModal(true);
       }
     } catch (error) {
@@ -94,13 +89,6 @@ const PickDropDetailScreen = () => {
     }
   };
 
-  useEffect(() => {
-    // Only fetch if we don't have service data passed from listing
-    if (!serviceData && serviceId) {
-      loadServiceDetails();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [serviceId]);
 
   if (loading) {
     return (
@@ -113,7 +101,7 @@ const PickDropDetailScreen = () => {
   if (!service) {
     return (
       <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-        <Text style={styles.errorText}>Service not found</Text>
+        <Text style={styles.errorText}>{t('pickDropDetail.serviceNotFound')}</Text>
       </View>
     );
   }
@@ -156,7 +144,7 @@ const PickDropDetailScreen = () => {
     if (!providerPhone) return;
     const phoneUrl = `tel:${providerPhone}`;
     Linking.openURL(phoneUrl).catch(() => {
-      setErrorMessage('Unable to open phone dialer on this device.');
+      setErrorMessage(t('pickDropDetail.errorPhone'));
       setShowErrorModal(true);
     });
   };
@@ -168,7 +156,7 @@ const PickDropDetailScreen = () => {
     Linking.openURL(whatsappUrl).catch(() => {
       const smsUrl = `sms:${providerWhatsApp}`;
       Linking.openURL(smsUrl).catch(() => {
-        setErrorMessage('Unable to open messaging app on this device.');
+        setErrorMessage(t('pickDropDetail.errorMsg'));
         setShowErrorModal(true);
       });
     });
@@ -185,7 +173,7 @@ const PickDropDetailScreen = () => {
         >
           <Icon name="arrow-back" size={24} color={theme.colors.text} />
           <Text style={[styles.backButtonText, { color: theme.colors.text }]}>
-            Back to Listing
+            {t('common.backToListing')}
           </Text>
         </TouchableOpacity>
 
@@ -210,7 +198,9 @@ const PickDropDetailScreen = () => {
                   {service.driver_gender === 'female' ? '♀' : '♂'}
                 </Text>
                 <Text style={styles.driverGenderText}>
-                  {service.driver_gender === 'female' ? 'Female' : 'Male'} Driver
+                  <Text style={styles.driverGenderText}>
+                    {service.driver_gender === 'female' ? t('pickDropDetail.femaleDriver') : t('pickDropDetail.maleDriver')}
+                  </Text>
                 </Text>
               </View>
             )}
@@ -221,7 +211,7 @@ const PickDropDetailScreen = () => {
 
           {/* 1. Route Section - Spacious Timeline */}
           <View style={styles.sectionContainer}>
-            <Text style={[styles.sectionHeaderTitle, { color: theme.colors.textSecondary }]}>ROUTE DETAILS</Text>
+            <Text style={[styles.sectionHeaderTitle, { color: theme.colors.textSecondary }]}>{t('pickDropDetail.routeDetails')}</Text>
             <View style={[styles.card, styles.routeCard, { backgroundColor: theme.colors.cardBackground, borderColor: isDark ? theme.colors.border : theme.colors.primary, shadowColor: isDark ? '#000' : theme.colors.primary, shadowOpacity: isDark ? 0.3 : 0.08 }]}>
 
               {/* Start Location */}
@@ -231,7 +221,7 @@ const PickDropDetailScreen = () => {
                   <View style={[styles.verticalLineFull, { backgroundColor: theme.colors.border }]} />
                 </View>
                 <View style={styles.locationContent}>
-                  <Text style={[styles.largeLocationLabel, { color: theme.colors.textSecondary }]}>Pick Up</Text>
+                  <Text style={[styles.largeLocationLabel, { color: theme.colors.textSecondary }]}>{t('pickDropDetail.pickUp')}</Text>
                   <Text style={[styles.largeLocationTitle, { color: theme.colors.text }]}>
                     {startLocation}
                   </Text>
@@ -254,7 +244,7 @@ const PickDropDetailScreen = () => {
                   </View>
                   <View style={styles.stopsListContent}>
                     <View style={[styles.stopsBadge, { backgroundColor: isDark ? 'rgba(126, 36, 108, 0.25)' : 'rgba(126, 36, 108, 0.12)' }]}>
-                      <Text style={[styles.stopsBadgeText, { color: isDark ? '#c77dba' : theme.colors.primary }]}>{service.stops.length} Stops</Text>
+                      <Text style={[styles.stopsBadgeText, { color: isDark ? '#c77dba' : theme.colors.primary }]}>{service.stops.length} {t('pickDropDetail.stops')}</Text>
                     </View>
                     {service.stops.map((stop, index) => (
                       <View key={index} style={styles.stopRow}>
@@ -276,7 +266,7 @@ const PickDropDetailScreen = () => {
                   <Icon name="location-pin" size={24} color={isDark ? '#c77dba' : theme.colors.primary} style={{ marginLeft: -12 }} />
                 </View>
                 <View style={styles.locationContent}>
-                  <Text style={[styles.largeLocationLabel, { color: theme.colors.textSecondary }]}>Drop Off</Text>
+                  <Text style={[styles.largeLocationLabel, { color: theme.colors.textSecondary }]}>{t('pickDropDetail.dropOff')}</Text>
                   <Text style={[styles.largeLocationTitle, { color: theme.colors.text }]}>
                     {endLocation}
                   </Text>
@@ -296,7 +286,7 @@ const PickDropDetailScreen = () => {
 
           {/* 2. Trip Information - Grid Layout */}
           <View style={styles.sectionContainer}>
-            <Text style={[styles.sectionHeaderTitle, { color: theme.colors.textSecondary }]}>TRIP INFORMATION</Text>
+            <Text style={[styles.sectionHeaderTitle, { color: theme.colors.textSecondary }]}>{t('pickDropDetail.tripInformation')}</Text>
             <View style={styles.gridContainer}>
 
               {/* Price Item */}
@@ -304,7 +294,7 @@ const PickDropDetailScreen = () => {
                 <View style={[styles.iconCircle, { backgroundColor: isDark ? 'rgba(126, 36, 108, 0.3)' : theme.colors.primary }]}>
                   <Icon name="attach-money" size={24} color={isDark ? '#c77dba' : '#fff'} />
                 </View>
-                <Text style={[styles.gridLabel, { color: theme.colors.textSecondary }]}>Price Per Person</Text>
+                <Text style={[styles.gridLabel, { color: theme.colors.textSecondary }]}>{t('pickDropDetail.pricePerPerson')}</Text>
                 <Text style={[styles.gridValueLarge, { color: isDark ? '#c77dba' : theme.colors.primary }]}>
                   {(() => {
                     const price =
@@ -324,7 +314,7 @@ const PickDropDetailScreen = () => {
                 <View style={[styles.iconCircle, { backgroundColor: isDark ? 'rgba(126, 36, 108, 0.3)' : theme.colors.secondary }]}>
                   <Icon name="access-time" size={24} color={isDark ? '#c77dba' : '#fff'} />
                 </View>
-                <Text style={[styles.gridLabel, { color: theme.colors.textSecondary }]}>Schedule</Text>
+                <Text style={[styles.gridLabel, { color: theme.colors.textSecondary }]}>{t('pickDropDetail.schedule')}</Text>
                 <Text style={[styles.gridValue, { color: theme.colors.text }]}>
                   {(() => {
                     const { schedule_type, selected_days, departure_date, departure_time, is_everyday, everyday_service } = service;
@@ -334,21 +324,21 @@ const PickDropDetailScreen = () => {
                     if (schedule_type) {
                       switch (schedule_type.toLowerCase()) {
                         case 'everyday':
-                          displaySchedule = 'Everyday';
+                          displaySchedule = t('pickDropDetail.everyday');
                           break;
                         case 'weekday':
                         case 'weekdays':
-                          displaySchedule = 'Mon-Fri';
+                          displaySchedule = t('pickDropDetail.weekday');
                           break;
                         case 'weekend':
                         case 'weekends':
-                          displaySchedule = 'Sat-Sun';
+                          displaySchedule = t('pickDropDetail.weekend');
                           break;
                         case 'custom':
                           displaySchedule = selected_days ? selected_days.replace(/,/g, ', ') : 'Custom Types';
                           break;
                         case 'once':
-                          displaySchedule = departure_date ? new Date(departure_date).toLocaleDateString() : 'Once';
+                          displaySchedule = departure_date ? new Date(departure_date).toLocaleDateString() : t('pickDropDetail.once');
                           break;
                         default:
                           displaySchedule = schedule_type;
@@ -356,11 +346,11 @@ const PickDropDetailScreen = () => {
                     } else {
                       // Fallback
                       if (is_everyday || everyday_service) {
-                        displaySchedule = 'Everyday';
+                        displaySchedule = t('pickDropDetail.everyday');
                       } else if (departure_date) {
                         displaySchedule = new Date(departure_date).toLocaleDateString();
                       } else {
-                        displaySchedule = 'Flexible';
+                        displaySchedule = t('pickDropDetail.flexible');
                       }
                     }
 
@@ -374,7 +364,7 @@ const PickDropDetailScreen = () => {
                 <View style={[styles.iconCircle, { backgroundColor: isDark ? 'rgba(255, 152, 0, 0.2)' : 'rgba(255, 152, 0, 0.15)' }]}>
                   <Icon name="event-seat" size={24} color={isDark ? '#ffb74d' : '#f57c00'} />
                 </View>
-                <Text style={[styles.gridLabel, { color: theme.colors.textSecondary }]}>Available Seats</Text>
+                <Text style={[styles.gridLabel, { color: theme.colors.textSecondary }]}>{t('pickDropDetail.availableSeats')}</Text>
                 <Text style={[styles.gridValueLarge, { color: isDark ? '#ffb74d' : '#f57c00' }]}>
                   {service.available_spaces || service.available_seats || 0}
                 </Text>
@@ -385,9 +375,9 @@ const PickDropDetailScreen = () => {
                 <View style={[styles.iconCircle, { backgroundColor: service.driver_gender === 'female' ? (isDark ? 'rgba(233, 30, 99, 0.25)' : '#EC407A') : (isDark ? 'rgba(33, 150, 243, 0.25)' : '#42A5F5') }]}>
                   <Icon name="person" size={24} color={service.driver_gender === 'female' ? (isDark ? '#f48fb1' : '#fff') : (isDark ? '#90caf9' : '#fff')} />
                 </View>
-                <Text style={[styles.gridLabel, { color: theme.colors.textSecondary }]}>Driver Gender</Text>
+                <Text style={[styles.gridLabel, { color: theme.colors.textSecondary }]}>{t('pickDropDetail.driverGender')}</Text>
                 <Text style={[styles.gridValue, { color: service.driver_gender === 'female' ? (isDark ? '#f48fb1' : '#e91e63') : (isDark ? '#90caf9' : '#2196f3') }]}>
-                  {service.driver_gender === 'female' ? 'Female\nDriver' : 'Male\nDriver'}
+                  {service.driver_gender === 'female' ? t('pickDropDetail.femaleDriver').replace(' ', '\n') : t('pickDropDetail.maleDriver').replace(' ', '\n')}
                 </Text>
               </View>
 
@@ -397,7 +387,7 @@ const PickDropDetailScreen = () => {
           {/* 3. Vehicle Information - List Card */}
           {service.car && (
             <View style={styles.sectionContainer}>
-              <Text style={[styles.sectionHeaderTitle, { color: theme.colors.textSecondary }]}>VEHICLE DETAILS</Text>
+              <Text style={[styles.sectionHeaderTitle, { color: theme.colors.textSecondary }]}>{t('pickDropDetail.vehicleDetails')}</Text>
               <View style={[styles.card, styles.vehicleCard, { backgroundColor: theme.colors.cardBackground, borderColor: isDark ? theme.colors.border : theme.colors.primary, shadowColor: isDark ? '#000' : theme.colors.primary, shadowOpacity: isDark ? 0.3 : 0.08 }]}>
                 <View style={styles.vehicleHeader}>
                   <View style={[styles.vehicleIconLarge, { backgroundColor: isDark ? 'rgba(255, 82, 82, 0.15)' : 'rgba(255, 82, 82, 0.1)' }]}>
@@ -409,7 +399,7 @@ const PickDropDetailScreen = () => {
                     </Text>
                     {service.car.color && (
                       <Text style={[styles.vehicleSubtitle, { color: theme.colors.textSecondary }]}>
-                        {service.car.color} Color
+                        {service.car.color} {t('pickDropDetail.color')}
                       </Text>
                     )}
                   </View>
@@ -417,15 +407,15 @@ const PickDropDetailScreen = () => {
                 <View style={[styles.divider, { backgroundColor: theme.colors.border }]} />
                 <View style={[styles.vehicleDetailsRow, { backgroundColor: theme.colors.cardBackground }]}>
                   <View style={styles.vehicleDetailItem}>
-                    <Text style={[styles.detailLabel, { color: theme.colors.textSecondary }]}>Brand</Text>
+                    <Text style={[styles.detailLabel, { color: theme.colors.textSecondary }]}>{t('pickDropDetail.brand')}</Text>
                     <Text style={[styles.detailValue, { color: theme.colors.text }]}>{service.car_brand || 'N/A'}</Text>
                   </View>
                   <View style={styles.vehicleDetailItem}>
-                    <Text style={[styles.detailLabel, { color: theme.colors.textSecondary }]}>Model</Text>
+                    <Text style={[styles.detailLabel, { color: theme.colors.textSecondary }]}>{t('pickDropDetail.model')}</Text>
                     <Text style={[styles.detailValue, { color: theme.colors.text }]}>{service.car_model || 'N/A'}</Text>
                   </View>
                   <View style={styles.vehicleDetailItem}>
-                    <Text style={[styles.detailLabel, { color: theme.colors.textSecondary }]}>Total Seats</Text>
+                    <Text style={[styles.detailLabel, { color: theme.colors.textSecondary }]}>{t('pickDropDetail.totalSeats')}</Text>
                     <Text style={[styles.detailValue, { color: theme.colors.text }]}>{service.car_seats || 'N/A'}</Text>
                   </View>
                 </View>
@@ -436,7 +426,7 @@ const PickDropDetailScreen = () => {
           {/* Description */}
           {service.description && (
             <View style={styles.sectionContainer}>
-              <Text style={[styles.sectionHeaderTitle, { color: theme.colors.textSecondary }]}>ADDITIONAL NOTES</Text>
+              <Text style={[styles.sectionHeaderTitle, { color: theme.colors.textSecondary }]}>{t('pickDropDetail.additionalNotes')}</Text>
               <View style={[styles.card, { padding: 16, backgroundColor: theme.colors.cardBackground, borderColor: isDark ? theme.colors.border : theme.colors.primary, shadowColor: isDark ? '#000' : theme.colors.primary, shadowOpacity: isDark ? 0.3 : 0.08 }]}>
                 <Text style={[styles.descriptionTextLarge, { color: theme.colors.text }]}>
                   {service.description}
@@ -447,7 +437,7 @@ const PickDropDetailScreen = () => {
 
           {/* 4. Service Provider - Large Profile */}
           <View style={styles.sectionContainer}>
-            <Text style={[styles.sectionHeaderTitle, { color: theme.colors.textSecondary }]}>SERVICE PROVIDER</Text>
+            <Text style={[styles.sectionHeaderTitle, { color: theme.colors.textSecondary }]}>{t('pickDropDetail.serviceProvider')}</Text>
             <View style={[styles.card, styles.providerCard, { backgroundColor: theme.colors.cardBackground, borderColor: isDark ? theme.colors.border : theme.colors.primary, shadowColor: isDark ? '#000' : theme.colors.primary, shadowOpacity: isDark ? 0.3 : 0.08 }]}>
 
               <View style={styles.providerHeader}>
@@ -460,7 +450,7 @@ const PickDropDetailScreen = () => {
                   <Text style={[styles.providerNameXLarge, { color: theme.colors.text }]}>
                     {provider?.name || provider?.user?.name || service.driver?.name || 'User'}
                   </Text>
-                  <Text style={[styles.providerRole, { color: theme.colors.primary, backgroundColor: theme.colors.backgroundSecondary }]}>Verified Driver</Text>
+                  <Text style={[styles.providerRole, { color: theme.colors.primary, backgroundColor: theme.colors.backgroundSecondary }]}>{t('pickDropDetail.verifiedDriver')}</Text>
                 </View>
               </View>
 
@@ -468,13 +458,13 @@ const PickDropDetailScreen = () => {
                 {providerPhone && (
                   <TouchableOpacity style={[styles.actionBtnFull, { backgroundColor: theme.colors.primary }]} onPress={handleCallProvider}>
                     <Icon name="call" size={20} color="#fff" />
-                    <Text style={styles.actionBtnText}>Call Now</Text>
+                    <Text style={styles.actionBtnText}>{t('pickDropDetail.callNow')}</Text>
                   </TouchableOpacity>
                 )}
                 {providerWhatsApp && (
                   <TouchableOpacity style={[styles.actionBtnFull, { backgroundColor: '#25D366' }]} onPress={handleMessageProvider}>
                     <FontAwesome name="whatsapp" size={20} color="#fff" />
-                    <Text style={styles.actionBtnText}>WhatsApp</Text>
+                    <Text style={styles.actionBtnText}>{t('pickDropDetail.whatsapp')}</Text>
                   </TouchableOpacity>
                 )}
                 {(provider?.id || provider?.user_id) && (
@@ -493,13 +483,13 @@ const PickDropDetailScreen = () => {
                     }
                   }}>
                     <Icon name="forum" size={20} color="#fff" />
-                    <Text style={styles.actionBtnText}>Chat in App</Text>
+                    <Text style={styles.actionBtnText}>{t('pickDropDetail.chatInApp')}</Text>
                   </TouchableOpacity>
                 )}
               </View>
 
               {!user && (
-                <Text style={[styles.loginHint, { color: theme.colors.textSecondary }]}>Login to contact the driver</Text>
+                <Text style={[styles.loginHint, { color: theme.colors.textSecondary }]}>{t('pickDropDetail.loginToContact')}</Text>
               )}
             </View>
           </View>

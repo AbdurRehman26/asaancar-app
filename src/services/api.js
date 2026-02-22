@@ -335,7 +335,7 @@ export const pickDropAPI = {
 
   // Update pick and drop service
   updatePickDropService: async (id, serviceData) => {
-    const response = await api.put(`/pick-and-drop/${id}`, serviceData);
+    const response = await api.put(`/customer/pick-and-drop/${id}`, serviceData);
     return response.data;
   },
 

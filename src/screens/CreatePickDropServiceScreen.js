@@ -66,7 +66,7 @@ const CreatePickDropServiceScreen = () => {
   const [availableSpaces, setAvailableSpaces] = useState('1');
   const [driverGender, setDriverGender] = useState('male');
   const [pricePerPerson, setPricePerPerson] = useState('');
-  const [currency] = useState('PKR'); // Hardcoded to PKR
+  const [currency, setCurrency] = useState('PKR');
   const [active, setActive] = useState(true);
   const [description, setDescription] = useState('');
 

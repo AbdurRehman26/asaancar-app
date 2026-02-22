@@ -204,5 +204,71 @@
         "enterNewPassword": "Naya password",
         "confirmNewPassword": "Naye Password ki Tasdeeq",
         "confirmNewPasswordPlaceholder": "Naye password ki tasdeeq karein"
+    },
+    "chat": {
+        "title": "Chat",
+        "messages": "Messages",
+        "noMessagesYet": "Abhi tak koi message nahi",
+        "startConversation": "Message bhej kar guftugu shuru karein",
+        "typeMessage": "Message likhein...",
+        "noConversationsYet": "Abhi tak koi guftugu nahi",
+        "startConversationHint": "Kisi ko message bhej kar guftugu shuru karein",
+        "noMessagesInConversation": "Abhi tak koi message nahi",
+        "unknownUser": "Maloom Nahi User",
+        "deleteConversation": "Guftugu Delete Karein",
+        "deleteConversationMessage": "Kya aap waaqi is guftugu ko delete karna chahte hain? Ye amal wapas nahi ho sakta.",
+        "failedToLoadConversations": "Guftugu load karne mein nakam",
+        "failedToLoadMessages": "Messages load karne mein nakam",
+        "failedToStartConversation": "Guftugu shuru karne mein nakam",
+        "failedToSendMessage": "Message bhejne mein nakam"
+    },
+    "pickDropDetail": {
+        "serviceNotFound": "Service nahi mili",
+        "pickUp": "Pick Up",
+        "dropOff": "Drop Off",
+        "stops": "Stops",
+        "routeDetails": "ROUTE DETAILS",
+        "tripInformation": "TRIP INFORMATION",
+        "pricePerPerson": "Per Shakhs Qeemat",
+        "everyday": "Rozana",
+        "weekday": "Mon-Fri",
+        "weekend": "Sat-Sun",
+        "once": "Ek Baar",
+        "flexible": "Flexible",
+        "availableSeats": "Dastiyaab Seats",
+        "driverGender": "Driver Gender",
+        "femaleDriver": "Female Driver",
+        "maleDriver": "Male Driver",
+        "vehicleDetails": "Gari ki Tafseel",
+        "color": "Rang",
+        "brand": "Brand",
+        "model": "Model",
+        "totalSeats": "Kul Seats",
+        "additionalNotes": "IZAFI NOTES",
+        "serviceProvider": "SERVICE PROVIDER",
+        "verifiedDriver": "Tasdeeq Shuda Driver",
+        "callNow": "Abhi Call Karein",
+        "whatsapp": "WhatsApp",
+        "chatInApp": "App mein Chat Karein",
+        "loginToContact": "Driver se raabta karne ke liye Login karein",
+        "errorPhone": "Is device par phone dialer khul nahi raha.",
+        "errorMsg": "Is device par messaging app khul nahi raha."
+    },
+    "onboarding": {
+        "skip": "Skip",
+        "next": "Agla",
+        "getStarted": "Shuru Karein",
+        "slide1": {
+            "title": "Ba-aitemaad Rozana Safar",
+            "description": "Apne rozana ke mamool ke mutabiq behtareen pick and drop service talaash karein. Humari riders aur drivers ki community mein shamil hon."
+        },
+        "slide2": {
+            "title": "Flexible Scheduling",
+            "description": "Apni marzi ke mutabiq gari book karein aur jab chahein safar ka aghaz karein. Aapka safar, aapka andaz."
+        },
+        "slide3": {
+            "title": "Mehfooz aur Tasdeeq Shuda",
+            "description": "Pur-sukoon safar karein. Humare tamam drivers tasdeeq shuda hain aur aapki hifazat ke liye safar ki nigrani ki jati hai."
+        }
     }
 }

@@ -19,12 +19,14 @@ import { chatAPI } from '@/services/api';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import ErrorModal from '@/components/ErrorModal';
 import PageHeader from '@/components/PageHeader';
+import { useTranslation } from 'react-i18next';
 
 const ChatScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
   const { user } = useAuth();
   const { theme } = useTheme();
+  const { t } = useTranslation();
   const { conversationId, userId, userName, type, serviceId } = route.params || {};
 
   const [messages, setMessages] = useState([]);
@@ -73,7 +75,7 @@ const ChatScreen = () => {
       }
     } catch (error) {
       console.error('Error initializing conversation:', error);
-      setErrorMessage('Failed to start conversation');
+      setErrorMessage(t('chat.failedToStartConversation'));
       setShowErrorModal(true);
     } finally {
       setLoading(false);
@@ -291,7 +293,7 @@ const ChatScreen = () => {
         keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
       >
         {/* Header */}
-        <PageHeader title={userName || 'Chat'} />
+        <PageHeader title={userName || t('chat.title')} />
 
         {/* Messages List */}
         <FlatList
@@ -314,10 +316,10 @@ const ChatScreen = () => {
             <View style={styles.emptyContainer}>
               <Icon name="chat-bubble-outline" size={64} color={theme.colors.border} />
               <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>
-                No messages yet
+                {t('chat.noMessagesYet')}
               </Text>
               <Text style={[styles.emptySubtext, { color: theme.colors.textSecondary }]}>
-                Start the conversation by sending a message
+                {t('chat.startConversation')}
               </Text>
             </View>
           }
@@ -329,7 +331,7 @@ const ChatScreen = () => {
             style={[styles.input, { color: theme.colors.text, borderColor: theme.colors.border }]}
             value={newMessage}
             onChangeText={setNewMessage}
-            placeholder="Type a message..."
+            placeholder={t('chat.typeMessage')}
             placeholderTextColor={theme.colors.placeholder}
             multiline
             maxLength={1000}

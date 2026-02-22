@@ -17,11 +17,13 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import ErrorModal from '@/components/ErrorModal';
 import ConfirmModal from '@/components/ConfirmModal';
 import PageHeader from '@/components/PageHeader';
+import { useTranslation } from 'react-i18next';
 
 const ConversationsScreen = () => {
   const navigation = useNavigation();
   const { user } = useAuth();
   const { theme } = useTheme();
+  const { t } = useTranslation();
   const [conversations, setConversations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -69,7 +71,7 @@ const ConversationsScreen = () => {
       setConversations(conversationsData);
     } catch (error) {
       console.error('Error loading conversations:', error);
-      setErrorMessage('Failed to load conversations');
+      setErrorMessage(t('chat.failedToLoadConversations'));
       setShowErrorModal(true);
       setConversations([]);
     } finally {
@@ -281,7 +283,7 @@ const ConversationsScreen = () => {
                   ]}
                   numberOfLines={1}
                 >
-                  No messages yet
+                  {t('chat.noMessagesInConversation')}
                 </Text>
               )}
             </View>
@@ -308,7 +310,7 @@ const ConversationsScreen = () => {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.backgroundTertiary }]} edges={['top']}>
-      <PageHeader title="Messages" backDestination="SettingsMain" />
+      <PageHeader title={t('chat.messages')} backDestination="SettingsMain" />
 
       <FlatList
         data={conversations}
@@ -326,10 +328,10 @@ const ConversationsScreen = () => {
           <View style={styles.emptyContainer}>
             <Icon name="chat-bubble-outline" size={64} color={theme.colors.border} />
             <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>
-              No conversations yet
+              {t('chat.noConversationsYet')}
             </Text>
             <Text style={[styles.emptySubtext, { color: theme.colors.textSecondary }]}>
-              Start a conversation by messaging someone
+              {t('chat.startConversationHint')}
             </Text>
           </View>
         }
@@ -347,10 +349,10 @@ const ConversationsScreen = () => {
           setShowDeleteModal(false);
           setConversationToDelete(null);
         }}
-        title="Delete Conversation"
-        message="Are you sure you want to delete this conversation? This action cannot be undone."
-        confirmText="Delete"
-        cancelText="Cancel"
+        title={t('chat.deleteConversation')}
+        message={t('chat.deleteConversationMessage')}
+        confirmText={t('common.delete')}
+        cancelText={t('common.cancel')}
         onConfirm={handleDeleteConfirm}
         confirmColor="#ff4444"
         destructive={true}

@@ -15,7 +15,7 @@ const ServiceTabs = ({ activeTab, onTabChange }) => {
           styles.tab,
           activeTab === 'pickdrop' && [
             styles.activeTab,
-            { borderBottomColor: theme.colors.primary },
+            { borderBottomColor: theme.colors.primary, flex: 1 },
           ],
         ]}
         onPress={() => onTabChange('pickdrop')}
@@ -41,40 +41,6 @@ const ServiceTabs = ({ activeTab, onTabChange }) => {
           ]}
         >
           {t('services.pickDrop')}
-        </Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        style={[
-          styles.tab,
-          activeTab === 'rental' && [
-            styles.activeTab,
-            { borderBottomColor: theme.colors.primary },
-          ],
-        ]}
-        onPress={() => onTabChange('rental')}
-      >
-        <Icon
-          name="directions-car"
-          size={20}
-          color={
-            activeTab === 'rental'
-              ? theme.colors.primary
-              : theme.colors.textSecondary
-          }
-        />
-        <Text
-          style={[
-            styles.tabText,
-            {
-              color:
-                activeTab === 'rental'
-                  ? theme.colors.primary
-                  : theme.colors.textSecondary,
-            },
-          ]}
-        >
-          {t('services.rentalCars')}
         </Text>
       </TouchableOpacity>
     </View>

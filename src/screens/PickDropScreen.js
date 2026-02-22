@@ -215,14 +215,6 @@ const PickDropScreen = () => {
     }
   };
 
-  const handleServiceTabChange = (tab) => {
-    setActiveServiceTab(tab);
-    if (tab === 'rental') {
-      navigation.navigate('RentalCars');
-    } else if (tab === 'pickdrop') {
-      navigation.navigate('PickDrop');
-    }
-  };
 
   const handleFilterChange = (key, value) => {
     setTempFilters((prev) => {
@@ -280,10 +272,6 @@ const PickDropScreen = () => {
 
           </View>
         </View>
-        <ServiceTabs
-          activeTab={activeServiceTab}
-          onTabChange={handleServiceTabChange}
-        />
       </View>
 
       {/* Filter and Add Service Section (match Rental Cars layout) */}

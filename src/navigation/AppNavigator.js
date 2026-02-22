@@ -9,28 +9,25 @@ import { useTranslation } from 'react-i18next';
 
 
 // Screens
-import HomeScreen from '@/screens/HomeScreen';
 import PickDropScreen from '@/screens/PickDropScreen';
 import PickDropDetailScreen from '@/screens/PickDropDetailScreen';
-import CarDetailScreen from '@/screens/CarDetailScreen';
 import StoreProfileScreen from '@/screens/StoreProfileScreen';
 import LoginScreen from '@/screens/LoginScreen';
 import RegisterScreen from '@/screens/RegisterScreen';
-import BookingScreen from '@/screens/BookingScreen';
 import MyBookingsScreen from '@/screens/MyBookingsScreen';
 import SettingsScreen from '@/screens/SettingsScreen';
 import ProfileScreen from '@/screens/ProfileScreen';
-import MyCarsScreen from '@/screens/MyCarsScreen';
-import MyStoresScreen from '@/screens/MyStoresScreen';
 import MyPickDropServicesScreen from '@/screens/MyPickDropServicesScreen';
 import CreatePickDropServiceScreen from '@/screens/CreatePickDropServiceScreen';
-import AddCarScreen from '@/screens/AddCarScreen';
 import ChatScreen from '@/screens/ChatScreen';
 import ConversationsScreen from '@/screens/ConversationsScreen';
 import ContactUsScreen from '@/screens/ContactUsScreen';
 import NotificationsScreen from '@/screens/NotificationsScreen';
 import AboutUsScreen from '@/screens/AboutUsScreen';
 import CreateStoreScreen from '@/screens/CreateStoreScreen';
+import OnboardingScreen from '@/screens/OnboardingScreen';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 
 
 const Stack = createNativeStackNavigator();
@@ -42,13 +39,8 @@ const MainStack = () => {
 
   return (
     <Stack.Navigator
-      initialRouteName="RentalCars"
+      initialRouteName="PickDrop"
     >
-      <Stack.Screen
-        name="RentalCars"
-        component={HomeScreen}
-        options={{ headerShown: false }}
-      />
       <Stack.Screen
         name="PickDrop"
         component={PickDropScreen}
@@ -63,40 +55,10 @@ const MainStack = () => {
         }}
       />
       <Stack.Screen
-        name="CreatePickDropService"
-        component={CreatePickDropServiceScreen}
-        options={{
-          headerShown: false,
-          presentation: 'card'
-        }}
-      />
-      <Stack.Screen
-        name="CarDetail"
-        component={CarDetailScreen}
-        options={{
-          headerShown: false,
-        }}
-      />
-      <Stack.Screen
         name="StoreProfile"
         component={StoreProfileScreen}
         options={{
           headerShown: false
-        }}
-      />
-      <Stack.Screen
-        name="Booking"
-        component={BookingScreen}
-        options={{
-          title: 'Book Car',
-          headerBackTitle: 'Back',
-          headerStyle: {
-            backgroundColor: theme.colors.background,
-          },
-          headerTintColor: theme.colors.text,
-          headerTitleStyle: {
-            color: theme.colors.text,
-          },
         }}
       />
       <Stack.Screen
@@ -154,27 +116,6 @@ const SettingsStack = () => {
         }}
       />
       <Stack.Screen
-        name="MyCars"
-        component={MyCarsScreen}
-        options={{
-          headerShown: false,
-        }}
-      />
-      <Stack.Screen
-        name="AddCar"
-        component={AddCarScreen}
-        options={{
-          headerShown: false,
-        }}
-      />
-      <Stack.Screen
-        name="MyStores"
-        component={MyStoresScreen}
-        options={{
-          headerShown: false,
-        }}
-      />
-      <Stack.Screen
         name="CreateStore"
         component={CreateStoreScreen}
         options={{
@@ -184,6 +125,13 @@ const SettingsStack = () => {
       <Stack.Screen
         name="MyPickDropServices"
         component={MyPickDropServicesScreen}
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="CreatePickDropService"
+        component={CreatePickDropServiceScreen}
         options={{
           headerShown: false,
         }}
@@ -244,7 +192,6 @@ const AuthenticatedTabs = () => {
       })}
     >
       <Tab.Screen name="Home" component={MainStack} options={{ tabBarLabel: t('navigation.home') }} />
-      <Tab.Screen name="Bookings" component={MyBookingsScreen} options={{ tabBarLabel: t('navigation.bookings') }} />
       <Tab.Screen
         name="Dashboard"
         component={SettingsStack}
@@ -275,8 +222,22 @@ const AuthenticatedTabs = () => {
 
 const AppNavigator = () => {
   const { user, loading } = useAuth();
+  const [isOnboardingVisible, setIsOnboardingVisible] = React.useState(null);
 
-  if (loading) {
+  React.useEffect(() => {
+    checkOnboardingStatus();
+  }, []);
+
+  const checkOnboardingStatus = async () => {
+    try {
+      const value = await AsyncStorage.getItem('IS_ONBOARDING_COMPLETE');
+      setIsOnboardingVisible(value === null);
+    } catch (error) {
+      setIsOnboardingVisible(false);
+    }
+  };
+
+  if (loading || isOnboardingVisible === null) {
     return null; // You can add a loading screen here
   }
 
@@ -289,6 +250,8 @@ const AppNavigator = () => {
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {user ? (
           <Stack.Screen name="Root" component={AuthenticatedTabs} />
+        ) : isOnboardingVisible ? (
+          <Stack.Screen name="Onboarding" component={OnboardingScreen} />
         ) : (
           <Stack.Screen name="Root" component={MainStack} />
         )}
