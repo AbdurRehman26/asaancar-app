@@ -201,7 +201,20 @@ const AuthenticatedTabs = () => {
         headerShown: false,
       })}
     >
-      <Tab.Screen name="Home" component={MainStack} options={{ tabBarLabel: t('navigation.home') }} />
+      <Tab.Screen
+        name="Home"
+        component={MainStack}
+        options={{ tabBarLabel: t('navigation.home') }}
+        listeners={({ navigation }) => ({
+          tabPress: (e) => {
+            // Always reset Home tab to PickDrop when pressed
+            e.preventDefault();
+            navigation.navigate('Home', {
+              screen: 'PickDrop',
+            });
+          },
+        })}
+      />
       <Tab.Screen
         name="Dashboard"
         component={SettingsStack}
