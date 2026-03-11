@@ -203,7 +203,11 @@
         "newPassword": "Naya Password",
         "enterNewPassword": "Naya password",
         "confirmNewPassword": "Naye Password ki Tasdeeq",
-        "confirmNewPasswordPlaceholder": "Naye password ki tasdeeq karein"
+        "confirmNewPasswordPlaceholder": "Naye password ki tasdeeq karein",
+        "setPasswordTitle": "Apna password set karein",
+        "setPasswordSubtitle": "Phone aur password se sign in karne ke liye password banaein.",
+        "setPassword": "Password set karein",
+        "passwordSetSuccess": "Password set ho gaya"
     },
     "chat": {
         "title": "Chat",

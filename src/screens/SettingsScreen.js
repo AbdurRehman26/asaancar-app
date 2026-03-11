@@ -6,6 +6,7 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
@@ -107,10 +108,17 @@ const SettingsScreen = () => {
           <View style={styles.headerTop}>
             <View>
               <Text style={[styles.welcomeText, { color: theme.colors.textSecondary }]}>{t('settings.welcomeBack')}</Text>
-              <Text style={[styles.headerName, { color: theme.colors.text }]}>{user?.name || t('settings.guest')}</Text>
+              <Text style={[styles.headerName, { color: theme.colors.text }]}>{user?.data?.name || t('settings.guest')}</Text>
             </View>
             <TouchableOpacity onPress={() => navigation.navigate('Profile')} style={styles.avatarContainer}>
-              <Icon name="person" size={32} color={theme.colors.primary} />
+              {user?.data?.profile_image ? (
+                <Image
+                  source={{ uri: user.data.profile_image }}
+                  style={styles.avatarImage}
+                />
+              ) : (
+                <Icon name="person" size={32} color={theme.colors.primary} />
+              )}
             </TouchableOpacity>
           </View>
         </View>
@@ -233,6 +241,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 1.5,
     borderColor: '#E5E7EB',
+  },
+  avatarImage: {
+    width: 46,
+    height: 46,
+    borderRadius: 23,
   },
   sectionHeader: {
     marginBottom: 16,

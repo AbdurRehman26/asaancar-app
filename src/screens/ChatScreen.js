@@ -66,7 +66,7 @@ const ChatScreen = () => {
     try {
       setLoading(true);
       // For pick_and_drop type, recipient_user_id is required (current logged-in user)
-      const recipientUserId = type === 'pick_and_drop' && user?.id ? user.id : null;
+      const recipientUserId = type === 'pick_and_drop' && user?.data?.id ? user.data.id : null;
       const response = await chatAPI.getOrCreateConversation(userId, type, serviceId, recipientUserId);
       const convId = response.data?.id || response.id || response.conversation_id;
       setCurrentConversationId(convId);
@@ -150,7 +150,7 @@ const ChatScreen = () => {
     setSending(true);
 
     // Optimistically add message to UI
-    const tempMessage = {
+      const tempMessage = {
       id: `temp-${Date.now()}`,
       message: messageText,
       sender_id: user?.id,
@@ -183,8 +183,8 @@ const ChatScreen = () => {
         ...sentMessage,
         id: sentMessage?.id || sentMessage?.message_id || tempMessage.id,
         message: sentMessage?.message || sentMessage?.text || messageText,
-        sender_id: sentMessage?.sender_id || sentMessage?.user_id || user?.id,
-        sender: sentMessage?.sender || sentMessage?.user || user,
+        sender_id: sentMessage?.sender_id || sentMessage?.user_id || user?.data?.id,
+        sender: sentMessage?.sender || sentMessage?.user || user?.data || user,
         created_at: sentMessage?.created_at || sentMessage?.created_at || tempMessage.created_at,
         is_sent: true,
       };
@@ -233,7 +233,7 @@ const ChatScreen = () => {
   };
 
   const renderMessage = ({ item }) => {
-    const isMyMessage = item.sender_id === user?.id || item.sender?.id === user?.id;
+    const isMyMessage = item.sender_id === user?.data?.id || item.sender?.id === user?.data?.id;
     const messageTime = item.created_at
       ? new Date(item.created_at).toLocaleTimeString('en-US', {
         hour: '2-digit',

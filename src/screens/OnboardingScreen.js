@@ -7,9 +7,9 @@ import {
     TouchableOpacity,
     Dimensions,
     FlatList,
-    SafeAreaView,
     StatusBar,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '@/context/ThemeContext';
 import { useTranslation } from 'react-i18next';
 import Icon from 'react-native-vector-icons/MaterialIcons';
@@ -142,7 +142,7 @@ const OnboardingScreen = ({ navigation }) => {
     };
 
     return (
-        <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
+        <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]} edges={['top']}>
             <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
 
             {/* Header Buttons */}

@@ -25,7 +25,7 @@ const LoginScreen = () => {
   const { theme, isDark, toggleTheme } = useTheme();
   const { login, loginWithOtp, setUserFromStorage } = useAuth();
   const { t, i18n } = useTranslation();
-  const [authMethod, setAuthMethod] = useState('otp'); // 'otp' or 'password'
+  const [authMethod, setAuthMethod] = useState('password'); // 'otp' or 'password'
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [otp, setOtp] = useState('');

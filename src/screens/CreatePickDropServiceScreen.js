@@ -122,9 +122,9 @@ const CreatePickDropServiceScreen = () => {
     fetchAreas();
 
     // Always set contact info from user profile
-    if (user) {
-      setContactName(user.name || '');
-      setContactPhone(user.phone_number || user.phone || '');
+    if (user?.data) {
+      setContactName(user.data.name || '');
+      setContactPhone(user.data.phone_number || user.data.phone || '');
     }
 
     if (service) {

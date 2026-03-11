@@ -1,4 +1,5 @@
 import React from 'react';
+import { View } from 'react-native';
 import { NavigationContainer, CommonActions } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -27,19 +28,19 @@ import AboutUsScreen from '@/screens/AboutUsScreen';
 import CreateStoreScreen from '@/screens/CreateStoreScreen';
 import OnboardingScreen from '@/screens/OnboardingScreen';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
-
+import VerifySignupOtpScreen from '@/screens/VerifySignupOtpScreen';
+import SetPasswordModal from '@/components/SetPasswordModal';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
 // Main stack accessible without login
-const MainStack = () => {
+const MainStack = ({ initialScreen }) => {
   const { theme } = useTheme();
 
   return (
     <Stack.Navigator
-      initialRouteName="PickDrop"
+      initialRouteName={initialScreen || 'PickDrop'}
     >
       <Stack.Screen
         name="PickDrop"
@@ -87,6 +88,15 @@ const MainStack = () => {
       <Stack.Screen
         name="Register"
         component={RegisterScreen}
+        options={{
+          headerShown: false,
+          presentation: 'modal',
+          gestureEnabled: false
+        }}
+      />
+      <Stack.Screen
+        name="VerifySignupOtp"
+        component={VerifySignupOtpScreen}
         options={{
           headerShown: false,
           presentation: 'modal',
@@ -198,21 +208,11 @@ const AuthenticatedTabs = () => {
         options={{ tabBarLabel: t('navigation.dashboard') }}
         listeners={({ navigation }) => ({
           tabPress: (e) => {
-            // Always navigate to SettingsMain when Dashboard tab is pressed
-            // This ensures we always go to the default dashboard state
-            const state = navigation.getState();
-            const dashboardTab = state.routes.find(r => r.name === 'Dashboard');
-
-            if (dashboardTab?.state) {
-              const stackState = dashboardTab.state;
-              // If we're not on SettingsMain, navigate to it
-              if (stackState.index > 0 || stackState.routes[stackState.index]?.name !== 'SettingsMain') {
-                e.preventDefault();
-                navigation.navigate('Dashboard', {
-                  screen: 'SettingsMain',
-                });
-              }
-            }
+            // Always reset Dashboard tab to SettingsMain when pressed
+            e.preventDefault();
+            navigation.navigate('Dashboard', {
+              screen: 'SettingsMain',
+            });
           },
         })}
       />
@@ -246,17 +246,20 @@ const AppNavigator = () => {
   // Otherwise show MainStack
 
   return (
-    <NavigationContainer>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
-        {user ? (
-          <Stack.Screen name="Root" component={AuthenticatedTabs} />
-        ) : isOnboardingVisible ? (
+    <View style={{ flex: 1 }}>
+      <NavigationContainer>
+        <Stack.Navigator
+          screenOptions={{ headerShown: false }}
+          initialRouteName={user ? 'Root' : isOnboardingVisible ? 'Onboarding' : 'Root'}
+        >
+          <Stack.Screen name="Root">
+            {({ route }) => (user ? <AuthenticatedTabs /> : <MainStack initialScreen={route.params?.screen} />)}
+          </Stack.Screen>
           <Stack.Screen name="Onboarding" component={OnboardingScreen} />
-        ) : (
-          <Stack.Screen name="Root" component={MainStack} />
-        )}
-      </Stack.Navigator>
-    </NavigationContainer>
+        </Stack.Navigator>
+      </NavigationContainer>
+      <SetPasswordModal />
+    </View>
   );
 };
 

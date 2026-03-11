@@ -203,7 +203,11 @@
         "newPassword": "نیا پاس ورڈ",
         "enterNewPassword": "نیا پاس ورڈ",
         "confirmNewPassword": "نئے پاس ورڈ کی تصدیق",
-        "confirmNewPasswordPlaceholder": "نئے پاس ورڈ کی تصدیق کریں"
+        "confirmNewPasswordPlaceholder": "نئے پاس ورڈ کی تصدیق کریں",
+        "setPasswordTitle": "اپنا پاس ورڈ سیٹ کریں",
+        "setPasswordSubtitle": "فون اور پاس ورڈ سے سائن ان کرنے کے لیے پاس ورڈ بنائیں۔",
+        "setPassword": "پاس ورڈ سیٹ کریں",
+        "passwordSetSuccess": "پاس ورڈ سیٹ ہو گیا"
     },
     "chat": {
         "title": "چیٹ",

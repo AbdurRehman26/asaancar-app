@@ -494,6 +494,16 @@ const PickDropDetailScreen = () => {
             </View>
           </View>
 
+          {/* Back to listing - bottom */}
+          <TouchableOpacity
+            style={[styles.backToListingBottom, { backgroundColor: theme.colors.primary }]}
+            onPress={() => navigation.navigate('PickDrop')}
+            activeOpacity={0.8}
+          >
+            <Icon name="arrow-back" size={20} color="#fff" style={{ marginRight: 8 }} />
+            <Text style={styles.backToListingBottomText}>{t('common.backToListing')}</Text>
+          </TouchableOpacity>
+
           <View style={{ height: 40 }} />
         </View>
       </ScrollView>
@@ -793,6 +803,20 @@ const styles = StyleSheet.create({
   loginHint: {
     marginTop: 16,
     fontSize: 12,
+  },
+  backToListingBottom: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    borderRadius: 12,
+    marginTop: 8,
+    marginBottom: 16,
+  },
+  backToListingBottomText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
   errorText: {
     fontSize: 16,

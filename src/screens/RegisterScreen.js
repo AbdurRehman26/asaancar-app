@@ -16,8 +16,10 @@ import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import ErrorModal from '@/components/ErrorModal';
+import SuccessModal from '@/components/SuccessModal';
 import { useTranslation } from 'react-i18next';
 import { LANGUAGES, changeLanguage } from '@/i18n';
+import { authAPI } from '@/services/api';
 
 const RegisterScreen = () => {
   const navigation = useNavigation();
@@ -31,7 +33,9 @@ const RegisterScreen = () => {
   });
   const [loading, setLoading] = useState(false);
   const [showErrorModal, setShowErrorModal] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
 
   const handleSendOTP = async () => {
     if (!formData.name) {
@@ -48,12 +52,16 @@ const RegisterScreen = () => {
 
     try {
       setLoading(true);
-      // TODO: Implement OTP sending API call
-      // await authAPI.sendOTP(formData.phone);
-      setErrorMessage('OTP functionality will be implemented');
-      setShowErrorModal(true);
+      const formattedPhone = formData.phone.startsWith('+') ? formData.phone : `+92${formData.phone}`;
+      await authAPI.sendSignupOtp(formattedPhone, formData.name || undefined);
+      setShowSuccessModal(false);
+      navigation.navigate('VerifySignupOtp', {
+        phone: formattedPhone,
+        name: formData.name,
+        role: formData.role,
+      });
     } catch (error) {
-      setErrorMessage(error.response?.data?.message || 'Failed to send OTP');
+      setErrorMessage(error.response?.data?.message || error.message || 'Failed to send OTP');
       setShowErrorModal(true);
     } finally {
       setLoading(false);
@@ -208,6 +216,12 @@ const RegisterScreen = () => {
         visible={showErrorModal}
         onClose={() => setShowErrorModal(false)}
         message={errorMessage}
+      />
+      <SuccessModal
+        visible={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}
+        title={t('common.success') || 'Success'}
+        message={successMessage}
       />
     </KeyboardAvoidingView>
   );

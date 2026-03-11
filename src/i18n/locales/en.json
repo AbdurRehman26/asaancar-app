@@ -28,6 +28,7 @@
         "sendOtp": "Send OTP",
         "verifyOtp": "Verify OTP",
         "resendOtp": "Resend OTP",
+        "enterOtp": "Enter OTP",
         "backToListing": "Back to Listing",
         "done": "Done"
     },
@@ -84,7 +85,13 @@
         "enterPassword": "Enter your password",
         "enterName": "Enter your name",
         "selectCity": "Select your city",
-        "phoneHelper": "Enter your 10-digit phone number without the country code"
+        "phoneHelper": "Enter your 10-digit phone number without the country code",
+        "otpSent": "OTP has been sent to your phone number.",
+        "verifyOtpTitle": "Verify your phone",
+        "verifyOtpSubtitle": "Enter the 6-digit code sent to",
+        "enterOtpPlaceholder": "Enter 6-digit OTP",
+        "enterValidOtp": "Please enter the 6-digit OTP",
+        "invalidOtp": "Invalid OTP. Please try again."
     },
     "language": {
         "english": "English",
@@ -203,7 +210,11 @@
         "newPassword": "New Password",
         "enterNewPassword": "New password",
         "confirmNewPassword": "Confirm New Password",
-        "confirmNewPasswordPlaceholder": "Confirm new password"
+        "confirmNewPasswordPlaceholder": "Confirm new password",
+        "setPasswordTitle": "Set your password",
+        "setPasswordSubtitle": "Create a password to sign in with phone and password.",
+        "setPassword": "Set password",
+        "passwordSetSuccess": "Password set successfully"
     },
     "chat": {
         "title": "Chat",

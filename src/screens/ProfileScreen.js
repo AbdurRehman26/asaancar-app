@@ -29,9 +29,8 @@ const ProfileScreen = () => {
   const { user, setUserFromStorage } = useAuth();
   const { theme } = useTheme();
   const { t } = useTranslation();
-  const [name, setName] = useState(user?.name || '');
-  const [email, setEmail] = useState(user?.email || '');
-  const [profileImageUri, setProfileImageUri] = useState(user?.profile_image || '');
+  const [name, setName] = useState(user?.data?.name || '');
+  const [profileImageUri, setProfileImageUri] = useState(user?.data?.profile_image || '');
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -44,15 +43,20 @@ const ProfileScreen = () => {
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
 
+  // User has a password set – trust backend flags (on user.data) or normalized flag
+  const hasPasswordSet =
+    user?.hasPasswordSet === true ||
+    user?.data?.has_password === true ||
+    user?.data?.password_set === true ||
+    user?.data?.is_password_set === true ||
+    user?.data?.hasPasswordSet === true;
+
   useEffect(() => {
-    if (user?.name) {
-      setName(user.name);
+    if (user?.data?.name) {
+      setName(user.data.name);
     }
-    if (user?.email) {
-      setEmail(user.email);
-    }
-    if (user?.profile_image) {
-      setProfileImageUri(user.profile_image);
+    if (user?.data?.profile_image) {
+      setProfileImageUri(user.data.profile_image);
     }
   }, [user]);
 
@@ -88,12 +92,6 @@ const ProfileScreen = () => {
       return;
     }
 
-    if (!email.trim()) {
-      setErrorMessage('Please enter your email');
-      setShowErrorModal(true);
-      return;
-    }
-
     try {
       setLoading(true);
 
@@ -114,7 +112,6 @@ const ProfileScreen = () => {
 
       const updateData = {
         name: name.trim(),
-        email: email.trim(),
         profile_image: finalProfileImage,
       };
 
@@ -131,7 +128,7 @@ const ProfileScreen = () => {
   };
 
   const handleChangePassword = async () => {
-    if (!currentPassword) {
+    if (hasPasswordSet && !currentPassword) {
       setErrorMessage('Please enter your current password');
       setShowErrorModal(true);
       return;
@@ -157,7 +154,11 @@ const ProfileScreen = () => {
 
     try {
       setLoading(true);
-      await authAPI.changePassword(currentPassword, newPassword, confirmPassword);
+      await authAPI.changePassword(
+        hasPasswordSet ? currentPassword : '',
+        newPassword,
+        confirmPassword
+      );
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
@@ -221,26 +222,6 @@ const ProfileScreen = () => {
               />
             </View>
 
-            <View style={styles.inputSection}>
-              <Text style={[styles.label, { color: theme.colors.text }]}>{t('profile.email')}</Text>
-              <TextInput
-                style={[
-                  styles.input,
-                  {
-                    color: theme.colors.text,
-                    borderColor: theme.colors.border,
-                    backgroundColor: theme.colors.inputBackground,
-                  }
-                ]}
-                placeholder={t('profile.enterEmail')}
-                placeholderTextColor={theme.colors.placeholder}
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-              />
-            </View>
-
             <TouchableOpacity
               style={[
                 styles.saveButton,
@@ -262,7 +243,8 @@ const ProfileScreen = () => {
           <View style={[styles.card, { backgroundColor: theme.colors.cardBackground }]}>
             <Text style={[styles.cardTitle, { color: theme.colors.text }]}>{t('profile.changePassword')}</Text>
 
-            {/* Current Password */}
+            {/* Current Password - only when user already has a password set */}
+            {hasPasswordSet && (
             <View style={styles.inputSection}>
               <Text style={[styles.label, { color: theme.colors.text }]}>{t('profile.currentPassword')}</Text>
               <View style={[
@@ -296,6 +278,7 @@ const ProfileScreen = () => {
                 </View>
               </View>
             </View>
+            )}
 
             {/* New Password */}
             <View style={styles.inputSection}>
@@ -397,6 +380,7 @@ const ProfileScreen = () => {
           title="Success"
           message={successMessage}
         />
+
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

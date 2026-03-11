@@ -376,7 +376,27 @@ export const authAPI = {
 
   // Verify login OTP
   verifyLoginOtp: async (phone, otp) => {
-    const response = await api.post('/verify-login-otp', { phone_number: phone, otp });
+    const response = await api.post('/verify-login-otp', { identifier: phone, otp });
+    if (response.data.token) {
+      await AsyncStorage.setItem('authToken', response.data.token);
+      await AsyncStorage.setItem('user', JSON.stringify(response.data.user));
+    }
+    return response.data;
+  },
+
+  // Send signup OTP
+  sendSignupOtp: async (phone, name = null) => {
+    const payload = { phone_number: phone };
+    if (name) payload.name = name;
+    const response = await api.post('/send-signup-otp', payload);
+    return response.data;
+  },
+
+  // Verify signup OTP (completes registration)
+  verifySignupOtp: async (phone, otp, name = null) => {
+    const payload = { identifier: phone, otp };
+    if (name) payload.name = name;
+    const response = await api.post('/verify-signup-otp', payload);
     if (response.data.token) {
       await AsyncStorage.setItem('authToken', response.data.token);
       await AsyncStorage.setItem('user', JSON.stringify(response.data.user));
@@ -400,29 +420,49 @@ export const authAPI = {
     await AsyncStorage.removeItem('user');
   },
 
-  // Get current user
+  // Get current user: on first load fetches from API when token exists, then updates storage and returns user
   getCurrentUser: async () => {
-    const userStr = await AsyncStorage.getItem('user');
-    return userStr ? JSON.parse(userStr) : null;
+    const token = await AsyncStorage.getItem('authToken');
+    if (!token) {
+      const userStr = await AsyncStorage.getItem('user');
+      return userStr ? JSON.parse(userStr) : null;
+    }
+    try {
+      const response = await api.get('/user');
+      const userData = response.data?.user ?? response.data;
+      if (userData) {
+        await AsyncStorage.setItem('user', JSON.stringify(userData));
+        return userData;
+      }
+      return null;
+    } catch (error) {
+      if (error.response?.status === 401) {
+        await AsyncStorage.removeItem('authToken');
+        await AsyncStorage.removeItem('user');
+        return null;
+      }
+      // Offline or other error: fall back to stored user
+      const userStr = await AsyncStorage.getItem('user');
+      return userStr ? JSON.parse(userStr) : null;
+    }
   },
 
-  // Update user profile
+  // Update user profile (PATCH /settings/profile)
   updateProfile: async (userData) => {
     let response;
-    // The user specified /settings/profile for saving profile
     const endpoint = '/settings/profile';
 
     if (userData instanceof FormData) {
-      // Use POST with _method: 'PUT' for multipart/form-data
-      userData.append('_method', 'PUT');
+      // Use POST with _method: 'PATCH' for multipart/form-data
+      userData.append('_method', 'PATCH');
       response = await api.post(endpoint, userData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
     } else {
-      // If we are passing a plain object, use PUT
-      response = await api.put(endpoint, userData);
+      // For JSON payloads, use PATCH directly
+      response = await api.patch(endpoint, userData);
     }
 
     if (response.data.user) {
@@ -446,12 +486,12 @@ export const authAPI = {
     return response.data;
   },
 
-  // Change password
+  // Change password (PUT /settings/password)
   changePassword: async (currentPassword, newPassword, confirmPassword) => {
-    const response = await api.post('/user/change-password', {
+    const response = await api.put('/settings/password', {
       current_password: currentPassword,
-      new_password: newPassword,
-      confirm_password: confirmPassword,
+      password: newPassword,
+      password_confirmation: confirmPassword,
     });
     return response.data;
   },

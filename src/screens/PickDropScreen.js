@@ -292,7 +292,7 @@ const PickDropScreen = () => {
                 navigation.navigate('Login');
                 return;
               }
-              navigation.navigate('CreatePickDropService');
+              navigation.navigate('Dashboard', { screen: 'CreatePickDropService' });
             }}
             style={[styles.addServiceButton, { backgroundColor: theme.colors.primary }]}
           >

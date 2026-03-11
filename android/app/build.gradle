@@ -81,6 +81,18 @@ def enableMinifyInReleaseBuilds = (findProperty('android.enableMinifyInReleaseBu
  */
 def jscFlavor = 'io.github.react-native-community:jsc-android:2026004.+'
 
+// Fail release build if Play upload key is not configured (avoid uploading wrong key to Play)
+gradle.taskGraph.whenReady { taskGraph ->
+    if (taskGraph.hasTask(':app:bundleRelease') && !rootProject.hasProperty('ASAANCAR_UPLOAD_STORE_FILE')) {
+        throw new GradleException(
+            "Release signing not configured. To build an AAB for Play Store:\n" +
+            "1. Put your upload keystore (SHA1: C9:21:70:D8:70:3E:15:A0:82:44:24:FC:71:CF:3A:56:1E:39:B0:A6) in android/app/\n" +
+            "2. In android/gradle.properties, uncomment and set: ASAANCAR_UPLOAD_STORE_FILE, ASAANCAR_UPLOAD_STORE_PASSWORD, ASAANCAR_UPLOAD_KEY_ALIAS, ASAANCAR_UPLOAD_KEY_PASSWORD\n" +
+            "See the comments at the bottom of android/gradle.properties."
+        )
+    }
+}
+
 android {
     ndkVersion rootProject.ext.ndkVersion
 
@@ -92,8 +104,8 @@ android {
         applicationId 'com.asaancar.app'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 27
-        versionName "1.0.1"
+        versionCode 28
+        versionName "1.0.2"
 
         buildConfigField "String", "REACT_NATIVE_RELEASE_LEVEL", "\"${findProperty('reactNativeReleaseLevel') ?: 'stable'}\""
     }
@@ -104,15 +116,21 @@ android {
             keyAlias 'androiddebugkey'
             keyPassword 'android'
         }
+        release {
+            if (rootProject.hasProperty('ASAANCAR_UPLOAD_STORE_FILE')) {
+                storeFile file(rootProject.ASAANCAR_UPLOAD_STORE_FILE)
+                storePassword rootProject.ASAANCAR_UPLOAD_STORE_PASSWORD
+                keyAlias rootProject.ASAANCAR_UPLOAD_KEY_ALIAS
+                keyPassword rootProject.ASAANCAR_UPLOAD_KEY_PASSWORD
+            }
+        }
     }
     buildTypes {
         debug {
             signingConfig signingConfigs.debug
         }
         release {
-            // Caution! In production, you need to generate your own keystore file.
-            // see https://reactnative.dev/docs/signed-apk-android.
-            signingConfig signingConfigs.debug
+            signingConfig rootProject.hasProperty('ASAANCAR_UPLOAD_STORE_FILE') ? signingConfigs.release : signingConfigs.debug
             def enableShrinkResources = findProperty('android.enableShrinkResourcesInReleaseBuilds') ?: 'false'
             shrinkResources enableShrinkResources.toBoolean()
             minifyEnabled enableMinifyInReleaseBuilds

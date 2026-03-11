@@ -117,9 +117,9 @@ const ConversationsScreen = () => {
 
     // Find the other user (not the current user)
     const otherUser = participants.find((p) =>
-      p.id !== user?.id &&
-      p.user_id !== user?.id &&
-      p.id !== user?.user_id
+      p.id !== user?.data?.id &&
+      p.user_id !== user?.data?.id &&
+      p.id !== user?.data?.user_id
     );
 
     return otherUser || participants[0] || null;
