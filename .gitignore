@@ -23,24 +23,6 @@ web-build/
 .env
 .env.local
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/asaancar-app-20260113-0620.aab
-/asaancar-app-signed-correctly.aab
+# files
+/*.aab
+/*.apk
