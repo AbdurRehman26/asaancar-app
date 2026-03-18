@@ -27,7 +27,7 @@
       "permissions": [
         "CAMERA"
       ],
-      "versionCode": 35
+      "versionCode": 36
     },
     "web": {
       "bundler": "metro"
