@@ -62,11 +62,8 @@ const ProfileScreen = () => {
 
   const pickImage = async () => {
     try {
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert('Permission needed', 'Please grant camera roll permissions to upload images');
-        return;
-      }
+      // No explicit permission request needed for modern Android (13+) or iOS
+      // for the system image picker.
 
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,

@@ -29,7 +29,9 @@
         "verifyOtp": "OTP تصدیق کریں",
         "resendOtp": "دوبارہ OTP بھیجیں",
         "backToListing": "فہرست پر واپس",
-        "done": "ہو گیا"
+        "done": "ہو گیا",
+        "favorites": "پسندیدہ",
+        "explore": "مزید تلاش کریں"
     },
     "home": {
         "carsAvailable": "{{count}} گاڑیاں دستیاب ہیں",
@@ -112,7 +114,10 @@
         "addService": "سروس شامل کریں",
         "startPoint": "شروعاتی مقام",
         "destination": "منزل",
-        "perPerson": "فی شخص"
+        "perPerson": "فی شخص",
+        "noFavoritesFound": "ابھی تک کوئی پسندیدہ نہیں",
+        "seats": "سیٹیں",
+        "flexible": "لچکدار"
     },
     "carDetail": {
         "specifications": "تفصیلات",

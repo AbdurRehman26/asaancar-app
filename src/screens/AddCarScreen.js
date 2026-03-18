@@ -10,6 +10,7 @@ import {
   Modal,
   Image,
   Alert,
+  Platform,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useTheme } from '@/context/ThemeContext';
@@ -223,14 +224,7 @@ const AddCarScreen = () => {
     }
   };
 
-  const requestImagePermission = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert('Permission needed', 'Please grant camera roll permissions to upload images');
-      return false;
-    }
-    return true;
-  };
+  // On modern Android (13+) or iOS, we skip permission requests for the system picker.
 
   const handleImageUpload = async () => {
     if (images.length >= 5) {
@@ -238,8 +232,8 @@ const AddCarScreen = () => {
       return;
     }
 
-    const hasPermission = await requestImagePermission();
-    if (!hasPermission) return;
+    // No explicit permission request needed for modern Android (13+) or iOS
+    // for the system image picker.
 
     try {
       const result = await ImagePicker.launchImageLibraryAsync({

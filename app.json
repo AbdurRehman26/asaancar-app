@@ -2,7 +2,7 @@
   "expo": {
     "name": "AsaanCar",
     "slug": "asaancar-app",
-    "version": "1.0.6",
+    "version": "1.0.7",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -25,11 +25,9 @@
       },
       "package": "com.asaancar.app",
       "permissions": [
-        "CAMERA",
-        "READ_EXTERNAL_STORAGE",
-        "WRITE_EXTERNAL_STORAGE"
+        "CAMERA"
       ],
-      "versionCode": 32
+      "versionCode": 35
     },
     "web": {
       "bundler": "metro"

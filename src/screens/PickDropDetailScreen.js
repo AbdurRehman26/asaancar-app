@@ -17,6 +17,7 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import ErrorModal from '@/components/ErrorModal';
 import { useTranslation } from 'react-i18next';
+import { favoritesManager } from '@/utils/favorites';
 
 const PickDropDetailScreen = () => {
   const { t } = useTranslation();
@@ -31,6 +32,28 @@ const PickDropDetailScreen = () => {
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [expandedStops, setExpandedStops] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(false);
+
+  useEffect(() => {
+    checkFavoriteStatus();
+  }, [serviceId, service]);
+
+  const checkFavoriteStatus = async () => {
+    if (serviceId) {
+      const status = await favoritesManager.isFavorite(serviceId);
+      setIsFavorite(status);
+    }
+  };
+
+  const toggleFavorite = async () => {
+    if (!service) return;
+    try {
+      const status = await favoritesManager.toggleFavorite(service);
+      setIsFavorite(status);
+    } catch (error) {
+      console.error('Error toggling favorite:', error);
+    }
+  };
 
   useEffect(() => {
     // Only fetch if we don't have service data passed from listing
@@ -183,15 +206,28 @@ const PickDropDetailScreen = () => {
       <ScrollView
         contentContainerStyle={{ paddingBottom: insets.bottom + 24 }}>
         {/* Back Button */}
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.navigate('PickDrop')}
-        >
-          <Icon name="arrow-back" size={24} color={theme.colors.text} />
-          <Text style={[styles.backButtonText, { color: theme.colors.text }]}>
-            {t('common.backToListing')}
-          </Text>
-        </TouchableOpacity>
+        <View style={styles.detailHeader}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => navigation.navigate('PickDrop')}
+          >
+            <Icon name="arrow-back" size={24} color={theme.colors.text} />
+            <Text style={[styles.backButtonText, { color: theme.colors.text }]}>
+              {t('common.backToListing')}
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.favoriteDetailButton}
+            onPress={toggleFavorite}
+          >
+            <Icon
+              name={isFavorite ? "favorite" : "favorite-border"}
+              size={28}
+              color={isFavorite ? "#FF5252" : theme.colors.text}
+            />
+          </TouchableOpacity>
+        </View>
 
         {/* Header Banner */}
         <View style={[styles.headerBanner, { backgroundColor: theme.colors.primary }]}>
@@ -574,6 +610,15 @@ const styles = StyleSheet.create({
   },
   headerBanner: {
     display: 'none',
+  },
+  detailHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingRight: 16,
+  },
+  favoriteDetailButton: {
+    padding: 8,
   },
   contentContainer: {
     paddingHorizontal: 20,

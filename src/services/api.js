@@ -346,6 +346,28 @@ export const pickDropAPI = {
   },
 };
 
+export const pickDropFavoriteAPI = {
+  // Get all favorite pick and drop services
+  getFavorites: async (page = 1, perPage = 10) => {
+    const response = await api.get(`/customer/pick-and-drop/favorites?page=${page}&per_page=${perPage}`);
+    return response.data;
+  },
+
+  // Add a service to favorites
+  addFavorite: async (serviceId) => {
+    const response = await api.post('/customer/pick-and-drop/favorites', {
+      pick_and_drop_service_id: serviceId,
+    });
+    return response.data;
+  },
+
+  // Remove a service from favorites
+  deleteFavorite: async (favoriteId) => {
+    const response = await api.delete(`/customer/pick-and-drop/favorites/${favoriteId}`);
+    return response.data;
+  },
+};
+
 export const authAPI = {
   // Login with phone number and password
   login: async (phone, password) => {

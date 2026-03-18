@@ -30,7 +30,9 @@
         "resendOtp": "Resend OTP",
         "enterOtp": "Enter OTP",
         "backToListing": "Back to Listing",
-        "done": "Done"
+        "done": "Done",
+        "favorites": "Favorites",
+        "explore": "Explore Services"
     },
     "home": {
         "carsAvailable": "{{count}} cars available",
@@ -119,7 +121,10 @@
         "addService": "Add Service",
         "startPoint": "Start Point",
         "destination": "Destination",
-        "perPerson": "Per Person"
+        "perPerson": "Per Person",
+        "noFavoritesFound": "No favorites yet",
+        "seats": "seats",
+        "flexible": "Flexible"
     },
     "carDetail": {
         "specifications": "Specifications",
