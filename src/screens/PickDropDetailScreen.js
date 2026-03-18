@@ -51,6 +51,22 @@ const PickDropDetailScreen = () => {
     }
   }, [service]);
 
+  const formatTime = (timeString) => {
+    if (!timeString) return '';
+    if (typeof timeString === 'string' && timeString.includes(':')) {
+      const parts = timeString.split(':');
+      if (parts.length >= 2) {
+        let h = parseInt(parts[0]);
+        const m = parts[1].substring(0, 2);
+        const ampm = h >= 12 ? 'PM' : 'AM';
+        h = h % 12;
+        h = h ? h : 12;
+        return `${h}:${m} ${ampm}`;
+      }
+    }
+    return timeString;
+  };
+
   const loadServiceDetails = async () => {
     try {
       setLoading(true);
@@ -317,9 +333,10 @@ const PickDropDetailScreen = () => {
                 <Text style={[styles.gridLabel, { color: theme.colors.textSecondary }]}>{t('pickDropDetail.schedule')}</Text>
                 <Text style={[styles.gridValue, { color: theme.colors.text }]}>
                   {(() => {
-                    const { schedule_type, selected_days, departure_date, departure_time, is_everyday, everyday_service } = service;
+                    const { schedule_type, selected_days, departure_date, departure_time, return_time, is_roundtrip, is_everyday, everyday_service } = service;
                     let displaySchedule = '';
-                    let displayTime = departure_time || '';
+                    let displayTime = formatTime(departure_time);
+                    let displayReturn = is_roundtrip && return_time ? formatTime(return_time) : '';
 
                     if (schedule_type) {
                       switch (schedule_type.toLowerCase()) {
@@ -354,7 +371,10 @@ const PickDropDetailScreen = () => {
                       }
                     }
 
-                    return `${displaySchedule}${displayTime ? `\nat ${displayTime}` : ''}`;
+                    let result = displaySchedule;
+                    if (displayTime) result += `\nat ${displayTime}`;
+                    if (displayReturn) result += `\nReturn at ${displayReturn}`;
+                    return result;
                   })()}
                 </Text>
               </View>

@@ -115,6 +115,17 @@ const MyPickDropServicesScreen = () => {
 
   const formatTime = (timeString) => {
     if (!timeString) return 'N/A';
+    if (typeof timeString === 'string' && timeString.includes(':')) {
+      const parts = timeString.split(':');
+      if (parts.length >= 2) {
+        let h = parseInt(parts[0]);
+        const m = parts[1].substring(0, 2);
+        const ampm = h >= 12 ? 'PM' : 'AM';
+        h = h % 12;
+        h = h ? h : 12;
+        return `${h}:${m} ${ampm}`;
+      }
+    }
     return timeString;
   };
 

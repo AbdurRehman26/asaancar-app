@@ -320,8 +320,8 @@ const CreatePickDropServiceScreen = () => {
         selected_days: scheduleType === 'custom' ? selectedDays : null,
         is_roundtrip: isRoundTrip,
         departure_date: scheduleType === 'once' ? formatDate(departureDate) : "",
-        departure_time: departureTime.toISOString().split('.')[0], // "2000-01-01T07:03:00" format
-        return_time: isRoundTrip ? formatTime(returnTime) : "",
+        departure_time: `${String(departureTime.getHours()).padStart(2, '0')}:${String(departureTime.getMinutes()).padStart(2, '0')}`,
+        return_time: isRoundTrip ? `${String(returnTime.getHours()).padStart(2, '0')}:${String(returnTime.getMinutes()).padStart(2, '0')}` : "",
 
         // Location (IDs are critical)
         pickup_area_id: startAreaId,
@@ -373,11 +373,17 @@ const CreatePickDropServiceScreen = () => {
         navigation.goBack();
       }, 1500);
     } catch (error) {
-      setErrorMessage(
-        error.response?.data?.message ||
-        error.message ||
-        'Failed to create service. Please try again.'
-      );
+      let msg = '';
+      const data = error.response?.data;
+      if (data?.errors && typeof data.errors === 'object') {
+        // Laravel validation errors: { field: ["error1", "error2"], ... }
+        msg = Object.values(data.errors).flat().join('\n');
+      } else if (data?.message) {
+        msg = data.message;
+      } else {
+        msg = error.message || 'Failed to create service. Please try again.';
+      }
+      setErrorMessage(msg);
       setShowErrorModal(true);
     } finally {
       setLoading(false);
