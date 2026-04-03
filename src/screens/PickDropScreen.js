@@ -21,8 +21,6 @@ import ServiceTabs from '@/components/ServiceTabs';
 import PickDropFilterDrawer from '@/components/PickDropFilterDrawer';
 import ErrorModal from '@/components/ErrorModal';
 import { useTranslation } from 'react-i18next';
-import { favoritesManager } from '@/utils/favorites';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const PickDropScreen = () => {
   const { theme, isDark, toggleTheme } = useTheme();
@@ -50,7 +48,6 @@ const PickDropScreen = () => {
   const [pageSize] = useState(12);
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-  const [favoriteIds, setFavoriteIds] = useState([]);
 
   const formatDate = (dateString) => {
     if (!dateString) return null;
@@ -68,17 +65,6 @@ const PickDropScreen = () => {
 
   const formatTime = (timeString) => {
     if (!timeString) return null;
-    if (typeof timeString === 'string' && timeString.includes(':')) {
-      const parts = timeString.split(':');
-      if (parts.length >= 2) {
-        let h = parseInt(parts[0]);
-        const m = parts[1].substring(0, 2);
-        const ampm = h >= 12 ? 'PM' : 'AM';
-        h = h % 12;
-        h = h ? h : 12;
-        return `${h}:${m} ${ampm}`;
-      }
-    }
     return timeString;
   };
 
@@ -151,31 +137,8 @@ const PickDropScreen = () => {
     useCallback(() => {
       setActiveServiceTab('pickdrop');
       loadServices();
-      loadFavorites();
     }, [])
   );
-
-  const loadFavorites = async () => {
-    try {
-      const favorites = await favoritesManager.getFavorites();
-      setFavoriteIds(favorites.map(fav => fav.id));
-    } catch (error) {
-      console.error('Error loading favorites:', error);
-    }
-  };
-
-  const toggleFavorite = async (service) => {
-    try {
-      const isNowFavorite = await favoritesManager.toggleFavorite(service);
-      if (isNowFavorite) {
-        setFavoriteIds(prev => [...prev, service.id]);
-      } else {
-        setFavoriteIds(prev => prev.filter(id => id !== service.id));
-      }
-    } catch (error) {
-      console.error('Error toggling favorite:', error);
-    }
-  };
 
   useEffect(() => {
     loadServices();
@@ -391,24 +354,9 @@ const PickDropScreen = () => {
                     <View style={styles.timelineItem}>
                       <View style={[styles.timelineDotGreen, { borderColor: theme.colors.cardBackground }]} />
                       <View style={styles.timelineContent}>
-                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <Text style={[styles.locationTitle, { color: theme.colors.text, flex: 1 }]} numberOfLines={1}>
-                            {service.start_location || 'Start Location'}
-                          </Text>
-                          {/* Favorite Button moved here to be prominent */}
-                          <TouchableOpacity
-                            onPress={(e) => {
-                              toggleFavorite(service);
-                            }}
-                            style={styles.favoriteCardButton}
-                          >
-                            <Icon
-                              name={favoriteIds.includes(service.id) ? "favorite" : "favorite-border"}
-                              size={22}
-                              color={favoriteIds.includes(service.id) ? "#FF5252" : theme.colors.textSecondary}
-                            />
-                          </TouchableOpacity>
-                        </View>
+                        <Text style={[styles.locationTitle, { color: theme.colors.text }]} numberOfLines={1}>
+                          {service.start_location || 'Start Location'}
+                        </Text>
                         <Text style={[styles.locationLabel, { color: theme.colors.textLight }]}>{t('pickdrop.startPoint')}</Text>
                       </View>
                     </View>
@@ -838,10 +786,6 @@ const styles = StyleSheet.create({
   routeContainer: {
     flex: 1,
     marginRight: 16,
-  },
-  favoriteCardButton: {
-    padding: 2,
-    marginLeft: 8,
   },
   timelineItem: {
     flexDirection: 'row',

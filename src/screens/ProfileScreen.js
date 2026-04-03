@@ -24,6 +24,53 @@ import SuccessModal from '@/components/SuccessModal';
 import { useTranslation } from 'react-i18next';
 import PageHeader from '@/components/PageHeader';
 
+const getUploadedImagePath = (uploadResult) => {
+  if (!uploadResult) return '';
+
+  const candidateGroups = [
+    uploadResult,
+    uploadResult.data,
+    uploadResult.image,
+    uploadResult.images,
+    uploadResult.data?.image,
+    uploadResult.data?.images,
+  ];
+
+  for (const candidate of candidateGroups) {
+    if (!candidate) continue;
+
+    if (typeof candidate === 'string') {
+      return candidate;
+    }
+
+    if (Array.isArray(candidate)) {
+      const firstMatch = candidate.find(Boolean);
+      if (!firstMatch) continue;
+      if (typeof firstMatch === 'string') {
+        return firstMatch;
+      }
+      if (typeof firstMatch === 'object') {
+        return firstMatch.url || firstMatch.path || firstMatch.image || firstMatch.location || '';
+      }
+    }
+
+    if (typeof candidate === 'object') {
+      const directPath =
+        candidate.url ||
+        candidate.path ||
+        candidate.image ||
+        candidate.location ||
+        candidate.profile_image;
+
+      if (directPath) {
+        return directPath;
+      }
+    }
+  }
+
+  return '';
+};
+
 const ProfileScreen = () => {
   const navigation = useNavigation();
   const { user, setUserFromStorage } = useAuth();
@@ -62,8 +109,11 @@ const ProfileScreen = () => {
 
   const pickImage = async () => {
     try {
-      // No explicit permission request needed for modern Android (13+) or iOS
-      // for the system image picker.
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission needed', 'Please grant camera roll permissions to upload images');
+        return;
+      }
 
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -103,8 +153,7 @@ const ProfileScreen = () => {
         const blob = await response.blob();
 
         const uploadResult = await authAPI.uploadImage(blob, fileName);
-        // Assuming the API returns the path/URL in 'url' or 'path' or 'data.url'
-        finalProfileImage = uploadResult.url || uploadResult.path || uploadResult.data?.url || uploadResult.data?.path || uploadResult.image;
+        finalProfileImage = getUploadedImagePath(uploadResult) || finalProfileImage;
       }
 
       const updateData = {

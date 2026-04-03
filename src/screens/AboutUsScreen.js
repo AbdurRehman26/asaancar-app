@@ -11,6 +11,7 @@ import { useTheme } from '@/context/ThemeContext';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useTranslation } from 'react-i18next';
 import PageHeader from '@/components/PageHeader';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const AboutUsScreen = () => {
   const navigation = useNavigation();
@@ -18,7 +19,7 @@ const AboutUsScreen = () => {
   const { t } = useTranslation();
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.backgroundTertiary }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.backgroundTertiary }]} edges={['top']}>
       <PageHeader title={t('aboutUs.title')} backDestination="SettingsMain" />
 
       <ScrollView
@@ -96,7 +97,7 @@ const AboutUsScreen = () => {
           </Text>
         </View>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 };
 

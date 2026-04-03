@@ -12,15 +12,14 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '@/context/ThemeContext';
-import Icon from 'react-native-vector-icons/MaterialIcons';
 import { contactAPI } from '@/services/api';
 import SuccessModal from '@/components/SuccessModal';
 import ErrorModal from '@/components/ErrorModal';
 import { useTranslation } from 'react-i18next';
 import PageHeader from '@/components/PageHeader';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const ContactUsScreen = () => {
-  const navigation = useNavigation();
   const { theme } = useTheme();
   const { t } = useTranslation();
   const [name, setName] = useState('');
@@ -77,12 +76,13 @@ const ContactUsScreen = () => {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={[styles.container, { backgroundColor: theme.colors.backgroundTertiary }]}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
-    >
-      <PageHeader title={t('contactUs.title')} />
+    <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.backgroundTertiary }} edges={['top']}>
+      <KeyboardAvoidingView
+        style={[styles.container, { backgroundColor: theme.colors.backgroundTertiary }]}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+      >
+        <PageHeader title={t('contactUs.title')} />
 
       <ScrollView
         style={styles.scrollView}
@@ -173,7 +173,8 @@ const ContactUsScreen = () => {
         title="Error"
         message={errorMessage}
       />
-    </KeyboardAvoidingView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
 

@@ -81,7 +81,14 @@ const CreatePickDropServiceScreen = () => {
   // Stops
   const [stops, setStops] = useState([]);
   const [showStopModal, setShowStopModal] = useState(false);
-  const [newStop, setNewStop] = useState({ location: '', stop_time: '' });
+  const [newStop, setNewStop] = useState({
+    area_id: null,
+    city_id: 197,
+    location: '',
+    notes: null,
+    order: 0,
+    stop_time: '',
+  });
 
   // Dropdown states
   const [showStartAreaDropdown, setShowStartAreaDropdown] = useState(false);
@@ -215,7 +222,8 @@ const CreatePickDropServiceScreen = () => {
 
   const formatTimeString = (timeStr) => {
     if (!timeStr) return '';
-    const [hours, minutes] = timeStr.split(':');
+    const timePart = timeStr.includes('T') ? timeStr.split('T')[1] : timeStr;
+    const [hours, minutes] = timePart.split(':');
     let h = parseInt(hours);
     const ampm = h >= 12 ? 'PM' : 'AM';
     h = h % 12;
@@ -223,10 +231,20 @@ const CreatePickDropServiceScreen = () => {
     return `${h}:${minutes} ${ampm}`;
   };
 
+  const formatStopTimeForApi = (timeStr) => {
+    if (!timeStr) return null;
+    if (timeStr.includes('T')) {
+      return timeStr;
+    }
+
+    const [hours = '00', minutes = '00'] = timeStr.split(':');
+    return `2000-01-01T${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:00`;
+  };
+
   const handleAddStop = () => {
     if (newStop.location && newStop.stop_time) {
-      setStops([...stops, { ...newStop, id: Date.now() }]);
-      setNewStop({ location: '', stop_time: '' });
+      setStops([...stops, { ...newStop, id: Date.now(), city_id: newStop.city_id || 197 }]);
+      setNewStop({ area_id: null, city_id: 197, location: '', notes: null, order: 0, stop_time: '' });
       setShowStopModal(false);
     }
   };
@@ -319,9 +337,11 @@ const CreatePickDropServiceScreen = () => {
         schedule_type: scheduleType,
         selected_days: scheduleType === 'custom' ? selectedDays : null,
         is_roundtrip: isRoundTrip,
-        departure_date: scheduleType === 'once' ? formatDate(departureDate) : "",
+        ...(scheduleType === 'once' ? { departure_date: formatDate(departureDate) } : {}),
         departure_time: `${String(departureTime.getHours()).padStart(2, '0')}:${String(departureTime.getMinutes()).padStart(2, '0')}`,
-        return_time: isRoundTrip ? `${String(returnTime.getHours()).padStart(2, '0')}:${String(returnTime.getMinutes()).padStart(2, '0')}` : "",
+        ...(isRoundTrip ? {
+          return_time: `${String(returnTime.getHours()).padStart(2, '0')}:${String(returnTime.getMinutes()).padStart(2, '0')}`,
+        } : {}),
 
         // Location (IDs are critical)
         pickup_area_id: startAreaId,
@@ -353,9 +373,13 @@ const CreatePickDropServiceScreen = () => {
         car_fuel_type: fuelType || "",
 
         // Stops
-        stops: stops.length > 0 ? stops.map((stop) => ({
+        stops: stops.length > 0 ? stops.map((stop, index) => ({
+          area_id: stop.area_id ?? null,
+          city_id: stop.city_id ?? 197,
           location: stop.location,
-          stop_time: stop.stop_time,
+          notes: stop.notes ?? null,
+          order: index,
+          stop_time: formatStopTimeForApi(stop.stop_time),
         })) : [],
       };
 
@@ -373,17 +397,9 @@ const CreatePickDropServiceScreen = () => {
         navigation.goBack();
       }, 1500);
     } catch (error) {
-      let msg = '';
-      const data = error.response?.data;
-      if (data?.errors && typeof data.errors === 'object') {
-        // Laravel validation errors: { field: ["error1", "error2"], ... }
-        msg = Object.values(data.errors).flat().join('\n');
-      } else if (data?.message) {
-        msg = data.message;
-      } else {
-        msg = error.message || 'Failed to create service. Please try again.';
-      }
-      setErrorMessage(msg);
+      setErrorMessage(
+        getApiErrorMessage(error, 'Failed to create service. Please try again.')
+      );
       setShowErrorModal(true);
     } finally {
       setLoading(false);
@@ -461,6 +477,42 @@ const CreatePickDropServiceScreen = () => {
     } else {
       setSelectedDays([...selectedDays, day]);
     }
+  };
+
+  const getApiErrorMessage = (error, fallbackMessage) => {
+    const data = error?.response?.data;
+
+    if (typeof data === 'string' && data.trim()) {
+      return data;
+    }
+
+    if (data?.errors && typeof data.errors === 'object' && !Array.isArray(data.errors)) {
+      const validationMessages = Object.values(data.errors)
+        .flat()
+        .filter(Boolean)
+        .join('\n');
+
+      if (validationMessages) {
+        return validationMessages;
+      }
+    }
+
+    if (Array.isArray(data?.errors)) {
+      const validationMessages = data.errors.filter(Boolean).join('\n');
+      if (validationMessages) {
+        return validationMessages;
+      }
+    }
+
+    if (typeof data?.error === 'string' && data.error.trim()) {
+      return data.error;
+    }
+
+    if (typeof data?.message === 'string' && data.message.trim()) {
+      return data.message;
+    }
+
+    return error?.message || fallbackMessage;
   };
 
   // Render Steps Content
@@ -1096,7 +1148,18 @@ const CreatePickDropServiceScreen = () => {
 
       {/* Stop Area Dropdown - adds stop directly when selected */}
       {renderDropdown(areaList, null, (item) => {
-        setStops([...stops, { location: item.name, stop_time: '', id: Date.now() }]);
+        setStops([
+          ...stops,
+          {
+            area_id: item.id,
+            city_id: 197,
+            location: item.name,
+            notes: null,
+            order: stops.length,
+            stop_time: '',
+            id: Date.now(),
+          }
+        ]);
       }, showStopAreaDropdown, setShowStopAreaDropdown, true, 'name', 'id')}
 
       {/* Date/Time Pickers */}
@@ -1529,12 +1592,14 @@ const styles = StyleSheet.create({
   routeTimelineContainer: {
     borderRadius: 16,
     borderWidth: 1,
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 20,
     marginBottom: 16,
   },
   routeTimelineItem: {
     flexDirection: 'row',
     alignItems: 'flex-start',
+    paddingVertical: 6,
   },
   routeTimelineIconContainer: {
     width: 24,
@@ -1576,7 +1641,7 @@ const styles = StyleSheet.create({
   addStopRowContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 4,
+    paddingVertical: 10,
   },
   addStopInlineButton: {
     flexDirection: 'row',
@@ -1593,12 +1658,14 @@ const styles = StyleSheet.create({
   },
   stopsListInline: {
     marginLeft: 36,
-    marginBottom: 8,
+    marginBottom: 12,
+    gap: 10,
   },
   stopInlineItem: {
     flexDirection: 'row',
     alignItems: 'center',
     marginLeft: -36,
+    minHeight: 44,
   },
   stopDot: {
     width: 10,
@@ -1608,7 +1675,8 @@ const styles = StyleSheet.create({
   },
   stopInlineContent: {
     flex: 1,
-    paddingVertical: 4,
+    paddingVertical: 8,
+    marginRight: 8,
   },
   stopInlineText: {
     fontSize: 14,
@@ -1618,7 +1686,8 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   stopRemoveBtn: {
-    padding: 4,
+    padding: 6,
+    marginLeft: 4,
   },
   // Preview styles
   previewSectionTitle: {

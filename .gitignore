@@ -19,12 +19,9 @@ web-build/
 .vscode/
 .idea/
 
-
 # Environment
 .env
 .env.local
 
-# files
 /*.aab
 /*.apk
-/*.jks

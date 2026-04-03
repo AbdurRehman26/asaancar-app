@@ -17,7 +17,6 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import ErrorModal from '@/components/ErrorModal';
 import { useTranslation } from 'react-i18next';
-import { favoritesManager } from '@/utils/favorites';
 
 const PickDropDetailScreen = () => {
   const { t } = useTranslation();
@@ -32,28 +31,6 @@ const PickDropDetailScreen = () => {
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [expandedStops, setExpandedStops] = useState(false);
-  const [isFavorite, setIsFavorite] = useState(false);
-
-  useEffect(() => {
-    checkFavoriteStatus();
-  }, [serviceId, service]);
-
-  const checkFavoriteStatus = async () => {
-    if (serviceId) {
-      const status = await favoritesManager.isFavorite(serviceId);
-      setIsFavorite(status);
-    }
-  };
-
-  const toggleFavorite = async () => {
-    if (!service) return;
-    try {
-      const status = await favoritesManager.toggleFavorite(service);
-      setIsFavorite(status);
-    } catch (error) {
-      console.error('Error toggling favorite:', error);
-    }
-  };
 
   useEffect(() => {
     // Only fetch if we don't have service data passed from listing
@@ -73,22 +50,6 @@ const PickDropDetailScreen = () => {
         null;
     }
   }, [service]);
-
-  const formatTime = (timeString) => {
-    if (!timeString) return '';
-    if (typeof timeString === 'string' && timeString.includes(':')) {
-      const parts = timeString.split(':');
-      if (parts.length >= 2) {
-        let h = parseInt(parts[0]);
-        const m = parts[1].substring(0, 2);
-        const ampm = h >= 12 ? 'PM' : 'AM';
-        h = h % 12;
-        h = h ? h : 12;
-        return `${h}:${m} ${ampm}`;
-      }
-    }
-    return timeString;
-  };
 
   const loadServiceDetails = async () => {
     try {
@@ -206,28 +167,15 @@ const PickDropDetailScreen = () => {
       <ScrollView
         contentContainerStyle={{ paddingBottom: insets.bottom + 24 }}>
         {/* Back Button */}
-        <View style={styles.detailHeader}>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => navigation.navigate('PickDrop')}
-          >
-            <Icon name="arrow-back" size={24} color={theme.colors.text} />
-            <Text style={[styles.backButtonText, { color: theme.colors.text }]}>
-              {t('common.backToListing')}
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.favoriteDetailButton}
-            onPress={toggleFavorite}
-          >
-            <Icon
-              name={isFavorite ? "favorite" : "favorite-border"}
-              size={28}
-              color={isFavorite ? "#FF5252" : theme.colors.text}
-            />
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.navigate('PickDrop')}
+        >
+          <Icon name="arrow-back" size={24} color={theme.colors.text} />
+          <Text style={[styles.backButtonText, { color: theme.colors.text }]}>
+            {t('common.backToListing')}
+          </Text>
+        </TouchableOpacity>
 
         {/* Header Banner */}
         <View style={[styles.headerBanner, { backgroundColor: theme.colors.primary }]}>
@@ -369,10 +317,9 @@ const PickDropDetailScreen = () => {
                 <Text style={[styles.gridLabel, { color: theme.colors.textSecondary }]}>{t('pickDropDetail.schedule')}</Text>
                 <Text style={[styles.gridValue, { color: theme.colors.text }]}>
                   {(() => {
-                    const { schedule_type, selected_days, departure_date, departure_time, return_time, is_roundtrip, is_everyday, everyday_service } = service;
+                    const { schedule_type, selected_days, departure_date, departure_time, is_everyday, everyday_service } = service;
                     let displaySchedule = '';
-                    let displayTime = formatTime(departure_time);
-                    let displayReturn = is_roundtrip && return_time ? formatTime(return_time) : '';
+                    let displayTime = departure_time || '';
 
                     if (schedule_type) {
                       switch (schedule_type.toLowerCase()) {
@@ -407,10 +354,7 @@ const PickDropDetailScreen = () => {
                       }
                     }
 
-                    let result = displaySchedule;
-                    if (displayTime) result += `\nat ${displayTime}`;
-                    if (displayReturn) result += `\nReturn at ${displayReturn}`;
-                    return result;
+                    return `${displaySchedule}${displayTime ? `\nat ${displayTime}` : ''}`;
                   })()}
                 </Text>
               </View>
@@ -610,15 +554,6 @@ const styles = StyleSheet.create({
   },
   headerBanner: {
     display: 'none',
-  },
-  detailHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingRight: 16,
-  },
-  favoriteDetailButton: {
-    padding: 8,
   },
   contentContainer: {
     paddingHorizontal: 20,

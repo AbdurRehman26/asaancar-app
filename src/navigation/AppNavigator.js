@@ -27,7 +27,6 @@ import NotificationsScreen from '@/screens/NotificationsScreen';
 import AboutUsScreen from '@/screens/AboutUsScreen';
 import CreateStoreScreen from '@/screens/CreateStoreScreen';
 import OnboardingScreen from '@/screens/OnboardingScreen';
-import FavoritesScreen from '@/screens/FavoritesScreen';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import VerifySignupOtpScreen from '@/screens/VerifySignupOtpScreen';
 import SetPasswordModal from '@/components/SetPasswordModal';
@@ -164,13 +163,6 @@ const SettingsStack = () => {
       <Stack.Screen
         name="AboutUs"
         component={AboutUsScreen}
-        options={{
-          headerShown: false,
-        }}
-      />
-      <Stack.Screen
-        name="Favorites"
-        component={FavoritesScreen}
         options={{
           headerShown: false,
         }}

@@ -346,28 +346,6 @@ export const pickDropAPI = {
   },
 };
 
-export const pickDropFavoriteAPI = {
-  // Get all favorite pick and drop services
-  getFavorites: async (page = 1, perPage = 10) => {
-    const response = await api.get(`/customer/pick-and-drop/favorites?page=${page}&per_page=${perPage}`);
-    return response.data;
-  },
-
-  // Add a service to favorites
-  addFavorite: async (serviceId) => {
-    const response = await api.post('/customer/pick-and-drop/favorites', {
-      pick_and_drop_service_id: serviceId,
-    });
-    return response.data;
-  },
-
-  // Remove a service from favorites
-  deleteFavorite: async (favoriteId) => {
-    const response = await api.delete(`/customer/pick-and-drop/favorites/${favoriteId}`);
-    return response.data;
-  },
-};
-
 export const authAPI = {
   // Login with phone number and password
   login: async (phone, password) => {
@@ -476,6 +454,7 @@ export const authAPI = {
 
     if (userData instanceof FormData) {
       // Use POST with _method: 'PATCH' for multipart/form-data
+      // Keep multipart updates compatible with backends that expect method spoofing.
       userData.append('_method', 'PATCH');
       response = await api.post(endpoint, userData, {
         headers: {
@@ -484,7 +463,12 @@ export const authAPI = {
       });
     } else {
       // For JSON payloads, use PATCH directly
-      response = await api.patch(endpoint, userData);
+      const payload = {
+        ...userData,
+        profile_image: userData?.profile_image,
+      };
+
+      response = await api.patch(endpoint, payload);
     }
 
     if (response.data.user) {
@@ -636,4 +620,3 @@ export const notificationAPI = {
 };
 
 export default api;
-

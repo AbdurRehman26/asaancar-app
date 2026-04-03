@@ -56,13 +56,6 @@ const SettingsScreen = () => {
       color: '#10B981', // Emerald
       onPress: () => navigation.navigate('Conversations'),
     },
-    {
-      id: 'favorites',
-      title: t('common.favorites') || 'Favorites',
-      icon: 'favorite',
-      color: '#F43F5E', // Rose/Pink
-      onPress: () => navigation.navigate('Favorites'),
-    },
   ];
 
   const secondaryMenuItems = [

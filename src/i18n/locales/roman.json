@@ -29,8 +29,7 @@
         "verifyOtp": "OTP Tasdeeq Karein",
         "resendOtp": "Dobara OTP Bhejein",
         "backToListing": "Listing pe Wapas",
-        "done": "Ho Gaya",
-        "explore": "Mazeed Talaash Karein"
+        "done": "Ho Gaya"
     },
     "home": {
         "carsAvailable": "{{count}} gariyan dastiyaab hain",
@@ -113,10 +112,7 @@
         "addService": "Service Shamil Karein",
         "startPoint": "Shuruwati Maqam",
         "destination": "Manzil",
-        "perPerson": "Per Shakhs",
-        "noFavoritesFound": "Abhi tak koi favorite nahi mila",
-        "seats": "seats",
-        "flexible": "Flexible"
+        "perPerson": "Per Shakhs"
     },
     "carDetail": {
         "specifications": "Specifications",
