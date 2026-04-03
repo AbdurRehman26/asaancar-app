@@ -150,11 +150,12 @@ const ChatScreen = () => {
     setSending(true);
 
     // Optimistically add message to UI
-      const tempMessage = {
+    const currentUser = user?.data || user;
+    const tempMessage = {
       id: `temp-${Date.now()}`,
       message: messageText,
-      sender_id: user?.id,
-      sender: user,
+      sender_id: currentUser?.id,
+      sender: currentUser,
       created_at: new Date().toISOString(),
       is_sent: true,
     };
@@ -475,4 +476,3 @@ const styles = StyleSheet.create({
 });
 
 export default ChatScreen;
-

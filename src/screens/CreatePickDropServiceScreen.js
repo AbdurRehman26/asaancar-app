@@ -10,7 +10,9 @@ import {
   Modal,
   Platform,
   Alert,
+  Pressable,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useTheme } from '@/context/ThemeContext';
 import { useAuth } from '@/context/AuthContext';
@@ -101,6 +103,9 @@ const CreatePickDropServiceScreen = () => {
   const [showStopTimePicker, setShowStopTimePicker] = useState(false);
   const [editingStopId, setEditingStopId] = useState(null);
   const [stopTime, setStopTime] = useState(new Date());
+  const [startAreaSearch, setStartAreaSearch] = useState('');
+  const [endAreaSearch, setEndAreaSearch] = useState('');
+  const [stopAreaSearch, setStopAreaSearch] = useState('');
 
 
 
@@ -425,21 +430,56 @@ const CreatePickDropServiceScreen = () => {
   };
 
   // Helper renderers
-  const renderDropdown = (items, selectedValue, onSelect, visible, setVisible, isObject = false, labelKey = 'name', valueKey = 'id') => (
+  const renderDropdown = (
+    items,
+    selectedValue,
+    onSelect,
+    visible,
+    setVisible,
+    isObject = false,
+    labelKey = 'name',
+    valueKey = 'id',
+    searchable = false,
+    searchQuery = '',
+    setSearchQuery = null,
+    searchPlaceholder = 'Search...'
+  ) => (
     <Modal
       visible={visible}
       transparent
       animationType="fade"
-      onRequestClose={() => setVisible(false)}
+      onRequestClose={() => {
+        setVisible(false);
+        if (setSearchQuery) setSearchQuery('');
+      }}
     >
-      <TouchableOpacity
+      <Pressable
         style={styles.modalOverlay}
-        activeOpacity={1}
-        onPress={() => setVisible(false)}
+        onPress={() => {
+          setVisible(false);
+          if (setSearchQuery) setSearchQuery('');
+        }}
       >
-        <View style={[styles.dropdownModal, { backgroundColor: theme.colors.cardBackground }]}>
+        <Pressable onPress={() => {}}>
+          <View style={[styles.dropdownModal, { backgroundColor: theme.colors.cardBackground }]}>
+          {searchable && setSearchQuery ? (
+            <View style={[styles.searchInputWrapper, { borderColor: theme.colors.border, backgroundColor: theme.colors.inputBackground }]}>
+              <Icon name="search" size={18} color={theme.colors.textSecondary} />
+              <TextInput
+                style={[styles.searchInput, { color: theme.colors.text }]}
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                placeholder={searchPlaceholder}
+                placeholderTextColor={theme.colors.placeholder}
+              />
+            </View>
+          ) : null}
           <ScrollView style={{ maxHeight: 300 }}>
-            {items.map((item, index) => {
+            {items.filter((item) => {
+              if (!searchable || !searchQuery.trim()) return true;
+              const itemLabel = isObject ? item[labelKey] : item;
+              return String(itemLabel).toLowerCase().includes(searchQuery.trim().toLowerCase());
+            }).map((item, index) => {
               const itemLabel = isObject ? item[labelKey] : item;
               const itemValue = isObject ? item[valueKey] : item;
               const isSelected = isObject ? selectedValue === itemValue : selectedValue === itemValue;
@@ -454,6 +494,7 @@ const CreatePickDropServiceScreen = () => {
                   onPress={() => {
                     onSelect(item);
                     setVisible(false);
+                    if (setSearchQuery) setSearchQuery('');
                   }}
                 >
                   <Text
@@ -472,8 +513,9 @@ const CreatePickDropServiceScreen = () => {
               );
             })}
           </ScrollView>
-        </View>
-      </TouchableOpacity>
+          </View>
+        </Pressable>
+      </Pressable>
     </Modal>
   );
 
@@ -739,30 +781,29 @@ const CreatePickDropServiceScreen = () => {
       case 1: // Service (Was 2)
         return (
           <View>
-            <View style={styles.row}>
-              <View style={[styles.inputGroup, styles.flex1, { marginRight: 8 }]}>
-                <Text style={[styles.label, { color: theme.colors.text }]}>Available Spaces *</Text>
-                <TextInput
-                  style={[styles.input, { borderColor: theme.colors.border, color: theme.colors.text, backgroundColor: theme.colors.inputBackground }]}
-                  value={availableSpaces}
-                  onChangeText={setAvailableSpaces}
-                  keyboardType="numeric"
-                  placeholder="1"
-                  placeholderTextColor={theme.colors.placeholder}
-                />
-              </View>
-              <View style={[styles.inputGroup, styles.flex1, { marginLeft: 8 }]}>
-                <Text style={[styles.label, { color: theme.colors.text }]}>Driver Gender *</Text>
-                <TouchableOpacity
-                  style={[styles.input, { borderColor: theme.colors.border, backgroundColor: theme.colors.inputBackground }]}
-                  onPress={() => setShowDriverGenderDropdown(true)}
-                >
-                  <Text style={[styles.inputText, { color: theme.colors.text }]}>
-                    {driverGender.charAt(0).toUpperCase() + driverGender.slice(1)}
-                  </Text>
-                  <Icon name="keyboard-arrow-down" size={20} color={theme.colors.textSecondary} />
-                </TouchableOpacity>
-              </View>
+            <View style={styles.inputGroup}>
+              <Text style={[styles.label, { color: theme.colors.text }]}>Available Spaces *</Text>
+              <TextInput
+                style={[styles.input, { borderColor: theme.colors.border, color: theme.colors.text, backgroundColor: theme.colors.inputBackground }]}
+                value={availableSpaces}
+                onChangeText={setAvailableSpaces}
+                keyboardType="numeric"
+                placeholder="1"
+                placeholderTextColor={theme.colors.placeholder}
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={[styles.label, { color: theme.colors.text }]}>Driver Gender *</Text>
+              <TouchableOpacity
+                style={[styles.input, { borderColor: theme.colors.border, backgroundColor: theme.colors.inputBackground }]}
+                onPress={() => setShowDriverGenderDropdown(true)}
+              >
+                <Text style={[styles.inputText, { color: theme.colors.text }]}>
+                  {driverGender.charAt(0).toUpperCase() + driverGender.slice(1)}
+                </Text>
+                <Icon name="keyboard-arrow-down" size={20} color={theme.colors.textSecondary} />
+              </TouchableOpacity>
             </View>
 
             <View style={styles.row}>
@@ -1046,7 +1087,7 @@ const CreatePickDropServiceScreen = () => {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.backgroundTertiary }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.backgroundTertiary }]} edges={['top']}>
       <View style={[styles.header, { backgroundColor: theme.colors.cardBackground, borderBottomColor: theme.colors.border }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <Icon name="arrow-back" size={24} color={theme.colors.text} />
@@ -1152,12 +1193,12 @@ const CreatePickDropServiceScreen = () => {
       {renderDropdown(areaList, startAreaId, (item) => {
         setStartArea(item.name);
         setStartAreaId(item.id);
-      }, showStartAreaDropdown, setShowStartAreaDropdown, true, 'name', 'id')}
+      }, showStartAreaDropdown, setShowStartAreaDropdown, true, 'name', 'id', true, startAreaSearch, setStartAreaSearch, 'Search pick-up location')}
 
       {renderDropdown(areaList, endAreaId, (item) => {
         setEndArea(item.name);
         setEndAreaId(item.id);
-      }, showEndAreaDropdown, setShowEndAreaDropdown, true, 'name', 'id')}
+      }, showEndAreaDropdown, setShowEndAreaDropdown, true, 'name', 'id', true, endAreaSearch, setEndAreaSearch, 'Search drop-off location')}
 
       {renderDropdown(driverGenders, driverGender.charAt(0).toUpperCase() + driverGender.slice(1), (val) => setDriverGender(val.toLowerCase()), showDriverGenderDropdown, setShowDriverGenderDropdown)}
 
@@ -1178,7 +1219,7 @@ const CreatePickDropServiceScreen = () => {
             id: Date.now(),
           }
         ]);
-      }, showStopAreaDropdown, setShowStopAreaDropdown, true, 'name', 'id')}
+      }, showStopAreaDropdown, setShowStopAreaDropdown, true, 'name', 'id', true, stopAreaSearch, setStopAreaSearch, 'Search stop location')}
 
       {/* Date/Time Pickers */}
       {showDatePicker && (
@@ -1280,7 +1321,7 @@ const CreatePickDropServiceScreen = () => {
                 style={[styles.modalButton, { backgroundColor: theme.colors.backgroundSecondary }]}
                 onPress={() => {
                   setShowStopModal(false);
-                  setNewStop({ location: '', stop_time: '' });
+                  setNewStop({ area_id: null, city_id: 197, location: '', notes: null, order: 0, stop_time: '' });
                 }}
               >
                 <Text style={[styles.modalButtonText, { color: theme.colors.text }]}>Cancel</Text>
@@ -1308,7 +1349,7 @@ const CreatePickDropServiceScreen = () => {
         title="Success"
         message={successMessage}
       />
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -1555,9 +1596,25 @@ const styles = StyleSheet.create({
   },
   dropdownModal: {
     width: '80%',
+    alignSelf: 'center',
     borderRadius: 12,
     padding: 8,
     maxHeight: 300,
+  },
+  searchInputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    marginBottom: 12,
+    marginHorizontal: 8,
+  },
+  searchInput: {
+    flex: 1,
+    paddingVertical: 10,
+    paddingLeft: 8,
+    fontSize: 14,
   },
   dropdownOption: {
     flexDirection: 'row',
@@ -1571,6 +1628,7 @@ const styles = StyleSheet.create({
   },
   stopModal: {
     width: '90%',
+    alignSelf: 'center',
     borderRadius: 12,
     padding: 24,
   },

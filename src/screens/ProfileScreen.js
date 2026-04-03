@@ -24,6 +24,21 @@ import SuccessModal from '@/components/SuccessModal';
 import { useTranslation } from 'react-i18next';
 import PageHeader from '@/components/PageHeader';
 
+const getMimeType = (uri = '') => {
+  const extension = uri.split('.').pop()?.toLowerCase();
+
+  switch (extension) {
+    case 'png':
+      return 'image/png';
+    case 'heic':
+      return 'image/heic';
+    case 'webp':
+      return 'image/webp';
+    default:
+      return 'image/jpeg';
+  }
+};
+
 const getUploadedImagePath = (uploadResult) => {
   if (!uploadResult) return '';
 
@@ -116,7 +131,7 @@ const ProfileScreen = () => {
       }
 
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: ['images'],
         allowsEditing: true,
         aspect: [1, 1],
         quality: 0.8,
@@ -147,12 +162,11 @@ const ProfileScreen = () => {
       // If a new local image is selected, upload it first
       if (profileImageUri && !profileImageUri.startsWith('http')) {
         const fileName = profileImageUri.split('/').pop();
-
-        // Fetch the image and convert to blob for binary upload
-        const response = await fetch(profileImageUri);
-        const blob = await response.blob();
-
-        const uploadResult = await authAPI.uploadImage(blob, fileName);
+        const uploadResult = await authAPI.uploadImage({
+          uri: profileImageUri,
+          name: fileName || `profile-${Date.now()}.jpg`,
+          type: getMimeType(profileImageUri),
+        }, fileName);
         finalProfileImage = getUploadedImagePath(uploadResult) || finalProfileImage;
       }
 
