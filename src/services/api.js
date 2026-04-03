@@ -456,11 +456,7 @@ export const authAPI = {
       // Use POST with _method: 'PATCH' for multipart/form-data
       // Keep multipart updates compatible with backends that expect method spoofing.
       userData.append('_method', 'PATCH');
-      response = await api.post(endpoint, userData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+      response = await api.post(endpoint, userData);
     } else {
       // For JSON payloads, use PATCH directly
       const payload = {
@@ -484,11 +480,7 @@ export const authAPI = {
     formData.append('images[]', imageFile);
     formData.append('directory', 'profile-images');
 
-    const response = await api.post('/upload/images', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
+    const response = await api.post('/upload/images', formData);
     return response.data;
   },
 
