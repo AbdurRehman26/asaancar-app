@@ -81,12 +81,39 @@ const PickDropDetailScreen = () => {
       setErrorMessage(
         error.response?.data?.message ||
         error.message ||
-        'Failed to load service details. Please try again.'
+        t('pickDropDetail.loadError')
       );
       setShowErrorModal(true);
     } finally {
       setLoading(false);
     }
+  };
+
+  const formatDisplayTime = (timeString) => {
+    if (!timeString) return '';
+
+    const normalizedTime = typeof timeString === 'string' && timeString.includes('T')
+      ? timeString.split('T')[1]
+      : timeString;
+
+    if (typeof normalizedTime === 'string' && normalizedTime.includes(':')) {
+      const [hours, minutes] = normalizedTime.split(':');
+      let h = parseInt(hours, 10);
+      if (Number.isNaN(h)) return timeString;
+      const ampm = h >= 12 ? 'PM' : 'AM';
+      h = h % 12;
+      h = h ? h : 12;
+      return `${h}:${String(minutes).slice(0, 2)} ${ampm}`;
+    }
+
+    return timeString;
+  };
+
+  const formatDisplayDate = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    if (Number.isNaN(date.getTime())) return dateString;
+    return date.toLocaleDateString();
   };
 
 
@@ -106,9 +133,9 @@ const PickDropDetailScreen = () => {
     );
   }
 
-  const startLocation = service.start_location || service.startLocation || 'Start Location';
-  const endLocation = service.end_location || service.endLocation || 'End Location';
-  const city = service.city || 'City';
+  const startLocation = service.start_location || service.startLocation || t('pickDropDetail.startLocation');
+  const endLocation = service.end_location || service.endLocation || t('pickDropDetail.endLocation');
+  const city = service.city || t('pickDropDetail.city');
 
   const provider =
     service.user ||
@@ -250,8 +277,8 @@ const PickDropDetailScreen = () => {
                       <View key={index} style={styles.stopRow}>
                         <View style={[styles.stopDot, { backgroundColor: theme.colors.textSecondary }]} />
                         <Text style={[styles.stopText, { color: theme.colors.textSecondary }]}>
-                          {stop.location || stop.name || 'Stop'}
-                          {stop.time ? ` (${stop.time})` : ''}
+                          {stop.location || stop.name || t('pickDropDetail.stop')}
+                          {stop.stop_time || stop.time ? ` (${formatDisplayTime(stop.stop_time || stop.time)})` : ''}
                         </Text>
                       </View>
                     ))}
@@ -319,7 +346,7 @@ const PickDropDetailScreen = () => {
                   {(() => {
                     const { schedule_type, selected_days, departure_date, departure_time, is_everyday, everyday_service } = service;
                     let displaySchedule = '';
-                    let displayTime = departure_time || '';
+                    let displayTime = formatDisplayTime(departure_time);
 
                     if (schedule_type) {
                       switch (schedule_type.toLowerCase()) {
@@ -335,10 +362,10 @@ const PickDropDetailScreen = () => {
                           displaySchedule = t('pickDropDetail.weekend');
                           break;
                         case 'custom':
-                          displaySchedule = selected_days ? selected_days.replace(/,/g, ', ') : 'Custom Types';
+                          displaySchedule = selected_days ? selected_days.replace(/,/g, ', ') : t('pickDropDetail.custom');
                           break;
                         case 'once':
-                          displaySchedule = departure_date ? new Date(departure_date).toLocaleDateString() : t('pickDropDetail.once');
+                          displaySchedule = departure_date ? formatDisplayDate(departure_date) : t('pickDropDetail.once');
                           break;
                         default:
                           displaySchedule = schedule_type;
@@ -348,13 +375,13 @@ const PickDropDetailScreen = () => {
                       if (is_everyday || everyday_service) {
                         displaySchedule = t('pickDropDetail.everyday');
                       } else if (departure_date) {
-                        displaySchedule = new Date(departure_date).toLocaleDateString();
+                        displaySchedule = formatDisplayDate(departure_date);
                       } else {
                         displaySchedule = t('pickDropDetail.flexible');
                       }
                     }
 
-                    return `${displaySchedule}${displayTime ? `\nat ${displayTime}` : ''}`;
+                    return `${displaySchedule}${displayTime ? `\n${t('pickDropDetail.at')} ${displayTime}` : ''}`;
                   })()}
                 </Text>
               </View>
@@ -442,13 +469,13 @@ const PickDropDetailScreen = () => {
 
               <View style={styles.providerHeader}>
                 <View style={[styles.providerAvatarXLarge, { backgroundColor: isDark ? 'rgba(126, 36, 108, 0.3)' : 'rgba(126, 36, 108, 0.1)', borderWidth: 2, borderColor: isDark ? theme.colors.border : 'transparent' }]}>
-                  <Text style={[styles.providerInitialsXLarge, { color: isDark ? '#c77dba' : theme.colors.primary }]}>
-                    {(provider?.name || provider?.user?.name || service.driver?.name || 'U').charAt(0).toUpperCase()}
-                  </Text>
-                </View>
+                    <Text style={[styles.providerInitialsXLarge, { color: isDark ? '#c77dba' : theme.colors.primary }]}>
+                      {(provider?.name || provider?.user?.name || service.driver?.name || 'U').charAt(0).toUpperCase()}
+                    </Text>
+                  </View>
                 <View style={styles.providerInfoCenter}>
                   <Text style={[styles.providerNameXLarge, { color: theme.colors.text }]}>
-                    {provider?.name || provider?.user?.name || service.driver?.name || 'User'}
+                    {provider?.name || provider?.user?.name || service.driver?.name || t('pickDropDetail.user')}
                   </Text>
                   <Text style={[styles.providerRole, { color: theme.colors.primary, backgroundColor: theme.colors.backgroundSecondary }]}>{t('pickDropDetail.verifiedDriver')}</Text>
                 </View>
@@ -473,7 +500,7 @@ const PickDropDetailScreen = () => {
                       navigation.navigate('Login');
                     } else {
                       const pId = provider.id || provider.user_id;
-                      const pName = provider.name || provider.user?.name || service.driver?.name || 'Provider';
+                      const pName = provider.name || provider.user?.name || service.driver?.name || t('pickDropDetail.provider');
                       navigation.navigate('Chat', {
                         userId: pId,
                         userName: pName,
@@ -825,4 +852,3 @@ const styles = StyleSheet.create({
 });
 
 export default PickDropDetailScreen;
-

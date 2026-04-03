@@ -115,8 +115,12 @@ const MyPickDropServicesScreen = () => {
 
   const formatTime = (timeString) => {
     if (!timeString) return 'N/A';
-    if (typeof timeString === 'string' && timeString.includes(':')) {
-      const parts = timeString.split(':');
+    const normalizedTime = typeof timeString === 'string' && timeString.includes('T')
+      ? timeString.split('T')[1]
+      : timeString;
+
+    if (typeof normalizedTime === 'string' && normalizedTime.includes(':')) {
+      const parts = normalizedTime.split(':');
       if (parts.length >= 2) {
         let h = parseInt(parts[0]);
         const m = parts[1].substring(0, 2);
@@ -129,17 +133,25 @@ const MyPickDropServicesScreen = () => {
     return timeString;
   };
 
+  const formatStopTimes = (stops = []) =>
+    stops
+      .map((stop) => formatTime(stop?.stop_time))
+      .filter((time) => time && time !== 'N/A')
+      .join(', ');
+
   const renderServiceItem = ({ item }) => {
     const startLocation = item.start_location || item.start_area || 'N/A';
     const endLocation = item.end_location || item.end_area || 'N/A';
     const departureDate = item.departure_date || item.departureDate || null;
     const departureTime = item.departure_time || item.departureTime || null;
+    const returnTime = item.return_time || item.returnTime || null;
     const everydayService =
       item.is_everyday || item.everyday_service || item.everydayService || false;
     const availableSpaces = item.available_spaces || item.availableSpaces || 0;
     const driverGender = item.driver_gender || item.driverGender || 'N/A';
     const price = item.price_per_person || item.pricePerPerson || null;
     const currency = item.currency || 'PKR';
+    const stopTimes = formatStopTimes(item.stops || []);
 
     return (
       <View style={[styles.serviceCard, { backgroundColor: theme.colors.cardBackground }]}>
@@ -172,6 +184,24 @@ const MyPickDropServicesScreen = () => {
                   : formatTime(departureTime) || 'N/A'}
             </Text>
           </View>
+
+          {returnTime && (
+            <View style={styles.detailRow}>
+              <Icon name="reply" size={14} color={theme.colors.textSecondary} style={{ marginRight: 8 }} />
+              <Text style={[styles.detailText, { color: theme.colors.textSecondary }]}>
+                Return: {formatTime(returnTime)}
+              </Text>
+            </View>
+          )}
+
+          {stopTimes ? (
+            <View style={styles.detailRow}>
+              <Icon name="more-horiz" size={14} color={theme.colors.textSecondary} style={{ marginRight: 8 }} />
+              <Text style={[styles.detailText, { color: theme.colors.textSecondary }]}>
+                Stops: {stopTimes}
+              </Text>
+            </View>
+          ) : null}
 
           <View style={styles.detailRow}>
             <Icon name="people" size={14} color={theme.colors.textSecondary} style={{ marginRight: 8 }} />
@@ -431,4 +461,3 @@ const styles = StyleSheet.create({
 });
 
 export default MyPickDropServicesScreen;
-

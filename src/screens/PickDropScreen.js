@@ -65,8 +65,33 @@ const PickDropScreen = () => {
 
   const formatTime = (timeString) => {
     if (!timeString) return null;
-    return timeString;
+    try {
+      const timePart = typeof timeString === 'string' && timeString.includes('T')
+        ? timeString.split('T')[1]
+        : timeString;
+
+      if (typeof timePart === 'string' && timePart.includes(':')) {
+        const [hours, minutes] = timePart.split(':');
+        let h = parseInt(hours, 10);
+        if (Number.isNaN(h)) return timeString;
+        const ampm = h >= 12 ? 'PM' : 'AM';
+        h = h % 12;
+        h = h ? h : 12;
+        return `${h}:${String(minutes).slice(0, 2)} ${ampm}`;
+      }
+
+      return timeString;
+    } catch (error) {
+      return timeString;
+    }
   };
+
+  const getFormattedStopTimes = (stops = []) => (
+    stops
+      .map((stop) => formatTime(stop?.stop_time))
+      .filter(Boolean)
+      .join(', ')
+  );
 
   // Helper function to handle phone calls
   const handleCall = async (phoneNumber) => {
@@ -462,6 +487,24 @@ const PickDropScreen = () => {
                     );
                   })()}
 
+                  {service.return_time && (
+                    <View style={[styles.scheduleTag, { backgroundColor: isDark ? 'rgba(33, 150, 243, 0.2)' : 'rgba(33, 150, 243, 0.12)' }]}>
+                      <Icon name="reply" size={14} color={isDark ? '#90caf9' : '#2196f3'} />
+                      <Text style={[styles.scheduleTagText, { color: isDark ? '#90caf9' : '#2196f3' }]}>
+                        Return • {formatTime(service.return_time)}
+                      </Text>
+                    </View>
+                  )}
+
+                  {service.stops && service.stops.length > 0 && getFormattedStopTimes(service.stops) ? (
+                    <View style={[styles.scheduleTag, { backgroundColor: isDark ? 'rgba(255, 152, 0, 0.2)' : 'rgba(255, 152, 0, 0.12)' }]}>
+                      <Icon name="more-horiz" size={14} color={isDark ? '#ffcc80' : '#ef6c00'} />
+                      <Text style={[styles.scheduleTagText, { color: isDark ? '#ffcc80' : '#ef6c00' }]}>
+                        Stops • {getFormattedStopTimes(service.stops)}
+                      </Text>
+                    </View>
+                  ) : null}
+
                   {/* Seats Tag */}
                   {(() => {
                     const availableSpaces =
@@ -519,29 +562,43 @@ const PickDropScreen = () => {
 
                 {/* Footer: Driver & Action */}
                 <View style={styles.cardFooter}>
-                  <View style={styles.driverInfo}>
+                  {(() => {
+                    const provider = service.user || service.provider || service.owner || service.created_by || null;
+                    const providerName =
+                      provider?.name ||
+                      provider?.user?.name ||
+                      service.driver?.name ||
+                      service.driver ||
+                      service.name ||
+                      service.contact_name ||
+                      'User';
+                    const phone =
+                      provider?.phone_number ||
+                      provider?.phone ||
+                      service.contact_number ||
+                      service.contact_phone ||
+                      service.phone ||
+                      null;
+
+                    return (
+                      <View style={styles.driverInfo}>
                     {/* Avatar */}
                     <View style={[styles.driverAvatar, { backgroundColor: isDark ? 'rgba(126, 36, 108, 0.3)' : 'rgba(126, 36, 108, 0.1)', borderWidth: 1, borderColor: isDark ? theme.colors.border : 'transparent' }]}>
                       <Text style={[styles.driverInitials, { color: isDark ? '#c77dba' : theme.colors.primary }]}>
-                        {(service.driver?.name || service.driver || 'U').charAt(0).toUpperCase()}
+                        {providerName.charAt(0).toUpperCase()}
                       </Text>
                     </View>
                     <View>
                       <Text style={[styles.driverName, { color: theme.colors.text }]}>
-                        {service.driver?.name || service.driver || 'User'}
+                        {providerName}
                       </Text>
-                      {(() => {
-                        const provider = service.user || service.provider || service.owner || null;
-                        const phone = provider?.phone_number || service.contact_number || service.phone || null;
-                        if (phone) {
-                          return (
-                            <Text style={[styles.driverPhone, { color: theme.colors.textSecondary }]}>{phone}</Text>
-                          )
-                        }
-                        return null;
-                      })()}
+                      {phone ? (
+                        <Text style={[styles.driverPhone, { color: theme.colors.textSecondary }]}>{phone}</Text>
+                      ) : null}
                     </View>
                   </View>
+                    );
+                  })()}
 
                   <TouchableOpacity
                     style={[styles.viewDetailsButtonSmall, { backgroundColor: theme.colors.primary }]}
@@ -1005,4 +1062,3 @@ const styles = StyleSheet.create({
 });
 
 export default PickDropScreen;
-

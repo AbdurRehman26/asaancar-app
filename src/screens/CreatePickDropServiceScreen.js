@@ -136,7 +136,21 @@ const CreatePickDropServiceScreen = () => {
 
     if (service) {
       setStartArea(service.start_area || service.start_location || '');
+      setStartAreaId(
+        service.pickup_area_id ||
+        service.start_area_id ||
+        service.pickup_area?.id ||
+        service.start_area?.id ||
+        null
+      );
       setEndArea(service.end_area || service.end_location || '');
+      setEndAreaId(
+        service.dropoff_area_id ||
+        service.end_area_id ||
+        service.dropoff_area?.id ||
+        service.end_area?.id ||
+        null
+      );
 
       // Map legacy boolean to schedule type if needed
       if (service.schedule_type) {
@@ -283,6 +297,10 @@ const CreatePickDropServiceScreen = () => {
           setErrorMessage('Please enter available spaces (minimum 1)');
           return false;
         }
+        if (!pricePerPerson || Number.isNaN(parseFloat(pricePerPerson)) || parseFloat(pricePerPerson) <= 0) {
+          setErrorMessage('Please enter price per person');
+          return false;
+        }
         if (!driverGender) {
           setErrorMessage('Please select driver gender');
           return false;
@@ -358,7 +376,7 @@ const CreatePickDropServiceScreen = () => {
         // Service Details
         available_spaces: parseInt(availableSpaces) || 1,
         driver_gender: driverGender.toLowerCase(),
-        price_per_person: pricePerPerson ? parseFloat(pricePerPerson) : 0,
+        price_per_person: parseFloat(pricePerPerson),
         currency: 'PKR',
         is_active: active, // "is_active" not "active"
         description: description || "",
