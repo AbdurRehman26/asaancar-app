@@ -65,14 +65,12 @@ const SearchableDropdown = ({
   }, [searchQuery, options, searchable, onSearch]);
 
   useEffect(() => {
-    // Update filtered options when options change
-    if (!searchable || !onSearch) {
-      setFilteredOptions(options);
-    }
-  }, [options, searchable, onSearch]);
+    // Keep the rendered list in sync when async options arrive.
+    setFilteredOptions(options);
+  }, [options]);
 
-  const handleSelect = (selectedValue) => {
-    onSelect(selectedValue);
+  const handleSelect = (selectedValue, selectedOption) => {
+    onSelect(selectedValue, selectedOption);
     setIsOpen(false);
     setSearchQuery('');
   };
@@ -145,7 +143,7 @@ const SearchableDropdown = ({
                         { backgroundColor: theme.colors.primary + '20' },
                       ],
                     ]}
-                    onPress={() => handleSelect(item.value || item.id)}
+                    onPress={() => handleSelect(item.value || item.id, item)}
                   >
                     <Text
                       style={[
@@ -251,8 +249,6 @@ const styles = StyleSheet.create({
 });
 
 export default SearchableDropdown;
-
-
 
 
 

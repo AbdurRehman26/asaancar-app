@@ -29,6 +29,7 @@
         "verifyOtp": "OTP تصدیق کریں",
         "resendOtp": "دوبارہ OTP بھیجیں",
         "backToListing": "فہرست پر واپس",
+        "goToListing": "فہرست پر جائیں",
         "done": "ہو گیا"
     },
     "home": {
@@ -243,6 +244,11 @@
         "flexible": "لچکدار",
         "at": "بوقت",
         "stop": "اسٹاپ",
+        "routeMap": "روٹ میپ",
+        "mapUnavailable": "نقشہ دستیاب نہیں",
+        "mapLoadError": "روٹ میپ تصویر لوڈ نہیں ہو سکی۔",
+        "mapOpenError": "گوگل میپس نہیں کھل سکا۔",
+        "openInMaps": "گوگل میپس میں کھولیں",
         "startLocation": "آغاز کی جگہ",
         "endLocation": "منزل",
         "city": "شہر",

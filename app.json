@@ -30,12 +30,14 @@
         "WRITE_EXTERNAL_STORAGE",
         "READ_MEDIA_IMAGES"
       ],
-      "versionCode": 52
+      "versionCode": 57
     },
     "web": {
       "bundler": "metro"
     },
     "extra": {
+      "googleStaticMapsApiKey": "AIzaSyAl7gcr1SOMOmVcINkah0IjMVTqXaA8zw4",
+      "googleMapsApiKey": "AIzaSyAl7gcr1SOMOmVcINkah0IjMVTqXaA8zw4",
       "eas": {
         "projectId": "66901416-8014-459b-b2dd-43be0066b4c0"
       }

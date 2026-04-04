@@ -29,6 +29,7 @@
         "verifyOtp": "OTP Tasdeeq Karein",
         "resendOtp": "Dobara OTP Bhejein",
         "backToListing": "Listing pe Wapas",
+        "goToListing": "Listing pe Jayein",
         "done": "Ho Gaya"
     },
     "home": {
@@ -243,6 +244,11 @@
         "flexible": "Flexible",
         "at": "par",
         "stop": "Stop",
+        "routeMap": "ROUTE MAP",
+        "mapUnavailable": "Map dastiyaab nahi",
+        "mapLoadError": "Route map image load nahi ho saki.",
+        "mapOpenError": "Google Maps khul nahi saka.",
+        "openInMaps": "Google Maps mein kholein",
         "startLocation": "Start Location",
         "endLocation": "End Location",
         "city": "City",

@@ -10,9 +10,10 @@ import {
   Dimensions,
   TextInput,
 } from 'react-native';
+import Constants from 'expo-constants';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/context/ThemeContext';
-import { locationAPI } from '@/services/api';
+import { googlePlacesAPI } from '@/services/api';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import SearchableDropdown from '@/components/SearchableDropdown';
 
@@ -29,15 +30,19 @@ const PickDropFilterDrawer = ({
   const { theme } = useTheme();
   const insets = useSafeAreaInsets();
   const [slideAnim] = React.useState(new Animated.Value(0));
-  const [locations, setLocations] = React.useState([]);
-  const [loadingLocations, setLoadingLocations] = React.useState(false);
+  const [startLocations, setStartLocations] = React.useState([]);
+  const [endLocations, setEndLocations] = React.useState([]);
+  const [loadingStartLocations, setLoadingStartLocations] = React.useState(false);
+  const [loadingEndLocations, setLoadingEndLocations] = React.useState(false);
+  const googleMapsApiKey =
+    Constants.expoConfig?.extra?.googleMapsApiKey ||
+    Constants.manifest?.extra?.googleMapsApiKey ||
+    '';
 
   React.useEffect(() => {
     if (visible) {
       // Immediately set drawer to visible position (no animation delay)
       slideAnim.setValue(0);
-      // Load locations when drawer opens
-      loadLocations();
     } else {
       Animated.timing(slideAnim, {
         toValue: height,
@@ -47,41 +52,108 @@ const PickDropFilterDrawer = ({
     }
   }, [visible]);
 
-  const loadLocations = async (search = '') => {
+  const mapPredictionsToOptions = React.useCallback((predictions = [], currentValue = '') => {
+    const placeOptions = predictions.map((prediction) => ({
+      value: prediction.description || prediction.structured_formatting?.main_text || '',
+      label: prediction.description || prediction.structured_formatting?.main_text || '',
+      id: prediction.place_id,
+    }));
+
+    const hasCurrentValue = currentValue && placeOptions.some((option) => option.value === currentValue);
+
+    return [
+      { value: '', label: 'Any Location', id: 'any-location' },
+      ...(hasCurrentValue ? [] : currentValue ? [{ value: currentValue, label: currentValue, id: `current-${currentValue}` }] : []),
+      ...placeOptions,
+    ];
+  }, []);
+
+  const loadPlaces = async (search = '', target = 'start') => {
+    const setLoading = target === 'start' ? setLoadingStartLocations : setLoadingEndLocations;
+    const setOptions = target === 'start' ? setStartLocations : setEndLocations;
+    const currentValue = target === 'start' ? filters.startLocation : filters.endLocation;
+
+    if (!search.trim()) {
+      setOptions(mapPredictionsToOptions([], currentValue));
+      return;
+    }
+
     try {
-      setLoadingLocations(true);
-      const data = await locationAPI.getAreas(197, search);
-      let locationsData = [];
-      
-      // Handle different response structures
-      if (data) {
-        if (Array.isArray(data.data)) {
-          locationsData = data.data;
-        } else if (Array.isArray(data)) {
-          locationsData = data;
-        } else if (data.areas && Array.isArray(data.areas)) {
-          locationsData = data.areas;
-        }
-      }
-      
-      // Transform to dropdown format
-      const formattedLocations = locationsData.map((location) => ({
-        value: location.id || location.value || location.name,
-        label: location.name || location.label || location.value,
-        id: location.id,
-      }));
-      
-      setLocations(formattedLocations);
+      setLoading(true);
+      const predictions = await googlePlacesAPI.autocomplete(search, googleMapsApiKey);
+      setOptions(mapPredictionsToOptions(predictions, currentValue));
     } catch (error) {
-      console.error('Error loading locations:', error);
-      setLocations([]);
+      console.error(`Error loading ${target} places:`, error);
+      setOptions(mapPredictionsToOptions([], currentValue));
     } finally {
-      setLoadingLocations(false);
+      setLoading(false);
     }
   };
 
-  const handleLocationSearch = (searchQuery) => {
-    loadLocations(searchQuery);
+  const startLocationOptions = React.useMemo(
+    () => mapPredictionsToOptions([], filters.startLocation),
+    [filters.startLocation, mapPredictionsToOptions]
+  );
+
+  const endLocationOptions = React.useMemo(
+    () => mapPredictionsToOptions([], filters.endLocation),
+    [filters.endLocation, mapPredictionsToOptions]
+  );
+
+  React.useEffect(() => {
+    setStartLocations(startLocationOptions);
+  }, [startLocationOptions]);
+
+  React.useEffect(() => {
+    setEndLocations(endLocationOptions);
+  }, [endLocationOptions]);
+
+  const handleStartLocationSearch = (searchQuery) => {
+    loadPlaces(searchQuery, 'start');
+  };
+
+  const handleEndLocationSearch = (searchQuery) => {
+    loadPlaces(searchQuery, 'end');
+  };
+
+  const applyPlaceSelection = async (target, value, option) => {
+    const locationKey = target === 'start' ? 'startLocation' : 'endLocation';
+    const latitudeKey = target === 'start' ? 'startLatitude' : 'endLatitude';
+    const longitudeKey = target === 'start' ? 'startLongitude' : 'endLongitude';
+    const placeIdKey = target === 'start' ? 'startPlaceId' : 'endPlaceId';
+
+    if (!value) {
+      onFilterChange(locationKey, '');
+      onFilterChange(latitudeKey, '');
+      onFilterChange(longitudeKey, '');
+      onFilterChange(placeIdKey, '');
+      return;
+    }
+
+    onFilterChange(locationKey, value);
+    onFilterChange(placeIdKey, option?.id || '');
+
+    if (!option?.id) {
+      onFilterChange(latitudeKey, '');
+      onFilterChange(longitudeKey, '');
+      return;
+    }
+
+    try {
+      const details = await googlePlacesAPI.getPlaceDetails(option.id, googleMapsApiKey);
+      const location = details?.geometry?.location;
+      const latitude =
+        typeof location?.lat === 'function' ? location.lat() : location?.lat;
+      const longitude =
+        typeof location?.lng === 'function' ? location.lng() : location?.lng;
+
+      onFilterChange(latitudeKey, latitude ?? '');
+      onFilterChange(longitudeKey, longitude ?? '');
+    } catch (error) {
+      console.error(`Error loading ${target} place details:`, error);
+      onFilterChange(latitudeKey, '');
+      onFilterChange(longitudeKey, '');
+    }
   };
 
   const handleClose = () => {
@@ -166,16 +238,13 @@ const PickDropFilterDrawer = ({
             <View style={styles.section}>
               <SearchableDropdown
                 label="Start Location"
-                options={[
-                  { value: '', label: 'Any Location' },
-                  ...locations,
-                ]}
+                options={startLocations}
                 value={filters.startLocation}
-                onSelect={(value) => onFilterChange('startLocation', value || '')}
+                onSelect={(value, option) => applyPlaceSelection('start', value || '', option)}
                 placeholder="Select start location"
                 searchable={true}
-                onSearch={handleLocationSearch}
-                loading={loadingLocations}
+                onSearch={handleStartLocationSearch}
+                loading={loadingStartLocations}
                 style={styles.dropdownStyle}
               />
             </View>
@@ -184,16 +253,13 @@ const PickDropFilterDrawer = ({
             <View style={styles.section}>
               <SearchableDropdown
                 label="End Location"
-                options={[
-                  { value: '', label: 'Any Location' },
-                  ...locations,
-                ]}
+                options={endLocations}
                 value={filters.endLocation}
-                onSelect={(value) => onFilterChange('endLocation', value || '')}
+                onSelect={(value, option) => applyPlaceSelection('end', value || '', option)}
                 placeholder="Select end location"
                 searchable={true}
-                onSearch={handleLocationSearch}
-                loading={loadingLocations}
+                onSearch={handleEndLocationSearch}
+                loading={loadingEndLocations}
                 style={styles.dropdownStyle}
               />
             </View>
@@ -263,7 +329,13 @@ const PickDropFilterDrawer = ({
                   // Create empty filters object
                   const emptyFilters = {
                     startLocation: '',
+                    startLatitude: '',
+                    startLongitude: '',
+                    startPlaceId: '',
                     endLocation: '',
+                    endLatitude: '',
+                    endLongitude: '',
+                    endPlaceId: '',
                     driverGender: '',
                     departureTime: '',
                     departureDate: '',
@@ -421,5 +493,3 @@ const styles = StyleSheet.create({
 });
 
 export default PickDropFilterDrawer;
-
-

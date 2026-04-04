@@ -30,6 +30,7 @@
         "resendOtp": "Resend OTP",
         "enterOtp": "Enter OTP",
         "backToListing": "Back to Listing",
+        "goToListing": "Go to Listing",
         "done": "Done"
     },
     "home": {
@@ -250,6 +251,11 @@
         "flexible": "Flexible",
         "at": "at",
         "stop": "Stop",
+        "routeMap": "ROUTE MAP",
+        "mapUnavailable": "Map unavailable",
+        "mapLoadError": "Unable to load route map image.",
+        "mapOpenError": "Unable to open Google Maps.",
+        "openInMaps": "Open in Google Maps",
         "startLocation": "Start Location",
         "endLocation": "End Location",
         "city": "City",

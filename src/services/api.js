@@ -1,5 +1,6 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
 
 const API_BASE_URL = 'https://asaancar.com/api';
 
@@ -258,6 +259,148 @@ export const locationAPI = {
   },
 };
 
+let googleMapsScriptPromise = null;
+
+const loadGoogleMapsScript = (apiKey) => {
+  if (Platform.OS !== 'web' || !apiKey) {
+    return Promise.resolve(null);
+  }
+
+  if (typeof window !== 'undefined' && window.google?.maps?.places) {
+    return Promise.resolve(window.google.maps);
+  }
+
+  if (googleMapsScriptPromise) {
+    return googleMapsScriptPromise;
+  }
+
+  googleMapsScriptPromise = new Promise((resolve, reject) => {
+    if (typeof document === 'undefined') {
+      reject(new Error('Google Maps script can only load in a browser environment.'));
+      return;
+    }
+
+    const existingScript = document.querySelector('script[data-google-maps="places"]');
+    if (existingScript) {
+      existingScript.addEventListener('load', () => resolve(window.google?.maps || null), { once: true });
+      existingScript.addEventListener('error', () => reject(new Error('Failed to load Google Maps script.')), { once: true });
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
+    script.async = true;
+    script.defer = true;
+    script.setAttribute('data-google-maps', 'places');
+    script.onload = () => resolve(window.google?.maps || null);
+    script.onerror = () => reject(new Error('Failed to load Google Maps script.'));
+    document.head.appendChild(script);
+  });
+
+  return googleMapsScriptPromise;
+};
+
+const webAutocomplete = async (input, apiKey) => {
+  const maps = await loadGoogleMapsScript(apiKey);
+  const AutocompleteService = maps?.places?.AutocompleteService;
+
+  if (!AutocompleteService) {
+    throw new Error('Google Places service is unavailable on web.');
+  }
+
+  const service = new AutocompleteService();
+
+  return new Promise((resolve, reject) => {
+    service.getPlacePredictions(
+      {
+        input,
+        componentRestrictions: { country: 'pk' },
+      },
+      (predictions, status) => {
+        const okStatus = maps.places.PlacesServiceStatus.OK;
+        const zeroStatus = maps.places.PlacesServiceStatus.ZERO_RESULTS;
+
+        if (status === okStatus || status === zeroStatus) {
+          resolve(predictions || []);
+          return;
+        }
+
+        reject(new Error(`Google Places autocomplete failed with status: ${status}`));
+      }
+    );
+  });
+};
+
+const webPlaceDetails = async (placeId, apiKey) => {
+  const maps = await loadGoogleMapsScript(apiKey);
+  const PlacesService = maps?.places?.PlacesService;
+
+  if (!PlacesService) {
+    throw new Error('Google Place details service is unavailable on web.');
+  }
+
+  const container = document.createElement('div');
+  const service = new PlacesService(container);
+
+  return new Promise((resolve, reject) => {
+    service.getDetails(
+      {
+        placeId,
+        fields: ['place_id', 'formatted_address', 'geometry', 'name'],
+      },
+      (result, status) => {
+        const okStatus = maps.places.PlacesServiceStatus.OK;
+
+        if (status === okStatus) {
+          resolve(result || null);
+          return;
+        }
+
+        reject(new Error(`Google Place details failed with status: ${status}`));
+      }
+    );
+  });
+};
+
+export const googlePlacesAPI = {
+  autocomplete: async (input, apiKey) => {
+    if (!input?.trim() || !apiKey) return [];
+
+    if (Platform.OS === 'web') {
+      return webAutocomplete(input, apiKey);
+    }
+
+    const response = await axios.get('https://maps.googleapis.com/maps/api/place/autocomplete/json', {
+      params: {
+        input,
+        key: apiKey,
+        components: 'country:pk',
+        language: 'en',
+      },
+    });
+
+    return response.data?.predictions || [];
+  },
+
+  getPlaceDetails: async (placeId, apiKey) => {
+    if (!placeId || !apiKey) return null;
+
+    if (Platform.OS === 'web') {
+      return webPlaceDetails(placeId, apiKey);
+    }
+
+    const response = await axios.get('https://maps.googleapis.com/maps/api/place/details/json', {
+      params: {
+        place_id: placeId,
+        key: apiKey,
+        fields: 'place_id,geometry,formatted_address,name',
+      },
+    });
+
+    return response.data?.result || null;
+  },
+};
+
 export const pickDropAPI = {
   // Get pick and drop services with filters
   getPickDropServices: async (filters = {}) => {
@@ -279,7 +422,13 @@ export const pickDropAPI = {
     // Add filters - convert camelCase to snake_case for API
     const filterMapping = {
       startLocation: 'start_location',
+      startLatitude: 'start_latitude',
+      startLongitude: 'start_longitude',
+      startPlaceId: 'start_place_id',
       endLocation: 'end_location',
+      endLatitude: 'end_latitude',
+      endLongitude: 'end_longitude',
+      endPlaceId: 'end_place_id',
       driverGender: 'driver_gender',
       departureTime: 'departure_time',
       departureDate: 'departure_date',

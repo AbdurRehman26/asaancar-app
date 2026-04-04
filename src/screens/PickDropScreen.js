@@ -31,7 +31,13 @@ const PickDropScreen = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [filters, setFilters] = useState({
     startLocation: '',
+    startLatitude: '',
+    startLongitude: '',
+    startPlaceId: '',
     endLocation: '',
+    endLatitude: '',
+    endLongitude: '',
+    endPlaceId: '',
     driverGender: '',
     departureTime: '',
     departureDate: '',
@@ -251,7 +257,13 @@ const PickDropScreen = () => {
   const clearFilters = () => {
     const emptyFilters = {
       startLocation: '',
+      startLatitude: '',
+      startLongitude: '',
+      startPlaceId: '',
       endLocation: '',
+      endLatitude: '',
+      endLongitude: '',
+      endPlaceId: '',
       driverGender: '',
       departureTime: '',
       departureDate: '',
@@ -267,7 +279,13 @@ const PickDropScreen = () => {
     // Create a completely new object to ensure React detects the change
     const newFilters = {
       startLocation: filtersToApply.startLocation || '',
+      startLatitude: filtersToApply.startLatitude || '',
+      startLongitude: filtersToApply.startLongitude || '',
+      startPlaceId: filtersToApply.startPlaceId || '',
       endLocation: filtersToApply.endLocation || '',
+      endLatitude: filtersToApply.endLatitude || '',
+      endLongitude: filtersToApply.endLongitude || '',
+      endPlaceId: filtersToApply.endPlaceId || '',
       driverGender: filtersToApply.driverGender || '',
       departureTime: filtersToApply.departureTime || '',
       departureDate: filtersToApply.departureDate || '',

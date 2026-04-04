@@ -9,14 +9,14 @@ import {
   ActivityIndicator,
   Modal,
   Platform,
-  Alert,
   Pressable,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Constants from 'expo-constants';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useTheme } from '@/context/ThemeContext';
 import { useAuth } from '@/context/AuthContext';
-import { pickDropAPI, locationAPI } from '@/services/api';
+import { pickDropAPI, googlePlacesAPI } from '@/services/api';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import ErrorModal from '@/components/ErrorModal';
 import SuccessModal from '@/components/SuccessModal';
@@ -46,10 +46,13 @@ const CreatePickDropServiceScreen = () => {
 
   // Route Information
   const [startArea, setStartArea] = useState('');
-  const [startAreaId, setStartAreaId] = useState(null);
+  const [startPlaceId, setStartPlaceId] = useState(null);
+  const [startLatitude, setStartLatitude] = useState(null);
+  const [startLongitude, setStartLongitude] = useState(null);
   const [endArea, setEndArea] = useState('');
-  const [endAreaId, setEndAreaId] = useState(null);
-  const [areaList, setAreaList] = useState([]);
+  const [endPlaceId, setEndPlaceId] = useState(null);
+  const [endLatitude, setEndLatitude] = useState(null);
+  const [endLongitude, setEndLongitude] = useState(null);
   const [scheduleType, setScheduleType] = useState('once'); // 'once', 'everyday', 'weekday', 'weekends', 'custom'
   const [selectedDays, setSelectedDays] = useState([]);
   const [isRoundTrip, setIsRoundTrip] = useState(false);
@@ -82,15 +85,6 @@ const CreatePickDropServiceScreen = () => {
 
   // Stops
   const [stops, setStops] = useState([]);
-  const [showStopModal, setShowStopModal] = useState(false);
-  const [newStop, setNewStop] = useState({
-    area_id: null,
-    city_id: 197,
-    location: '',
-    notes: null,
-    order: 0,
-    stop_time: '',
-  });
 
   // Dropdown states
   const [showStartAreaDropdown, setShowStartAreaDropdown] = useState(false);
@@ -106,33 +100,21 @@ const CreatePickDropServiceScreen = () => {
   const [startAreaSearch, setStartAreaSearch] = useState('');
   const [endAreaSearch, setEndAreaSearch] = useState('');
   const [stopAreaSearch, setStopAreaSearch] = useState('');
+  const [startPlaceResults, setStartPlaceResults] = useState([]);
+  const [endPlaceResults, setEndPlaceResults] = useState([]);
+  const [stopPlaceResults, setStopPlaceResults] = useState([]);
+  const [placesLoading, setPlacesLoading] = useState(false);
+
+  const googleMapsApiKey = Constants.expoConfig?.extra?.googleMapsApiKey;
 
 
 
   const driverGenders = ['Male', 'Female', 'Any'];
-  const currencies = ['PKR', 'USD', 'EUR'];
   const transmissions = ['Automatic', 'Manual'];
   const fuelTypes = ['Petrol', 'Diesel', 'Hybrid', 'Electric', 'CNG'];
 
   // Initialize form
   useEffect(() => {
-    // Fetch areas
-    const fetchAreas = async () => {
-      try {
-        const response = await locationAPI.getAreas();
-        // Assuming response is array of objects { id, name, ... } or similar
-        // Adjust based on actual API response structure if needed
-        if (Array.isArray(response)) {
-          setAreaList(response);
-        } else if (response.data && Array.isArray(response.data)) {
-          setAreaList(response.data);
-        }
-      } catch (error) {
-        console.error('Failed to fetch areas:', error);
-      }
-    };
-    fetchAreas();
-
     // Always set contact info from user profile
     if (user?.data) {
       setContactName(user.data.name || '');
@@ -141,21 +123,13 @@ const CreatePickDropServiceScreen = () => {
 
     if (service) {
       setStartArea(service.start_area || service.start_location || '');
-      setStartAreaId(
-        service.pickup_area_id ||
-        service.start_area_id ||
-        service.pickup_area?.id ||
-        service.start_area?.id ||
-        null
-      );
+      setStartPlaceId(service.start_place_id || null);
+      setStartLatitude(service.start_latitude ?? null);
+      setStartLongitude(service.start_longitude ?? null);
       setEndArea(service.end_area || service.end_location || '');
-      setEndAreaId(
-        service.dropoff_area_id ||
-        service.end_area_id ||
-        service.dropoff_area?.id ||
-        service.end_area?.id ||
-        null
-      );
+      setEndPlaceId(service.end_place_id || null);
+      setEndLatitude(service.end_latitude ?? null);
+      setEndLongitude(service.end_longitude ?? null);
 
       // Map legacy boolean to schedule type if needed
       if (service.schedule_type) {
@@ -218,10 +192,128 @@ const CreatePickDropServiceScreen = () => {
       setFuelType(service.fuel_type || '');
 
       if (service.stops && Array.isArray(service.stops)) {
-        setStops(service.stops.map(s => ({ ...s, id: s.id || Date.now() + Math.random() })));
+        setStops(service.stops.map((s) => ({
+          ...s,
+          place_id: s.place_id || null,
+          latitude: s.latitude ?? null,
+          longitude: s.longitude ?? null,
+          id: s.id || Date.now() + Math.random(),
+        })));
       }
     }
   }, [service, user]);
+
+  const loadPlacePredictions = async (query, setResults) => {
+    if (!query.trim() || !googleMapsApiKey) {
+      setResults([]);
+      return;
+    }
+
+    try {
+      setPlacesLoading(true);
+      const predictions = await googlePlacesAPI.autocomplete(query, googleMapsApiKey);
+      setResults(predictions);
+    } catch (error) {
+      console.error('Failed to load Google Places predictions:', error);
+      setResults([]);
+    } finally {
+      setPlacesLoading(false);
+    }
+  };
+
+  const handlePlaceSearchChange = (value, setSearch, setResults) => {
+    setSearch(value);
+    loadPlacePredictions(value, setResults);
+  };
+
+  const closePlacesModal = (setVisible, setQuery, setResults) => {
+    setVisible(false);
+    setQuery('');
+    setResults([]);
+  };
+
+  const extractCoordinates = (details) => ({
+    latitude: details?.geometry?.location?.lat ?? null,
+    longitude: details?.geometry?.location?.lng ?? null,
+  });
+
+  const resolvePlaceMetadata = async (locationText, existingPlaceId = null) => {
+    if (!googleMapsApiKey || !locationText?.trim()) {
+      return {
+        location: locationText || '',
+        placeId: existingPlaceId,
+        latitude: null,
+        longitude: null,
+      };
+    }
+
+    try {
+      let placeId = existingPlaceId;
+
+      if (!placeId) {
+        const predictions = await googlePlacesAPI.autocomplete(locationText, googleMapsApiKey);
+        placeId = predictions?.[0]?.place_id || null;
+      }
+
+      const details = placeId
+        ? await googlePlacesAPI.getPlaceDetails(placeId, googleMapsApiKey)
+        : null;
+      const coordinates = extractCoordinates(details);
+
+      return {
+        location: details?.formatted_address || locationText,
+        placeId: placeId || details?.place_id || null,
+        latitude: coordinates.latitude,
+        longitude: coordinates.longitude,
+      };
+    } catch (error) {
+      console.error('Failed to resolve place metadata:', error);
+      return {
+        location: locationText,
+        placeId: existingPlaceId,
+        latitude: null,
+        longitude: null,
+      };
+    }
+  };
+
+  const handleSelectPlace = async (place, type) => {
+    const locationText = place?.description || place?.structured_formatting?.main_text || '';
+    const placeMetadata = await resolvePlaceMetadata(locationText, place?.place_id);
+
+    if (type === 'start') {
+      setStartArea(placeMetadata.location);
+      setStartPlaceId(placeMetadata.placeId);
+      setStartLatitude(placeMetadata.latitude);
+      setStartLongitude(placeMetadata.longitude);
+      closePlacesModal(setShowStartAreaDropdown, setStartAreaSearch, setStartPlaceResults);
+      return;
+    }
+
+    if (type === 'end') {
+      setEndArea(placeMetadata.location);
+      setEndPlaceId(placeMetadata.placeId);
+      setEndLatitude(placeMetadata.latitude);
+      setEndLongitude(placeMetadata.longitude);
+      closePlacesModal(setShowEndAreaDropdown, setEndAreaSearch, setEndPlaceResults);
+      return;
+    }
+
+    setStops((prev) => [
+      ...prev,
+      {
+        location: placeMetadata.location,
+        place_id: placeMetadata.placeId,
+        latitude: placeMetadata.latitude,
+        longitude: placeMetadata.longitude,
+        notes: null,
+        order: prev.length,
+        stop_time: '',
+        id: Date.now(),
+      }
+    ]);
+    closePlacesModal(setShowStopAreaDropdown, setStopAreaSearch, setStopPlaceResults);
+  };
 
   const formatDate = (date) => {
     const day = String(date.getDate()).padStart(2, '0');
@@ -260,14 +352,6 @@ const CreatePickDropServiceScreen = () => {
     return `2000-01-01T${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:00`;
   };
 
-  const handleAddStop = () => {
-    if (newStop.location && newStop.stop_time) {
-      setStops([...stops, { ...newStop, id: Date.now(), city_id: newStop.city_id || 197 }]);
-      setNewStop({ area_id: null, city_id: 197, location: '', notes: null, order: 0, stop_time: '' });
-      setShowStopModal(false);
-    }
-  };
-
   const handleRemoveStop = (id) => {
     setStops(stops.filter((stop) => stop.id !== id));
   };
@@ -276,7 +360,7 @@ const CreatePickDropServiceScreen = () => {
     switch (step) {
       case 0: // Route
         if (!startArea || !endArea) {
-          setErrorMessage('Please select start and end areas');
+          setErrorMessage('Please select pick-up and drop-off locations');
           return false;
         }
         if (scheduleType === 'once' && !departureDate) {
@@ -354,56 +438,58 @@ const CreatePickDropServiceScreen = () => {
   const handleSubmit = async () => {
     try {
       setLoading(true);
+      const resolvedStart = await resolvePlaceMetadata(startArea, startPlaceId);
+      const resolvedEnd = await resolvePlaceMetadata(endArea, endPlaceId);
+      const resolvedStops = await Promise.all(
+        stops.map(async (stop, index) => {
+          const resolvedStop = await resolvePlaceMetadata(stop.location, stop.place_id);
+
+          return {
+            location: resolvedStop.location,
+            place_id: resolvedStop.placeId,
+            latitude: resolvedStop.latitude,
+            longitude: resolvedStop.longitude,
+            notes: stop.notes ?? null,
+            order: index,
+            stop_time: formatStopTimeForApi(stop.stop_time),
+          };
+        })
+      );
 
       // Strict payload construction
       const serviceData = {
+        available_spaces: parseInt(availableSpaces) || 1,
+        car_brand: carBrand || '',
+        car_color: carColor || '',
+        car_fuel_type: fuelType || '',
+        car_model: carModel || '',
+        car_seats: seats ? parseInt(seats) : null,
+        car_transmission: transmission || '',
+        contact: contactPhone || '',
+        currency: currency || 'PKR',
+        departure_time: `${String(departureTime.getHours()).padStart(2, '0')}:${String(departureTime.getMinutes()).padStart(2, '0')}`,
+        ...(scheduleType === 'once' ? { departure_date: formatDate(departureDate) } : {}),
+        description: description || '',
+        driver_gender: driverGender.toLowerCase(),
+        end_latitude: resolvedEnd.latitude ?? endLatitude,
+        end_location: resolvedEnd.location || endArea,
+        end_longitude: resolvedEnd.longitude ?? endLongitude,
+        end_place_id: resolvedEnd.placeId ?? endPlaceId,
+        is_active: active,
+        is_everyday: scheduleType === 'everyday',
+        is_roundtrip: isRoundTrip,
+        name: contactName || '',
+        price_per_person: pricePerPerson ? parseFloat(pricePerPerson) : null,
+        return_time: isRoundTrip
+          ? `${String(returnTime.getHours()).padStart(2, '0')}:${String(returnTime.getMinutes()).padStart(2, '0')}`
+          : null,
         schedule_type: scheduleType,
         selected_days: scheduleType === 'custom' ? selectedDays : null,
-        is_roundtrip: isRoundTrip,
-        ...(scheduleType === 'once' ? { departure_date: formatDate(departureDate) } : {}),
-        departure_time: `${String(departureTime.getHours()).padStart(2, '0')}:${String(departureTime.getMinutes()).padStart(2, '0')}`,
-        ...(isRoundTrip ? {
-          return_time: `${String(returnTime.getHours()).padStart(2, '0')}:${String(returnTime.getMinutes()).padStart(2, '0')}`,
-        } : {}),
-
-        // Location (IDs are critical)
-        pickup_area_id: startAreaId,
-        pickup_city_id: 197, // Hardcoded as per request
-        dropoff_area_id: endAreaId,
-        dropoff_city_id: 197, // Hardcoded as per request
-        start_location: startArea,
-        end_location: endArea,
-
-        // Contact
-        name: contactName || "",
-        contact: contactPhone || "",
-
-        // Service Details
-        available_spaces: parseInt(availableSpaces) || 1,
-        driver_gender: driverGender.toLowerCase(),
-        price_per_person: parseFloat(pricePerPerson),
-        currency: 'PKR',
-        is_active: active, // "is_active" not "active"
-        description: description || "",
-        is_everyday: scheduleType === 'everyday',
-
-        // Car Details
-        car_brand: carBrand || "",
-        car_model: carModel || "",
-        car_color: carColor || "",
-        car_seats: seats ? parseInt(seats) : null,
-        car_transmission: transmission || "",
-        car_fuel_type: fuelType || "",
-
-        // Stops
-        stops: stops.length > 0 ? stops.map((stop, index) => ({
-          area_id: stop.area_id ?? null,
-          city_id: stop.city_id ?? 197,
-          location: stop.location,
-          notes: stop.notes ?? null,
-          order: index,
-          stop_time: formatStopTimeForApi(stop.stop_time),
-        })) : [],
+        start_latitude: resolvedStart.latitude ?? startLatitude,
+        start_location: resolvedStart.location || startArea,
+        start_longitude: resolvedStart.longitude ?? startLongitude,
+        start_place_id: resolvedStart.placeId ?? startPlaceId,
+        stops: resolvedStops,
       };
 
       if (isEditing) {
@@ -515,6 +601,95 @@ const CreatePickDropServiceScreen = () => {
           </ScrollView>
           </View>
         </Pressable>
+      </Pressable>
+    </Modal>
+  );
+
+  const renderPlacesModal = (
+    visible,
+    setVisible,
+    query,
+    setQuery,
+    results,
+    setResults,
+    onSearchChange,
+    onSelect,
+    placeholder
+  ) => (
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      onRequestClose={() => closePlacesModal(setVisible, setQuery, setResults)}
+    >
+      <Pressable
+        style={styles.modalOverlay}
+        onPress={() => closePlacesModal(setVisible, setQuery, setResults)}
+      >
+        <View style={styles.dropdownModalWrapper} pointerEvents="box-none">
+          <Pressable style={styles.dropdownModalPanel} onPress={() => {}}>
+            <View style={[styles.dropdownModal, { backgroundColor: theme.colors.cardBackground }]}>
+            <View style={[styles.searchInputWrapper, { borderColor: theme.colors.border, backgroundColor: theme.colors.inputBackground }]}>
+              <Icon name="search" size={18} color={theme.colors.textSecondary} />
+              <TextInput
+                style={[styles.searchInput, { color: theme.colors.text }]}
+                value={query}
+                onChangeText={onSearchChange}
+                placeholder={placeholder}
+                placeholderTextColor={theme.colors.placeholder}
+                autoFocus
+              />
+            </View>
+
+            <ScrollView
+              style={styles.placesResultsScroll}
+              contentContainerStyle={styles.placesResultsContent}
+              keyboardShouldPersistTaps="handled"
+            >
+              {placesLoading ? (
+                <View style={styles.placesStatusContainer}>
+                  <ActivityIndicator size="small" color={theme.colors.primary} />
+                </View>
+              ) : null}
+
+              {!placesLoading && query.trim() && results.length === 0 ? (
+                <View style={styles.placesStatusContainer}>
+                  <Text style={[styles.placesStatusText, { color: theme.colors.textSecondary }]}>
+                    No places found
+                  </Text>
+                </View>
+              ) : null}
+
+              {!placesLoading && !query.trim() ? (
+                <View style={styles.placesStatusContainer}>
+                  <Text style={[styles.placesStatusText, { color: theme.colors.textSecondary }]}>
+                    Start typing to search places
+                  </Text>
+                </View>
+              ) : null}
+
+              {results.map((item, index) => (
+                <TouchableOpacity
+                  key={`${item.place_id}-${index}`}
+                  style={styles.dropdownOption}
+                  onPress={() => onSelect(item)}
+                >
+                  <View style={styles.placeOptionContent}>
+                    <Text style={[styles.dropdownOptionText, { color: theme.colors.text }]} numberOfLines={1}>
+                      {item.structured_formatting?.main_text || item.description}
+                    </Text>
+                    {item.structured_formatting?.secondary_text ? (
+                      <Text style={[styles.placeSecondaryText, { color: theme.colors.textSecondary }]} numberOfLines={1}>
+                        {item.structured_formatting.secondary_text}
+                      </Text>
+                    ) : null}
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+            </View>
+          </Pressable>
+        </View>
       </Pressable>
     </Modal>
   );
@@ -1190,15 +1365,29 @@ const CreatePickDropServiceScreen = () => {
       </ScrollView>
 
       {/* Dropdowns */}
-      {renderDropdown(areaList, startAreaId, (item) => {
-        setStartArea(item.name);
-        setStartAreaId(item.id);
-      }, showStartAreaDropdown, setShowStartAreaDropdown, true, 'name', 'id', true, startAreaSearch, setStartAreaSearch, 'Search pick-up location')}
+      {renderPlacesModal(
+        showStartAreaDropdown,
+        setShowStartAreaDropdown,
+        startAreaSearch,
+        setStartAreaSearch,
+        startPlaceResults,
+        setStartPlaceResults,
+        (value) => handlePlaceSearchChange(value, setStartAreaSearch, setStartPlaceResults),
+        (place) => handleSelectPlace(place, 'start'),
+        'Search pick-up location'
+      )}
 
-      {renderDropdown(areaList, endAreaId, (item) => {
-        setEndArea(item.name);
-        setEndAreaId(item.id);
-      }, showEndAreaDropdown, setShowEndAreaDropdown, true, 'name', 'id', true, endAreaSearch, setEndAreaSearch, 'Search drop-off location')}
+      {renderPlacesModal(
+        showEndAreaDropdown,
+        setShowEndAreaDropdown,
+        endAreaSearch,
+        setEndAreaSearch,
+        endPlaceResults,
+        setEndPlaceResults,
+        (value) => handlePlaceSearchChange(value, setEndAreaSearch, setEndPlaceResults),
+        (place) => handleSelectPlace(place, 'end'),
+        'Search drop-off location'
+      )}
 
       {renderDropdown(driverGenders, driverGender.charAt(0).toUpperCase() + driverGender.slice(1), (val) => setDriverGender(val.toLowerCase()), showDriverGenderDropdown, setShowDriverGenderDropdown)}
 
@@ -1206,20 +1395,17 @@ const CreatePickDropServiceScreen = () => {
       {renderDropdown(fuelTypes, fuelType, setFuelType, showFuelTypeDropdown, setShowFuelTypeDropdown)}
 
       {/* Stop Area Dropdown - adds stop directly when selected */}
-      {renderDropdown(areaList, null, (item) => {
-        setStops([
-          ...stops,
-          {
-            area_id: item.id,
-            city_id: 197,
-            location: item.name,
-            notes: null,
-            order: stops.length,
-            stop_time: '',
-            id: Date.now(),
-          }
-        ]);
-      }, showStopAreaDropdown, setShowStopAreaDropdown, true, 'name', 'id', true, stopAreaSearch, setStopAreaSearch, 'Search stop location')}
+      {renderPlacesModal(
+        showStopAreaDropdown,
+        setShowStopAreaDropdown,
+        stopAreaSearch,
+        setStopAreaSearch,
+        stopPlaceResults,
+        setStopPlaceResults,
+        (value) => handlePlaceSearchChange(value, setStopAreaSearch, setStopPlaceResults),
+        (place) => handleSelectPlace(place, 'stop'),
+        'Search stop location'
+      )}
 
       {/* Date/Time Pickers */}
       {showDatePicker && (
@@ -1275,7 +1461,7 @@ const CreatePickDropServiceScreen = () => {
             setShowStopTimePicker(Platform.OS === 'ios');
             if (selectedTime && editingStopId) {
               const timeString = `${String(selectedTime.getHours()).padStart(2, '0')}:${String(selectedTime.getMinutes()).padStart(2, '0')}`;
-              setStops(stops.map(s =>
+              setStops((prev) => prev.map((s) =>
                 s.id === editingStopId ? { ...s, stop_time: timeString } : s
               ));
               setEditingStopId(null);
@@ -1283,59 +1469,6 @@ const CreatePickDropServiceScreen = () => {
           }}
         />
       )}
-
-      {/* Add Stop Modal */}
-      <Modal
-        visible={showStopModal}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setShowStopModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={[styles.stopModal, { backgroundColor: theme.colors.cardBackground }]}>
-            <Text style={[styles.modalTitle, { color: theme.colors.text }]}>Add Stop</Text>
-            <View style={styles.inputGroup}>
-              <Text style={[styles.label, { color: theme.colors.text }]}>Location</Text>
-              <TouchableOpacity
-                style={[styles.input, { borderColor: theme.colors.border, backgroundColor: theme.colors.inputBackground }]}
-                onPress={() => setShowStopAreaDropdown(true)}
-              >
-                <Text style={[styles.inputText, { color: newStop.location ? theme.colors.text : theme.colors.placeholder }]} numberOfLines={1}>
-                  {newStop.location || 'Select stop location'}
-                </Text>
-                <Icon name="keyboard-arrow-down" size={20} color={theme.colors.textSecondary} />
-              </TouchableOpacity>
-            </View>
-            <View style={styles.inputGroup}>
-              <Text style={[styles.label, { color: theme.colors.text }]}>Stop Time</Text>
-              <TextInput
-                style={[styles.input, { borderColor: theme.colors.border, color: theme.colors.text, backgroundColor: theme.colors.inputBackground }]}
-                value={newStop.stop_time}
-                onChangeText={(text) => setNewStop({ ...newStop, stop_time: text })}
-                placeholder="e.g., 10:47 AM"
-                placeholderTextColor={theme.colors.placeholder}
-              />
-            </View>
-            <View style={styles.modalButtons}>
-              <TouchableOpacity
-                style={[styles.modalButton, { backgroundColor: theme.colors.backgroundSecondary }]}
-                onPress={() => {
-                  setShowStopModal(false);
-                  setNewStop({ area_id: null, city_id: 197, location: '', notes: null, order: 0, stop_time: '' });
-                }}
-              >
-                <Text style={[styles.modalButtonText, { color: theme.colors.text }]}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.modalButton, { backgroundColor: theme.colors.primary }]}
-                onPress={handleAddStop}
-              >
-                <Text style={styles.modalButtonTextWhite}>Add</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
 
       <ErrorModal
         visible={showErrorModal}
@@ -1594,12 +1727,21 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  dropdownModalWrapper: {
+    width: '100%',
+    alignItems: 'center',
+  },
+  dropdownModalPanel: {
+    width: '100%',
+    alignItems: 'center',
+  },
   dropdownModal: {
-    width: '80%',
+    width: '94%',
     alignSelf: 'center',
     borderRadius: 12,
     padding: 8,
     maxHeight: 300,
+    minHeight: 300,
   },
   searchInputWrapper: {
     flexDirection: 'row',
@@ -1607,6 +1749,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 10,
     paddingHorizontal: 12,
+    minHeight: 48,
     marginBottom: 12,
     marginHorizontal: 8,
   },
@@ -1623,39 +1766,33 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 8,
   },
+  placeOptionContent: {
+    flex: 1,
+  },
   dropdownOptionText: {
     fontSize: 16,
   },
-  stopModal: {
-    width: '90%',
-    alignSelf: 'center',
-    borderRadius: 12,
-    padding: 24,
+  placeSecondaryText: {
+    fontSize: 13,
+    marginTop: 4,
   },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 20,
+  placesResultsScroll: {
+    maxHeight: 300,
   },
-  modalButtons: {
-    flexDirection: 'row',
-    gap: 12,
-    marginTop: 20,
+  placesResultsContent: {
+    flexGrow: 1,
+    paddingBottom: 8,
   },
-  modalButton: {
+  placesStatusContainer: {
     flex: 1,
-    paddingVertical: 12,
-    borderRadius: 8,
+    minHeight: 180,
+    paddingVertical: 18,
+    paddingHorizontal: 16,
     alignItems: 'center',
+    justifyContent: 'center',
   },
-  modalButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  modalButtonTextWhite: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
+  placesStatusText: {
+    fontSize: 14,
   },
   priceRow: {
     flexDirection: 'row',

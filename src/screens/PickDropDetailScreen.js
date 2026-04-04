@@ -7,8 +7,10 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Linking,
+  Image,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import Constants from 'expo-constants';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
@@ -31,10 +33,30 @@ const PickDropDetailScreen = () => {
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [expandedStops, setExpandedStops] = useState(false);
+  const [mapLoadError, setMapLoadError] = useState('');
+  const rawStaticMapsApiKey = Constants.expoConfig?.extra?.googleStaticMapsApiKey;
+  const defaultMapsApiKey = Constants.expoConfig?.extra?.googleMapsApiKey;
+  const staticMapsApiKey =
+    rawStaticMapsApiKey && !rawStaticMapsApiKey.includes('REPLACE_WITH_STATIC_MAPS_KEY')
+      ? rawStaticMapsApiKey
+      : defaultMapsApiKey;
+
+  const hasRouteCoordinates = (serviceItem) => {
+    if (!serviceItem) return false;
+
+    const hasStartCoordinates =
+      serviceItem.start_latitude != null && serviceItem.start_longitude != null;
+    const hasEndCoordinates =
+      serviceItem.end_latitude != null && serviceItem.end_longitude != null;
+    const hasStopCoordinates = Array.isArray(serviceItem.stops)
+      && serviceItem.stops.some((stop) => stop?.latitude != null && stop?.longitude != null);
+
+    return hasStartCoordinates || hasEndCoordinates || hasStopCoordinates;
+  };
 
   useEffect(() => {
-    // Only fetch if we don't have service data passed from listing
-    if (!serviceData && serviceId) {
+    // Fetch full details when nothing was passed or when listing data lacks map coordinates.
+    if (serviceId && (!serviceData || !hasRouteCoordinates(serviceData))) {
       loadServiceDetails();
     }
   }, [serviceId, serviceData]);
@@ -167,6 +189,59 @@ const PickDropDetailScreen = () => {
     providerPhone ||
     null;
 
+  const routePoints = [
+    service.start_latitude != null && service.start_longitude != null
+      ? {
+          key: 'start',
+          label: t('pickDropDetail.pickUp'),
+          title: startLocation,
+          latitude: Number(service.start_latitude),
+          longitude: Number(service.start_longitude),
+          time: formatDisplayTime(service.departure_time),
+          markerColor: 'green',
+          markerLabel: 'S',
+        }
+      : null,
+    ...(service.stops || []).map((stop, index) => (
+      stop?.latitude != null && stop?.longitude != null
+        ? {
+            key: `stop-${index}`,
+            label: `${t('pickDropDetail.stop')} ${index + 1}`,
+            title: stop.location || stop.name || t('pickDropDetail.stop'),
+            latitude: Number(stop.latitude),
+            longitude: Number(stop.longitude),
+            time: formatDisplayTime(stop.stop_time || stop.time),
+            markerColor: 'blue',
+            markerLabel: String((index + 1) % 10),
+          }
+        : null
+    )),
+    service.end_latitude != null && service.end_longitude != null
+      ? {
+          key: 'end',
+          label: t('pickDropDetail.dropOff'),
+          title: endLocation,
+          latitude: Number(service.end_latitude),
+          longitude: Number(service.end_longitude),
+          time: formatDisplayTime(service.return_time),
+          markerColor: 'red',
+          markerLabel: 'E',
+        }
+      : null,
+  ].filter((point) => point && !Number.isNaN(point.latitude) && !Number.isNaN(point.longitude));
+
+  const staticMapUrl = staticMapsApiKey && routePoints.length
+    ? (() => {
+        const markerParams = routePoints
+          .map((point) => `markers=color:${point.markerColor}%7Clabel:${point.markerLabel}%7C${point.latitude},${point.longitude}`)
+          .join('&');
+        const pathPoints = routePoints.map((point) => `${point.latitude},${point.longitude}`).join('%7C');
+        const pathParam = routePoints.length > 1 ? `&path=color:0x7e246cdd%7Cweight:4%7C${pathPoints}` : '';
+
+        return `https://maps.googleapis.com/maps/api/staticmap?size=1000x520&scale=2${pathParam}&${markerParams}&key=${staticMapsApiKey}`;
+      })()
+    : null;
+
   const handleCallProvider = () => {
     if (!providerPhone) return;
     const phoneUrl = `tel:${providerPhone}`;
@@ -186,6 +261,24 @@ const PickDropDetailScreen = () => {
         setErrorMessage(t('pickDropDetail.errorMsg'));
         setShowErrorModal(true);
       });
+    });
+  };
+
+  const handleOpenRouteInMaps = () => {
+    if (!routePoints.length) return;
+
+    const origin = `${routePoints[0].latitude},${routePoints[0].longitude}`;
+    const destination = `${routePoints[routePoints.length - 1].latitude},${routePoints[routePoints.length - 1].longitude}`;
+    const waypoints = routePoints
+      .slice(1, -1)
+      .map((point) => `${point.latitude},${point.longitude}`)
+      .join('|');
+
+    const mapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(destination)}${waypoints ? `&waypoints=${encodeURIComponent(waypoints)}` : ''}&travelmode=driving`;
+
+    Linking.openURL(mapsUrl).catch(() => {
+      setErrorMessage(t('pickDropDetail.mapOpenError'));
+      setShowErrorModal(true);
     });
   };
 
@@ -310,6 +403,74 @@ const PickDropDetailScreen = () => {
 
             </View>
           </View>
+
+          {staticMapUrl ? (
+            <View style={styles.sectionContainer}>
+              <Text style={[styles.sectionHeaderTitle, { color: theme.colors.textSecondary }]}>{t('pickDropDetail.routeMap')}</Text>
+              <View style={[styles.card, styles.mapCard, { backgroundColor: theme.colors.cardBackground, borderColor: isDark ? theme.colors.border : theme.colors.primary, shadowColor: isDark ? '#000' : theme.colors.primary, shadowOpacity: isDark ? 0.3 : 0.08 }]}>
+                {mapLoadError ? (
+                  <View style={[styles.mapFallback, { backgroundColor: theme.colors.backgroundSecondary }]}>
+                    <Icon name="map" size={30} color={theme.colors.primary} />
+                    <Text style={[styles.mapFallbackTitle, { color: theme.colors.text }]}>
+                      {t('pickDropDetail.mapUnavailable')}
+                    </Text>
+                    <Text style={[styles.mapFallbackText, { color: theme.colors.textSecondary }]}>
+                      {mapLoadError}
+                    </Text>
+                    <Text style={[styles.mapDebugText, { color: theme.colors.textSecondary }]}>
+                      Key tail: {staticMapsApiKey ? staticMapsApiKey.slice(-6) : 'missing'}
+                    </Text>
+                    <Text style={[styles.mapDebugText, { color: theme.colors.textSecondary }]}>
+                      Points: {routePoints.length}
+                    </Text>
+                    <TouchableOpacity
+                      style={[styles.mapFallbackButton, { backgroundColor: theme.colors.primary }]}
+                      onPress={handleOpenRouteInMaps}
+                    >
+                      <Text style={styles.mapFallbackButtonText}>{t('pickDropDetail.openInMaps')}</Text>
+                    </TouchableOpacity>
+                  </View>
+                ) : (
+                  <>
+                    <Image
+                      source={{ uri: staticMapUrl }}
+                      style={styles.mapImage}
+                      resizeMode="cover"
+                      onError={(event) => {
+                        const nativeMessage =
+                          event?.nativeEvent?.error ||
+                          event?.nativeEvent?.message ||
+                          '';
+                        setMapLoadError(nativeMessage || t('pickDropDetail.mapLoadError'));
+                      }}
+                    />
+                    <View style={styles.mapLegend}>
+                      {routePoints.map((point) => (
+                        <View key={point.key} style={styles.mapLegendRow}>
+                          <View style={[
+                            styles.mapMarkerDot,
+                            point.markerColor === 'green' && styles.mapMarkerStart,
+                            point.markerColor === 'blue' && styles.mapMarkerStop,
+                            point.markerColor === 'red' && styles.mapMarkerEnd,
+                          ]}>
+                            <Text style={styles.mapMarkerText}>{point.markerLabel}</Text>
+                          </View>
+                          <View style={styles.mapLegendContent}>
+                            <Text style={[styles.mapLegendLabel, { color: theme.colors.textSecondary }]}>
+                              {point.label}{point.time ? ` • ${point.time}` : ''}
+                            </Text>
+                            <Text style={[styles.mapLegendTitle, { color: theme.colors.text }]} numberOfLines={2}>
+                              {point.title}
+                            </Text>
+                          </View>
+                        </View>
+                      ))}
+                    </View>
+                  </>
+                )}
+              </View>
+            </View>
+          ) : null}
 
           {/* 2. Trip Information - Grid Layout */}
           <View style={styles.sectionContainer}>
@@ -608,6 +769,93 @@ const styles = StyleSheet.create({
   },
   routeCard: {
     padding: 20,
+  },
+  mapCard: {
+    overflow: 'hidden',
+  },
+  mapImage: {
+    width: '100%',
+    height: 220,
+    backgroundColor: '#e9e9e9',
+  },
+  mapFallback: {
+    minHeight: 220,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 20,
+  },
+  mapFallbackTitle: {
+    fontSize: 17,
+    fontWeight: '700',
+    marginTop: 10,
+    marginBottom: 8,
+  },
+  mapFallbackText: {
+    fontSize: 13,
+    lineHeight: 19,
+    textAlign: 'center',
+    marginBottom: 14,
+  },
+  mapDebugText: {
+    fontSize: 12,
+    lineHeight: 18,
+    textAlign: 'center',
+    marginBottom: 6,
+  },
+  mapFallbackButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 10,
+  },
+  mapFallbackButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  mapLegend: {
+    padding: 16,
+    gap: 12,
+  },
+  mapLegendRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
+  mapMarkerDot: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+    marginTop: 2,
+  },
+  mapMarkerStart: {
+    backgroundColor: '#00C853',
+  },
+  mapMarkerStop: {
+    backgroundColor: '#2196F3',
+  },
+  mapMarkerEnd: {
+    backgroundColor: '#FF5252',
+  },
+  mapMarkerText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  mapLegendContent: {
+    flex: 1,
+  },
+  mapLegendLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    marginBottom: 2,
+    textTransform: 'uppercase',
+  },
+  mapLegendTitle: {
+    fontSize: 15,
+    lineHeight: 21,
+    fontWeight: '500',
   },
   timelineRow: {
     flexDirection: 'row',

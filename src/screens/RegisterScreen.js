@@ -117,12 +117,12 @@ const RegisterScreen = () => {
 
         {/* Back to Listing */}
         <TouchableOpacity
-          style={styles.backToListing}
+          style={[styles.backToListing, { backgroundColor: theme.colors.primary + '14', borderColor: theme.colors.primary }]}
           onPress={() => navigation.navigate('PickDrop')}
         >
           <Icon name="arrow-back" size={20} color={theme.colors.primary} />
           <Text style={[styles.backToListingText, { color: theme.colors.primary }]}>
-            {t('common.backToListing')}
+            {t('common.goToListing')}
           </Text>
         </TouchableOpacity>
 
@@ -266,13 +266,17 @@ const styles = StyleSheet.create({
   backToListing: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    marginBottom: 16,
-    paddingVertical: 8,
+    alignSelf: 'flex-start',
+    gap: 8,
+    marginBottom: 20,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 999,
+    borderWidth: 1,
   },
   backToListingText: {
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: 15,
+    fontWeight: '700',
   },
   logoContainer: {
     flexDirection: 'row',

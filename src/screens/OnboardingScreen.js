@@ -73,10 +73,10 @@ const OnboardingScreen = ({ navigation }) => {
     const finishOnboarding = async () => {
         try {
             await AsyncStorage.setItem('IS_ONBOARDING_COMPLETE', 'true');
-            navigation.replace('Root', { screen: 'Register' });
+            navigation.replace('Root', { screen: 'PickDrop' });
         } catch (error) {
             console.error('Error saving onboarding state:', error);
-            navigation.replace('Root', { screen: 'Register' });
+            navigation.replace('Root', { screen: 'PickDrop' });
         }
     };
 
