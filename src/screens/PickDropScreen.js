@@ -597,24 +597,61 @@ const PickDropScreen = () => {
                       service.contact_phone ||
                       service.phone ||
                       null;
+                    const providerImage =
+                      provider?.profile_image ||
+                      provider?.profileImage ||
+                      provider?.avatar ||
+                      provider?.image ||
+                      provider?.photo ||
+                      provider?.image_url ||
+                      provider?.imageUrl ||
+                      provider?.photo_url ||
+                      provider?.photoUrl ||
+                      provider?.user?.profile_image ||
+                      provider?.user?.profileImage ||
+                      provider?.user?.avatar ||
+                      provider?.user?.image ||
+                      provider?.user?.photo ||
+                      provider?.user?.image_url ||
+                      provider?.user?.imageUrl ||
+                      service.driver?.profile_image ||
+                      service.driver?.avatar ||
+                      service.driver?.image ||
+                      service.driver?.photo ||
+                      service.user_profile_image ||
+                      service.userProfileImage ||
+                      service.profile_image ||
+                      service.profileImage ||
+                      service.owner_profile_image ||
+                      service.ownerProfileImage ||
+                      service.provider_image ||
+                      service.providerImage ||
+                      null;
 
                     return (
                       <View style={styles.driverInfo}>
-                    {/* Avatar */}
-                    <View style={[styles.driverAvatar, { backgroundColor: isDark ? 'rgba(126, 36, 108, 0.3)' : 'rgba(126, 36, 108, 0.1)', borderWidth: 1, borderColor: isDark ? theme.colors.border : 'transparent' }]}>
-                      <Text style={[styles.driverInitials, { color: isDark ? '#c77dba' : theme.colors.primary }]}>
-                        {providerName.charAt(0).toUpperCase()}
-                      </Text>
-                    </View>
-                    <View>
-                      <Text style={[styles.driverName, { color: theme.colors.text }]}>
-                        {providerName}
-                      </Text>
-                      {phone ? (
-                        <Text style={[styles.driverPhone, { color: theme.colors.textSecondary }]}>{phone}</Text>
-                      ) : null}
-                    </View>
-                  </View>
+                        {/* Avatar */}
+                        <View style={[styles.driverAvatar, { backgroundColor: isDark ? 'rgba(126, 36, 108, 0.3)' : 'rgba(126, 36, 108, 0.1)', borderWidth: 1, borderColor: isDark ? theme.colors.border : 'transparent' }]}>
+                          {providerImage ? (
+                            <Image
+                              source={{ uri: providerImage }}
+                              style={styles.driverAvatarImage}
+                            />
+                          ) : (
+                            <Text style={[styles.driverInitials, { color: isDark ? '#c77dba' : theme.colors.primary }]}>
+                              {providerName.charAt(0).toUpperCase()}
+                            </Text>
+                          )}
+                        </View>
+                        <View>
+                          <Text style={[styles.driverName, { color: theme.colors.text }]}>
+                            {providerName}
+                          </Text>
+                          {phone ? (
+                            <Text style={[styles.driverPhone, { color: theme.colors.textSecondary }]}>{phone}</Text>
+                          ) : null}
+                        </View>
+                      </View>
                     );
                   })()}
 
@@ -1008,6 +1045,11 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  driverAvatarImage: {
+    width: '100%',
+    height: '100%',
   },
   driverInitials: {
     fontSize: 17,

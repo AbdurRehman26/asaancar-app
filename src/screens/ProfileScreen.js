@@ -24,27 +24,18 @@ import SuccessModal from '@/components/SuccessModal';
 import { useTranslation } from 'react-i18next';
 import PageHeader from '@/components/PageHeader';
 
-const getMimeType = (uri = '') => {
-  const extension = uri.split('.').pop()?.toLowerCase();
-
-  switch (extension) {
-    case 'png':
-      return 'image/png';
-    case 'heic':
-      return 'image/heic';
-    case 'webp':
-      return 'image/webp';
-    default:
-      return 'image/jpeg';
-  }
-};
-
 const getUploadedImagePath = (uploadResult) => {
   if (!uploadResult) return '';
+
+  const uploadedUrl = uploadResult?.data?.uploaded?.[0]?.url;
+  if (uploadedUrl) {
+    return uploadedUrl;
+  }
 
   const candidateGroups = [
     uploadResult,
     uploadResult.data,
+    uploadResult.data?.uploaded,
     uploadResult.image,
     uploadResult.images,
     uploadResult.data?.image,
@@ -65,7 +56,19 @@ const getUploadedImagePath = (uploadResult) => {
         return firstMatch;
       }
       if (typeof firstMatch === 'object') {
-        return firstMatch.url || firstMatch.path || firstMatch.image || firstMatch.location || '';
+        return (
+          firstMatch.url ||
+          firstMatch.path ||
+          firstMatch.image ||
+          firstMatch.location ||
+          firstMatch.file_path ||
+          firstMatch.filePath ||
+          firstMatch.full_url ||
+          firstMatch.fullUrl ||
+          firstMatch.original_url ||
+          firstMatch.originalUrl ||
+          ''
+        );
       }
     }
 
@@ -75,7 +78,13 @@ const getUploadedImagePath = (uploadResult) => {
         candidate.path ||
         candidate.image ||
         candidate.location ||
-        candidate.profile_image;
+        candidate.profile_image ||
+        candidate.file_path ||
+        candidate.filePath ||
+        candidate.full_url ||
+        candidate.fullUrl ||
+        candidate.original_url ||
+        candidate.originalUrl;
 
       if (directPath) {
         return directPath;
@@ -85,6 +94,13 @@ const getUploadedImagePath = (uploadResult) => {
 
   return '';
 };
+
+const isLocalImageUri = (uri = '') =>
+  typeof uri === 'string' &&
+  (uri.startsWith('blob:') ||
+    uri.startsWith('file:') ||
+    uri.startsWith('content:') ||
+    uri.startsWith('data:'));
 
 const ProfileScreen = () => {
   const navigation = useNavigation();
@@ -131,7 +147,7 @@ const ProfileScreen = () => {
       }
 
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ['images'],
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
         aspect: [1, 1],
         quality: 0.8,
@@ -162,12 +178,19 @@ const ProfileScreen = () => {
       // If a new local image is selected, upload it first
       if (profileImageUri && !profileImageUri.startsWith('http')) {
         const fileName = profileImageUri.split('/').pop();
-        const uploadResult = await authAPI.uploadImage({
-          uri: profileImageUri,
-          name: fileName || `profile-${Date.now()}.jpg`,
-          type: getMimeType(profileImageUri),
-        }, fileName);
-        finalProfileImage = getUploadedImagePath(uploadResult) || finalProfileImage;
+
+        // Fetch the image and convert to blob for binary upload
+        const response = await fetch(profileImageUri);
+        const blob = await response.blob();
+
+        const uploadResult = await authAPI.uploadImage(blob, fileName);
+        const uploadedImagePath = getUploadedImagePath(uploadResult);
+
+        if (!uploadedImagePath || isLocalImageUri(uploadedImagePath)) {
+          throw new Error('Image upload succeeded but no usable image path was returned.');
+        }
+
+        finalProfileImage = uploadedImagePath;
       }
 
       const updateData = {

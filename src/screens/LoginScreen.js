@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -36,6 +36,25 @@ const LoginScreen = () => {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const otpInputRef = useRef(null);
+
+  useEffect(() => {
+    if (authMethod !== 'otp') {
+      setResendCooldown(0);
+      return undefined;
+    }
+
+    if (resendCooldown <= 0) {
+      return undefined;
+    }
+
+    const interval = setInterval(() => {
+      setResendCooldown((current) => (current > 0 ? current - 1 : 0));
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [authMethod, resendCooldown]);
 
   const handleSendOTP = async () => {
     if (!phone || phone.length !== 10) {
@@ -62,6 +81,7 @@ const LoginScreen = () => {
 
       // If no user in response, show OTP input field
       setOtpSent(true);
+      setResendCooldown(90);
       setSuccessMessage('OTP has been sent to your phone number');
       setShowSuccessModal(true);
     } catch (error) {
@@ -126,6 +146,40 @@ const LoginScreen = () => {
       setLoading(false);
     }
   };
+
+  const renderOtpBoxes = () => (
+    <TouchableOpacity
+      activeOpacity={1}
+      onPress={() => otpInputRef.current?.focus()}
+      style={styles.otpBoxesContainer}
+    >
+      {Array.from({ length: 6 }).map((_, index) => {
+        const digit = otp[index] || '';
+        const isActive = index === otp.length && otp.length < 6;
+
+        return (
+          <View
+            key={index}
+            style={[
+              styles.otpBox,
+              { borderColor: isActive ? theme.colors.primary : theme.colors.border, backgroundColor: theme.colors.inputBackground },
+            ]}
+          >
+            <Text style={[styles.otpBoxText, { color: theme.colors.text }]}>{digit}</Text>
+          </View>
+        );
+      })}
+      <TextInput
+        ref={otpInputRef}
+        style={styles.hiddenOtpInput}
+        value={otp}
+        onChangeText={(text) => setOtp(text.replace(/[^0-9]/g, '').slice(0, 6))}
+        keyboardType="number-pad"
+        maxLength={6}
+        autoFocus={otpSent}
+      />
+    </TouchableOpacity>
+  );
 
   return (
     <KeyboardAvoidingView
@@ -197,27 +251,6 @@ const LoginScreen = () => {
             <TouchableOpacity
               style={[
                 styles.authMethodButton,
-                authMethod === 'otp' && { backgroundColor: theme.colors.primary },
-              ]}
-              onPress={() => {
-                setAuthMethod('otp');
-                setOtpSent(false);
-                setOtp('');
-              }}
-            >
-              <Text
-                style={[
-                  styles.authMethodText,
-                  authMethod === 'otp' && { color: '#fff' },
-                  authMethod !== 'otp' && { color: theme.colors.text },
-                ]}
-              >
-                OTP
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.authMethodButton,
                 authMethod === 'password' && { backgroundColor: theme.colors.primary },
                 authMethod !== 'password' && {
                   backgroundColor: theme.colors.background,
@@ -239,6 +272,32 @@ const LoginScreen = () => {
                 ]}
               >
                 {t('auth.password')}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.authMethodButton,
+                authMethod === 'otp' && { backgroundColor: theme.colors.primary },
+                authMethod !== 'otp' && {
+                  backgroundColor: theme.colors.background,
+                  borderWidth: 1,
+                  borderColor: theme.colors.border,
+                },
+              ]}
+              onPress={() => {
+                setAuthMethod('otp');
+                setOtpSent(false);
+                setOtp('');
+              }}
+            >
+              <Text
+                style={[
+                  styles.authMethodText,
+                  authMethod === 'otp' && { color: '#fff' },
+                  authMethod !== 'otp' && { color: theme.colors.text },
+                ]}
+              >
+                OTP
               </Text>
             </TouchableOpacity>
           </View>
@@ -281,28 +340,23 @@ const LoginScreen = () => {
                   <View style={styles.labelContainer}>
                     <Text style={[styles.label, { color: theme.colors.text }]}>Enter OTP</Text>
                   </View>
-                  <View style={[styles.inputContainer, { borderColor: theme.colors.border, backgroundColor: theme.colors.inputBackground }]}>
-                    <TextInput
-                      style={[styles.input, { color: theme.colors.text }]}
-                      placeholder="Enter 6-digit OTP"
-                      placeholderTextColor={theme.colors.placeholder}
-                      value={otp}
-                      onChangeText={setOtp}
-                      keyboardType="number-pad"
-                      maxLength={6}
-                    />
-                    <View style={styles.inputIcons}>
-                      <Icon name="lock" size={16} color={theme.colors.textSecondary} />
+                  {renderOtpBoxes()}
+                  {resendCooldown > 0 ? (
+                    <View style={styles.resendButton}>
+                      <Text style={[styles.resendCountdownText, { color: theme.colors.textSecondary }]}>
+                        {`Resend OTP in ${resendCooldown}s`}
+                      </Text>
                     </View>
-                  </View>
-                  <TouchableOpacity
-                    onPress={handleSendOTP}
-                    style={styles.resendButton}
-                  >
-                    <Text style={[styles.resendText, { color: theme.colors.primary }]}>
-                      {t('common.resendOtp')}
-                    </Text>
-                  </TouchableOpacity>
+                  ) : (
+                    <TouchableOpacity
+                      onPress={handleSendOTP}
+                      style={styles.resendButton}
+                    >
+                      <Text style={[styles.resendText, { color: theme.colors.primary }]}>
+                        {t('common.resendOtp')}
+                      </Text>
+                    </TouchableOpacity>
+                  )}
                 </>
               )}
             </>
@@ -593,6 +647,35 @@ const styles = StyleSheet.create({
   resendText: {
     fontSize: 14,
     fontWeight: '500',
+  },
+  resendCountdownText: {
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  otpBoxesContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 8,
+    marginBottom: 8,
+    position: 'relative',
+  },
+  otpBox: {
+    flex: 1,
+    height: 56,
+    borderWidth: 1,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  otpBoxText: {
+    fontSize: 22,
+    fontWeight: '700',
+  },
+  hiddenOtpInput: {
+    position: 'absolute',
+    opacity: 0,
+    width: 1,
+    height: 1,
   },
   button: {
     paddingVertical: 16,

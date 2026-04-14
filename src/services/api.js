@@ -623,13 +623,17 @@ export const authAPI = {
   },
 
   // Generic image upload API as specified: api/upload/images
-  uploadImage: async (imageFile, fileName) => {
+  uploadImage: async (blob, fileName) => {
     const formData = new FormData();
     // Use 'images[]' and add directory field as specified
-    formData.append('images[]', imageFile);
+    formData.append('images[]', blob, fileName);
     formData.append('directory', 'profile-images');
 
-    const response = await api.post('/upload/images', formData);
+    const response = await api.post('/upload/images', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
     return response.data;
   },
 
