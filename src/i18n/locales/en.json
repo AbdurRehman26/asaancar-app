@@ -45,7 +45,7 @@
         "seats": "{{count}} Seats"
     },
     "services": {
-        "pickDrop": "Pick & Drop",
+        "pickDrop": "Find a Ride",
         "rentalCars": "Rental Cars"
     },
     "settings": {
@@ -53,7 +53,7 @@
         "guest": "Guest",
         "quickActions": "Quick Actions",
         "myCars": "My Cars",
-        "myPickDrop": "My Pick & Drop",
+        "myPickDrop": "My Rides",
         "myStores": "My Stores",
         "messages": "Messages",
         "editProfile": "Edit Profile",
@@ -106,9 +106,9 @@
         "dashboard": "Dashboard"
     },
     "pickdrop": {
-        "title": "Pick & Drop",
-        "servicesAvailable": "{{count}} services available",
-        "noServicesFound": "No services found",
+        "title": "Find a Ride",
+        "servicesAvailable": "{{count}} rides available",
+        "noServicesFound": "No rides found",
         "from": "From",
         "to": "To",
         "driver": "Driver",
@@ -117,7 +117,7 @@
         "weekly": "Weekly",
         "monthly": "Monthly",
         "available": "Available",
-        "addService": "Add Service",
+        "addService": "Add Ride",
         "startPoint": "Start Point",
         "destination": "Destination",
         "perPerson": "Per Person"
@@ -287,7 +287,7 @@
         "getStarted": "Get Started",
         "slide1": {
             "title": "Reliable Daily Commute",
-            "description": "Discover a seamless pick and drop service tailored for your daily routine. Join our community of riders and drivers."
+            "description": "Discover a seamless ride service tailored for your daily routine. Join our community of riders and drivers."
         },
         "slide2": {
             "title": "Flexible Scheduling",

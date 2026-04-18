@@ -44,7 +44,7 @@
         "seats": "{{count}} Seats"
     },
     "services": {
-        "pickDrop": "Pick & Drop",
+        "pickDrop": "Ride Talaash Karein",
         "rentalCars": "Kiraye ki Gariyan"
     },
     "settings": {
@@ -52,7 +52,7 @@
         "guest": "Mehman",
         "quickActions": "Fori Actions",
         "myCars": "Meri Gariyan",
-        "myPickDrop": "Meri Pick & Drop",
+        "myPickDrop": "Meri Rides",
         "myStores": "Meri Dukanein",
         "messages": "Messages",
         "editProfile": "Profile Edit Karein",
@@ -99,9 +99,9 @@
         "dashboard": "Dashboard"
     },
     "pickdrop": {
-        "title": "Pick & Drop",
-        "servicesAvailable": "{{count}} services dastiyaab hain",
-        "noServicesFound": "Koi service nahi mili",
+        "title": "Ride Talaash Karein",
+        "servicesAvailable": "{{count}} rides dastiyaab hain",
+        "noServicesFound": "Koi ride nahi mili",
         "from": "Se",
         "to": "Tak",
         "driver": "Driver",
@@ -110,7 +110,7 @@
         "weekly": "Hafta waar",
         "monthly": "Maahana",
         "available": "Dastiyaab",
-        "addService": "Service Shamil Karein",
+        "addService": "Ride Add Karein",
         "startPoint": "Shuruwati Maqam",
         "destination": "Manzil",
         "perPerson": "Per Shakhs"
@@ -280,7 +280,7 @@
         "getStarted": "Shuru Karein",
         "slide1": {
             "title": "Ba-aitemaad Rozana Safar",
-            "description": "Apne rozana ke mamool ke mutabiq behtareen pick and drop service talaash karein. Humari riders aur drivers ki community mein shamil hon."
+            "description": "Apne rozana ke mamool ke mutabiq behtareen ride talaash karein. Humari riders aur drivers ki community mein shamil hon."
         },
         "slide2": {
             "title": "Flexible Scheduling",

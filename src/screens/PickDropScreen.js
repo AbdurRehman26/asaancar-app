@@ -630,27 +630,44 @@ const PickDropScreen = () => {
 
                     return (
                       <View style={styles.driverInfo}>
-                        {/* Avatar */}
-                        <View style={[styles.driverAvatar, { backgroundColor: isDark ? 'rgba(126, 36, 108, 0.3)' : 'rgba(126, 36, 108, 0.1)', borderWidth: 1, borderColor: isDark ? theme.colors.border : 'transparent' }]}>
-                          {providerImage ? (
-                            <Image
-                              source={{ uri: providerImage }}
-                              style={styles.driverAvatarImage}
-                            />
-                          ) : (
-                            <Text style={[styles.driverInitials, { color: isDark ? '#c77dba' : theme.colors.primary }]}>
-                              {providerName.charAt(0).toUpperCase()}
-                            </Text>
-                          )}
-                        </View>
-                        <View>
-                          <Text style={[styles.driverName, { color: theme.colors.text }]}>
-                            {providerName}
-                          </Text>
-                          {phone ? (
-                            <Text style={[styles.driverPhone, { color: theme.colors.textSecondary }]}>{phone}</Text>
-                          ) : null}
-                        </View>
+                        {user ? (
+                          <>
+                            <View style={[styles.driverAvatar, { backgroundColor: isDark ? 'rgba(126, 36, 108, 0.3)' : 'rgba(126, 36, 108, 0.1)', borderWidth: 1, borderColor: isDark ? theme.colors.border : 'transparent' }]}>
+                              {providerImage ? (
+                                <Image
+                                  source={{ uri: providerImage }}
+                                  style={styles.driverAvatarImage}
+                                />
+                              ) : (
+                                <Text style={[styles.driverInitials, { color: isDark ? '#c77dba' : theme.colors.primary }]}>
+                                  {providerName.charAt(0).toUpperCase()}
+                                </Text>
+                              )}
+                            </View>
+                            <View>
+                              <Text style={[styles.driverName, { color: theme.colors.text }]}>
+                                {providerName}
+                              </Text>
+                              {phone ? (
+                                <Text style={[styles.driverPhone, { color: theme.colors.textSecondary }]}>{phone}</Text>
+                              ) : null}
+                            </View>
+                          </>
+                        ) : (
+                          <>
+                            <View style={[styles.driverAvatar, { backgroundColor: isDark ? 'rgba(126, 36, 108, 0.3)' : 'rgba(126, 36, 108, 0.1)', borderWidth: 1, borderColor: isDark ? theme.colors.border : 'transparent' }]}>
+                              <Icon name="lock-outline" size={18} color={isDark ? '#c77dba' : theme.colors.primary} />
+                            </View>
+                            <View>
+                              <Text style={[styles.driverName, { color: theme.colors.text }]}>
+                                {t('pickDropDetail.user')}
+                              </Text>
+                              <Text style={[styles.driverPhone, { color: theme.colors.textSecondary }]}>
+                                {t('pickDropDetail.loginToContact')}
+                              </Text>
+                            </View>
+                          </>
+                        )}
                       </View>
                     );
                   })()}

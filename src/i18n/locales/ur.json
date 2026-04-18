@@ -44,7 +44,7 @@
         "seats": "{{count}} سیٹیں"
     },
     "services": {
-        "pickDrop": "پک اینڈ ڈراپ",
+        "pickDrop": "رائیڈ تلاش کریں",
         "rentalCars": "کرایہ کی گاڑیاں"
     },
     "settings": {
@@ -52,7 +52,7 @@
         "guest": "مہمان",
         "quickActions": "فوری کارروائیاں",
         "myCars": "میری گاڑیاں",
-        "myPickDrop": "میری پک اینڈ ڈراپ",
+        "myPickDrop": "میری رائیڈز",
         "myStores": "میری دکانیں",
         "messages": "پیغامات",
         "editProfile": "پروفائل میں ترمیم",
@@ -99,9 +99,9 @@
         "dashboard": "ڈیش بورڈ"
     },
     "pickdrop": {
-        "title": "پک اینڈ ڈراپ",
-        "servicesAvailable": "{{count}} سروسز دستیاب ہیں",
-        "noServicesFound": "کوئی سروس نہیں ملی",
+        "title": "رائیڈ تلاش کریں",
+        "servicesAvailable": "{{count}} رائیڈز دستیاب ہیں",
+        "noServicesFound": "کوئی رائیڈ نہیں ملی",
         "from": "سے",
         "to": "تک",
         "driver": "ڈرائیور",
@@ -110,7 +110,7 @@
         "weekly": "ہفتہ وار",
         "monthly": "ماہانہ",
         "available": "دستیاب",
-        "addService": "سروس شامل کریں",
+        "addService": "رائیڈ شامل کریں",
         "startPoint": "شروعاتی مقام",
         "destination": "منزل",
         "perPerson": "فی شخص"

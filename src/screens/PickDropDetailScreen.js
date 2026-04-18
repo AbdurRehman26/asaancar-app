@@ -630,32 +630,38 @@ const PickDropDetailScreen = () => {
 
               <View style={styles.providerHeader}>
                 <View style={[styles.providerAvatarXLarge, { backgroundColor: isDark ? 'rgba(126, 36, 108, 0.3)' : 'rgba(126, 36, 108, 0.1)', borderWidth: 2, borderColor: isDark ? theme.colors.border : 'transparent' }]}>
-                    <Text style={[styles.providerInitialsXLarge, { color: isDark ? '#c77dba' : theme.colors.primary }]}>
-                      {(provider?.name || provider?.user?.name || service.driver?.name || 'U').charAt(0).toUpperCase()}
-                    </Text>
-                  </View>
+                  <Text style={[styles.providerInitialsXLarge, { color: isDark ? '#c77dba' : theme.colors.primary }]}>
+                    {user
+                      ? (provider?.name || provider?.user?.name || service.driver?.name || 'U').charAt(0).toUpperCase()
+                      : 'L'}
+                  </Text>
+                </View>
                 <View style={styles.providerInfoCenter}>
                   <Text style={[styles.providerNameXLarge, { color: theme.colors.text }]}>
-                    {provider?.name || provider?.user?.name || service.driver?.name || t('pickDropDetail.user')}
+                    {user
+                      ? (provider?.name || provider?.user?.name || service.driver?.name || t('pickDropDetail.user'))
+                      : t('pickDropDetail.user')}
                   </Text>
-                  <Text style={[styles.providerRole, { color: theme.colors.primary, backgroundColor: theme.colors.backgroundSecondary }]}>{t('pickDropDetail.verifiedDriver')}</Text>
+                  <Text style={[styles.providerRole, { color: theme.colors.primary, backgroundColor: theme.colors.backgroundSecondary }]}>
+                    {user ? t('pickDropDetail.verifiedDriver') : t('pickDropDetail.loginToContact')}
+                  </Text>
                 </View>
               </View>
 
               <View style={styles.providerActionsColumn}>
-                {providerPhone && (
+                {user && providerPhone && (
                   <TouchableOpacity style={[styles.actionBtnFull, { backgroundColor: theme.colors.primary }]} onPress={handleCallProvider}>
                     <Icon name="call" size={20} color="#fff" />
                     <Text style={styles.actionBtnText}>{t('pickDropDetail.callNow')}</Text>
                   </TouchableOpacity>
                 )}
-                {providerWhatsApp && (
+                {user && providerWhatsApp && (
                   <TouchableOpacity style={[styles.actionBtnFull, { backgroundColor: '#25D366' }]} onPress={handleMessageProvider}>
                     <FontAwesome name="whatsapp" size={20} color="#fff" />
                     <Text style={styles.actionBtnText}>{t('pickDropDetail.whatsapp')}</Text>
                   </TouchableOpacity>
                 )}
-                {(provider?.id || provider?.user_id) && (
+                {user && (provider?.id || provider?.user_id) && (
                   <TouchableOpacity style={[styles.actionBtnFull, { backgroundColor: theme.colors.secondary }]} onPress={() => {
                     if (!user) {
                       navigation.navigate('Login');
@@ -672,6 +678,15 @@ const PickDropDetailScreen = () => {
                   }}>
                     <Icon name="forum" size={20} color="#fff" />
                     <Text style={styles.actionBtnText}>{t('pickDropDetail.chatInApp')}</Text>
+                  </TouchableOpacity>
+                )}
+                {!user && (
+                  <TouchableOpacity
+                    style={[styles.actionBtnFull, { backgroundColor: theme.colors.primary }]}
+                    onPress={() => navigation.navigate('Login')}
+                  >
+                    <Icon name="lock-open" size={20} color="#fff" />
+                    <Text style={styles.actionBtnText}>{t('common.login')}</Text>
                   </TouchableOpacity>
                 )}
               </View>

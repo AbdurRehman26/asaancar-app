@@ -262,14 +262,14 @@ const MyPickDropServicesScreen = () => {
       onPress={() => navigation.navigate('CreatePickDropService')}
     >
       <Icon name="add" size={20} color="#fff" style={{ marginRight: 6 }} />
-      <Text style={styles.addButtonText}>Add Service</Text>
+      <Text style={styles.addButtonText}>Add Ride</Text>
     </TouchableOpacity>
   );
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.backgroundTertiary }]} edges={['top']}>
       <PageHeader
-        title="My Pick & Drop"
+        title="My Rides"
         backDestination="SettingsMain"
         rightAction={addServiceButton}
       />
@@ -290,10 +290,10 @@ const MyPickDropServicesScreen = () => {
           <View style={styles.emptyContainer}>
             <Icon name="directions-transit" size={64} color={theme.colors.border} />
             <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>
-              No services found
+              No rides found
             </Text>
             <Text style={[styles.emptySubtext, { color: theme.colors.textSecondary }]}>
-              Create your first pick and drop service to get started
+              Create your first ride to get started
             </Text>
           </View>
         }

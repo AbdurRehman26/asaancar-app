@@ -1268,7 +1268,7 @@ const CreatePickDropServiceScreen = () => {
           <Icon name="arrow-back" size={24} color={theme.colors.text} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: theme.colors.text }]}>
-          {isEditing ? 'Edit Service' : 'Create Service'}
+          {isEditing ? 'Edit Ride' : 'Add Ride'}
         </Text>
         <View style={styles.placeholder} />
       </View>
