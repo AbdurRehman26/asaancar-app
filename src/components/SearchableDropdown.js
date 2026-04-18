@@ -4,6 +4,7 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
+  TouchableWithoutFeedback,
   Modal,
   FlatList,
   TextInput,
@@ -22,6 +23,7 @@ const SearchableDropdown = ({
   searchable = true,
   onSearch,
   loading = false,
+  onClose,
 }) => {
   const { theme } = useTheme();
   const [isOpen, setIsOpen] = useState(false);
@@ -84,6 +86,9 @@ const SearchableDropdown = ({
   const handleClose = () => {
     setIsOpen(false);
     setSearchQuery('');
+    if (onClose) {
+      onClose();
+    }
   };
 
   return (
@@ -110,64 +115,66 @@ const SearchableDropdown = ({
           activeOpacity={1}
           onPress={handleClose}
         >
-          <View style={[styles.modalContent, { backgroundColor: theme.colors.background }]}>
-            {/* Search Input */}
-            {searchable && (
-              <View style={[styles.searchContainer, { borderColor: theme.colors.border }]}>
-                <Icon name="search" size={20} color={theme.colors.textSecondary} />
-                <TextInput
-                  style={[styles.searchInput, { color: theme.colors.text }]}
-                  placeholder="Search locations..."
-                  placeholderTextColor={theme.colors.textSecondary}
-                  value={searchQuery}
-                  onChangeText={setSearchQuery}
-                  autoFocus={true}
-                />
-                {loading && (
-                  <ActivityIndicator size="small" color={theme.colors.primary} />
-                )}
-              </View>
-            )}
+          <TouchableWithoutFeedback>
+            <View style={[styles.modalContent, { backgroundColor: theme.colors.background }]}>
+              {/* Search Input */}
+              {searchable && (
+                <View style={[styles.searchContainer, { borderColor: theme.colors.border }]}>
+                  <Icon name="search" size={20} color={theme.colors.textSecondary} />
+                  <TextInput
+                    style={[styles.searchInput, { color: theme.colors.text }]}
+                    placeholder="Search locations..."
+                    placeholderTextColor={theme.colors.textSecondary}
+                    value={searchQuery}
+                    onChangeText={setSearchQuery}
+                    autoFocus={true}
+                  />
+                  {loading && (
+                    <ActivityIndicator size="small" color={theme.colors.primary} />
+                  )}
+                </View>
+              )}
 
-            {/* Options List */}
-            {filteredOptions.length > 0 ? (
-              <FlatList
-                data={filteredOptions}
-                keyExtractor={(item) => item.value?.toString() || item.id?.toString() || item.label}
-                renderItem={({ item }) => (
-                  <TouchableOpacity
-                    style={[
-                      styles.option,
-                      (value === item.value || value === item.id) && [
-                        styles.optionSelected,
-                        { backgroundColor: theme.colors.primary + '20' },
-                      ],
-                    ]}
-                    onPress={() => handleSelect(item.value || item.id, item)}
-                  >
-                    <Text
+              {/* Options List */}
+              {filteredOptions.length > 0 ? (
+                <FlatList
+                  data={filteredOptions}
+                  keyExtractor={(item) => item.value?.toString() || item.id?.toString() || item.label}
+                  renderItem={({ item }) => (
+                    <TouchableOpacity
                       style={[
-                        styles.optionText,
-                        { color: theme.colors.text },
-                        (value === item.value || value === item.id) && { color: theme.colors.primary, fontWeight: '600' },
+                        styles.option,
+                        (value === item.value || value === item.id) && [
+                          styles.optionSelected,
+                          { backgroundColor: theme.colors.primary + '20' },
+                        ],
                       ]}
+                      onPress={() => handleSelect(item.value || item.id, item)}
                     >
-                      {item.label}
-                    </Text>
-                    {(value === item.value || value === item.id) && (
-                      <Icon name="check" size={20} color={theme.colors.primary} />
-                    )}
-                  </TouchableOpacity>
-                )}
-              />
-            ) : (
-              <View style={styles.emptyContainer}>
-                <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>
-                  {loading ? 'Loading...' : 'No locations found'}
-                </Text>
-              </View>
-            )}
-          </View>
+                      <Text
+                        style={[
+                          styles.optionText,
+                          { color: theme.colors.text },
+                          (value === item.value || value === item.id) && { color: theme.colors.primary, fontWeight: '600' },
+                        ]}
+                      >
+                        {item.label}
+                      </Text>
+                      {(value === item.value || value === item.id) && (
+                        <Icon name="check" size={20} color={theme.colors.primary} />
+                      )}
+                    </TouchableOpacity>
+                  )}
+                />
+              ) : (
+                <View style={styles.emptyContainer}>
+                  <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>
+                    {loading ? 'Loading...' : 'No locations found'}
+                  </Text>
+                </View>
+              )}
+            </View>
+          </TouchableWithoutFeedback>
         </TouchableOpacity>
       </Modal>
     </View>
@@ -206,7 +213,7 @@ const styles = StyleSheet.create({
   modalContent: {
     width: '85%',
     maxWidth: 400,
-    maxHeight: '70%',
+    height: 360,
     borderRadius: 12,
     padding: 8,
   },
@@ -249,9 +256,6 @@ const styles = StyleSheet.create({
 });
 
 export default SearchableDropdown;
-
-
-
 
 
 

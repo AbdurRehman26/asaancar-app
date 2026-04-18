@@ -495,6 +495,83 @@ export const pickDropAPI = {
   },
 };
 
+export const rideRequestAPI = {
+  getRideRequests: async (filters = {}) => {
+    const params = new URLSearchParams();
+
+    const filterMapping = {
+      startLocation: 'start_location',
+      startLatitude: 'start_latitude',
+      startLongitude: 'start_longitude',
+      endLocation: 'end_location',
+      endLatitude: 'end_latitude',
+      endLongitude: 'end_longitude',
+      preferredDriverGender: 'preferred_driver_gender',
+      requiredSeats: 'required_seats',
+      departureDate: 'departure_date',
+      departureTime: 'departure_time',
+    };
+
+    Object.keys(filters).forEach((key) => {
+      if (filters[key] !== undefined && filters[key] !== null && filters[key] !== '') {
+        const apiKey = filterMapping[key] || key;
+        params.append(apiKey, filters[key]);
+      }
+    });
+
+    const queryString = params.toString();
+    const response = await api.get(queryString ? `/ride-requests?${queryString}` : '/ride-requests');
+    return response.data;
+  },
+
+  getRideRequest: async (id) => {
+    const response = await api.get(`/ride-requests/${id}`);
+    return response.data;
+  },
+
+  createRideRequest: async (requestData) => {
+    const response = await api.post('/customer/ride-requests', requestData);
+    return response.data;
+  },
+
+  updateRideRequest: async (id, requestData) => {
+    const response = await api.put(`/customer/ride-requests/${id}`, requestData);
+    return response.data;
+  },
+
+  deleteRideRequest: async (id) => {
+    const response = await api.delete(`/customer/ride-requests/${id}`);
+    return response.data;
+  },
+
+  getMyRideRequests: async (filters = {}) => {
+    const params = new URLSearchParams();
+
+    const filterMapping = {
+      startLocation: 'start_location',
+      endLocation: 'end_location',
+      preferredDriverGender: 'preferred_driver_gender',
+      requiredSeats: 'required_seats',
+      departureDate: 'departure_date',
+      departureTime: 'departure_time',
+      page: 'page',
+      per_page: 'per_page',
+      perPage: 'per_page',
+    };
+
+    Object.keys(filters).forEach((key) => {
+      if (filters[key] !== undefined && filters[key] !== null && filters[key] !== '') {
+        const apiKey = filterMapping[key] || key;
+        params.append(apiKey, filters[key]);
+      }
+    });
+
+    const queryString = params.toString();
+    const response = await api.get(queryString ? `/customer/ride-requests/my-requests?${queryString}` : '/customer/ride-requests/my-requests');
+    return response.data;
+  },
+};
+
 export const authAPI = {
   // Login with phone number and password
   login: async (phone, password) => {

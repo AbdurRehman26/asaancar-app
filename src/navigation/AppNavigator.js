@@ -30,6 +30,10 @@ import OnboardingScreen from '@/screens/OnboardingScreen';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import VerifySignupOtpScreen from '@/screens/VerifySignupOtpScreen';
 import SetPasswordModal from '@/components/SetPasswordModal';
+import RideRequestsScreen from '@/screens/RideRequestsScreen';
+import RideRequestDetailScreen from '@/screens/RideRequestDetailScreen';
+import RideRequestFormScreen from '@/screens/RideRequestFormScreen';
+import MyRideRequestsScreen from '@/screens/MyRideRequestsScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -171,6 +175,42 @@ const SettingsStack = () => {
   );
 };
 
+const RideRequestsStack = () => {
+  return (
+    <Stack.Navigator initialRouteName="RideRequestsMain">
+      <Stack.Screen
+        name="RideRequestsMain"
+        component={RideRequestsScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="RideRequestDetail"
+        component={RideRequestDetailScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="CreateRideRequest"
+        component={RideRequestFormScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="MyRideRequests"
+        component={MyRideRequestsScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="Login"
+        component={LoginScreen}
+        options={{
+          headerShown: false,
+          presentation: 'modal',
+          gestureEnabled: false,
+        }}
+      />
+    </Stack.Navigator>
+  );
+};
+
 // Authenticated tabs (only shown when logged in)
 const AuthenticatedTabs = () => {
   const { theme } = useTheme();
@@ -183,9 +223,9 @@ const AuthenticatedTabs = () => {
           let iconName;
 
           if (route.name === 'Home') {
-            iconName = 'home';
-          } else if (route.name === 'Bookings') {
-            iconName = 'book';
+            iconName = 'alt-route';
+          } else if (route.name === 'RideRequests') {
+            iconName = 'description';
           } else if (route.name === 'Dashboard') {
             iconName = 'dashboard';
           }
@@ -204,13 +244,26 @@ const AuthenticatedTabs = () => {
       <Tab.Screen
         name="Home"
         component={MainStack}
-        options={{ tabBarLabel: t('navigation.home') }}
+        options={{ tabBarLabel: 'Find Ride' }}
         listeners={({ navigation }) => ({
           tabPress: (e) => {
             // Always reset Home tab to PickDrop when pressed
             e.preventDefault();
             navigation.navigate('Home', {
               screen: 'PickDrop',
+            });
+          },
+        })}
+      />
+      <Tab.Screen
+        name="RideRequests"
+        component={RideRequestsStack}
+        options={{ tabBarLabel: 'Ride Requests' }}
+        listeners={({ navigation }) => ({
+          tabPress: (e) => {
+            e.preventDefault();
+            navigation.navigate('RideRequests', {
+              screen: 'RideRequestsMain',
             });
           },
         })}
@@ -277,4 +330,3 @@ const AppNavigator = () => {
 };
 
 export default AppNavigator;
-
