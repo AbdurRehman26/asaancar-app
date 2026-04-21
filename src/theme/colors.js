@@ -1,107 +1,106 @@
 // AsaanCar Theme Colors - Based on website design
 export const colors = {
-  // Primary brand colors
-  primary: '#7e246c', // Deep purple - main brand color for buttons
-  primaryDark: '#5d1a4f',
-  primaryLight: '#9d3a85',
-  
-  // Secondary brand colors (using primary for consistency)
-  secondary: '#7e246c', // Purple - same as primary
-  secondaryDark: '#5d1a4f',
-  secondaryLight: '#9d3a85',
-  
-  // Background colors
-  background: '#ffffff',
-  backgroundSecondary: '#f8f9fa',
-  backgroundTertiary: '#f5f5f5',
-  backgroundDark: '#1a1a1a',
-  backgroundDarkSecondary: '#2d2d2d',
-  
+  // Primary brand colors - aligned to the live website light palette
+  primary: '#7e246c',
+  primaryDark: '#5f1d54',
+  primaryLight: '#b35aa0',
+
+  // Secondary brand colors
+  secondary: '#9d3a8a',
+  secondaryDark: '#7e246c',
+  secondaryLight: '#e4b6d9',
+
+  // Background colors - softer rose/cream surfaces like the website
+  background: '#fbf6fa',
+  backgroundSecondary: '#fff9fd',
+  backgroundTertiary: '#f6edf4',
+  backgroundDark: '#130f18',
+  backgroundDarkSecondary: '#18141e',
+
   // Text colors
-  text: '#1a1a1a',
-  textSecondary: '#666666',
-  textLight: '#999999',
-  textDark: '#000000',
+  text: '#231526',
+  textSecondary: '#66576b',
+  textLight: '#97879a',
+  textDark: '#130f18',
   textOnPrimary: '#ffffff',
-  textOnSecondary: '#1a1a1a',
-  
+  textOnSecondary: '#231526',
+
   // Border colors
-  border: '#e0e0e0',
-  borderLight: '#f0f0f0',
-  borderDark: '#cccccc',
-  
+  border: '#e7d5e3',
+  borderLight: '#f3e7f0',
+  borderDark: '#d8bfd2',
+
   // Status colors
-  success: '#7e246c',
-  error: '#ff4444',
-  warning: '#ffa500',
-  info: '#2196f3',
-  
+  success: '#2f7d4a',
+  error: '#dc2626',
+  warning: '#f59e0b',
+  info: '#2563eb',
+
   // Card colors
-  cardBackground: '#ffffff',
-  cardShadow: 'rgba(0, 0, 0, 0.1)',
-  
+  cardBackground: '#fffdfd',
+  cardShadow: 'rgba(126, 36, 108, 0.12)',
+
   // Input colors
-  inputBackground: '#ffffff',
-  inputBorder: '#e0e0e0',
+  inputBackground: '#fff9fc',
+  inputBorder: '#dfc7d9',
   inputFocus: '#7e246c',
-  placeholder: '#999999',
-  
+  placeholder: '#99889c',
+
   // Button colors
   buttonPrimary: '#7e246c',
-  buttonSecondary: '#7e246c',
+  buttonSecondary: '#5f1d54',
   buttonText: '#ffffff',
 };
 
 export const darkColors = {
-  // Primary brand colors - slightly brighter for dark mode visibility
-  primary: '#9d3a85',
-  primaryDark: '#7e246c',
-  primaryLight: '#c77dba',
+  // Primary brand colors - based on live site dark theme accents
+  primary: '#7e246c',
+  primaryDark: '#1b1521',
+  primaryLight: '#c66ab3',
   
-  // Secondary brand colors (using primary for consistency)
-  secondary: '#9d3a85',
-  secondaryDark: '#7e246c',
-  secondaryLight: '#c77dba',
+  // Secondary brand colors
+  secondary: '#9d3a8a',
+  secondaryDark: '#221b29',
+  secondaryLight: '#d88ac8',
   
-  // Background colors - matching website dark mode (#1A1A2E and #21213A)
-  background: '#1a1a2e',
-  backgroundSecondary: '#2a2a42', // Lighter for better card contrast
-  backgroundTertiary: '#1a1a2e',
-  backgroundDark: '#1a1a2e',
-  backgroundDarkSecondary: '#252540', // Card background for better readability
+  // Background colors - matching live site dark gradients and cards
+  background: '#1b1521',
+  backgroundSecondary: '#221b29',
+  backgroundTertiary: '#191b24',
+  backgroundDark: '#1b1521',
+  backgroundDarkSecondary: '#271f2f',
   
   // Text colors
   text: '#ffffff',
-  textSecondary: '#d0d0d0',
-  textLight: '#b0b0b0',
+  textSecondary: '#d4d4d8',
+  textLight: '#a1a1aa',
   textDark: '#ffffff',
   textOnPrimary: '#ffffff',
   textOnSecondary: '#1a1a1a',
   
   // Border colors
-  border: '#4a4a6a', // Lighter border for better visibility
-  borderLight: '#252540',
-  borderDark: '#5a5a7a',
+  border: '#352d3f',
+  borderLight: '#2a2333',
+  borderDark: '#4a3f57',
   
-  // Status colors (same)
-  success: '#7e246c',
+  // Status colors
+  success: '#4caf50',
   error: '#ff4444',
-  warning: '#ffa500',
+  warning: '#f59e0b',
   info: '#2196f3',
   
-  // Card colors - lighter for better readability in dark mode
-  cardBackground: '#252540', // Lighter card background
-  cardShadow: 'rgba(0, 0, 0, 0.3)',
+  // Card colors
+  cardBackground: '#271f2f',
+  cardShadow: 'rgba(0, 0, 0, 0.35)',
   
   // Input colors
-  inputBackground: '#252540',
-  inputBorder: '#4a4a6a',
+  inputBackground: '#271f2f',
+  inputBorder: '#352d3f',
   inputFocus: '#7e246c',
-  placeholder: '#b0b0b0',
+  placeholder: '#a1a1aa',
   
   // Button colors
   buttonPrimary: '#7e246c',
-  buttonSecondary: '#7e246c',
+  buttonSecondary: '#9d3a8a',
   buttonText: '#ffffff',
 };
-

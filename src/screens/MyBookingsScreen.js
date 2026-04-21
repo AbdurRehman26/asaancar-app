@@ -143,14 +143,14 @@ const MyBookingsScreen = () => {
 
   if (loading && !refreshing) {
     return (
-      <SafeAreaView style={[styles.loadingContainer, { backgroundColor: theme.colors.background }]}>
+      <SafeAreaView style={[styles.loadingContainer, { backgroundColor: theme.colors.background }]} edges={['bottom']}>
         <ActivityIndicator size="large" color={theme.colors.primary} />
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]} edges={['bottom']}>
       <PageHeader title={t('booking.yourBookings')} showBack={false} />
 
       <FlatList
@@ -273,5 +273,4 @@ const styles = StyleSheet.create({
 });
 
 export default MyBookingsScreen;
-
 

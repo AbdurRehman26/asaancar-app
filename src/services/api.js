@@ -4,6 +4,66 @@ import { Platform } from 'react-native';
 
 const API_BASE_URL = 'https://asaancar.com/api';
 
+const pickFirstDefined = (...values) =>
+  values.find((value) => value !== undefined && value !== null && value !== '');
+
+const normalizeForceUpdatePayload = (payload = {}) => {
+  const raw = payload?.data || payload;
+
+  return {
+    enabled: pickFirstDefined(
+      raw.enabled,
+      raw.force_update,
+      raw.forceUpdate,
+      raw.is_force_update,
+      raw.isForceUpdate,
+      raw.required,
+      raw.is_required
+    ),
+    minimumVersion: pickFirstDefined(
+      raw.minimum_version,
+      raw.minimumVersion,
+      raw.min_version,
+      raw.minVersion,
+      raw.required_version,
+      raw.requiredVersion
+    ),
+    minimumVersionCode: pickFirstDefined(
+      raw.minimum_version_code,
+      raw.minimumVersionCode,
+      raw.min_build,
+      raw.minBuild,
+      raw.minimum_build,
+      raw.minimumBuild,
+      raw.required_build
+    ),
+    message: pickFirstDefined(raw.message, raw.description, raw.note),
+    title: pickFirstDefined(raw.title, raw.heading),
+    storeUrl: pickFirstDefined(raw.store_url, raw.storeUrl, raw.url, raw.link),
+  };
+};
+
+const extractPlayStoreVersion = (html = '') => {
+  const matchers = [
+    /itemprop=["']softwareVersion["'][^>]*>\s*([^<\s][^<]*)\s*</i,
+    /"softwareVersion":"([^"]+)"/i,
+    /\[\[\["([0-9]+(?:\.[0-9A-Za-z-]+)+)"\]\],\[\[\["Current Version"\]\]/i,
+    /\[\[\["Current Version"\]\],\[\["([0-9]+(?:\.[0-9A-Za-z-]+)+)"\]\]/i,
+    /Current Version[\s\S]{0,200}?>([0-9]+(?:\.[0-9A-Za-z-]+)+)</i,
+    /Version[\s\S]{0,200}?>([0-9]+(?:\.[0-9A-Za-z-]+)+)</i,
+  ];
+
+  for (const matcher of matchers) {
+    const match = html.match(matcher);
+    const version = match?.[1]?.trim();
+    if (version) {
+      return version;
+    }
+  }
+
+  return null;
+};
+
 // Create axios instance
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -175,6 +235,42 @@ export const bookingAPI = {
   getBookingById: async (id) => {
     const response = await api.get(`/customer/booking/${id}`);
     return response.data;
+  },
+};
+
+export const forceUpdateAPI = {
+  getConfig: async (endpoint) => {
+    if (!endpoint) {
+      return null;
+    }
+
+    const response = endpoint.startsWith('http')
+      ? await axios.get(endpoint)
+      : await api.get(endpoint);
+
+    return normalizeForceUpdatePayload(response.data);
+  },
+
+  getPlayStoreVersion: async (packageName) => {
+    if (!packageName) {
+      return null;
+    }
+
+    const response = await axios.get('https://play.google.com/store/apps/details', {
+      params: {
+        id: packageName,
+        hl: 'en',
+        gl: 'us',
+      },
+      headers: {
+        'User-Agent':
+          'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Mobile Safari/537.36',
+        Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+      },
+      timeout: 15000,
+    });
+
+    return extractPlayStoreVersion(response.data);
   },
 };
 

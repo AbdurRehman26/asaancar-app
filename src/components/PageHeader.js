@@ -4,9 +4,9 @@ import {
     Text,
     StyleSheet,
     TouchableOpacity,
-    Platform,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/context/ThemeContext';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
@@ -28,6 +28,7 @@ const PageHeader = ({
 }) => {
     const navigation = useNavigation();
     const { theme } = useTheme();
+    const insets = useSafeAreaInsets();
 
     const handleBack = () => {
         if (onBack) {
@@ -41,8 +42,10 @@ const PageHeader = ({
 
     return (
         <View style={[styles.header, {
-            backgroundColor: theme.colors.cardBackground,
-            borderBottomColor: theme.colors.border,
+            backgroundColor: theme.colors.primaryDark || theme.colors.primary,
+            borderBottomColor: 'rgba(255,255,255,0.12)',
+            height: HEADER_HEIGHT + Math.max(insets.top - 12, 1),
+            paddingTop: Math.max(insets.top - 12, 1),
         }]}>
             <View style={styles.headerContent}>
                 {showBack ? (
@@ -51,18 +54,20 @@ const PageHeader = ({
                         style={styles.backButton}
                         hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                     >
-                        <Icon name="arrow-back" size={24} color={theme.colors.text} />
+                        <Icon name="arrow-back" size={22} color="#fff" />
                     </TouchableOpacity>
                 ) : (
                     <View style={styles.placeholder} />
                 )}
 
-                <Text
-                    style={[styles.headerTitle, { color: theme.colors.text }]}
-                    numberOfLines={1}
-                >
-                    {title}
-                </Text>
+                <View style={styles.headerTextBlock}>
+                    <Text
+                        style={styles.headerTitle}
+                        numberOfLines={1}
+                    >
+                        {title}
+                    </Text>
+                </View>
 
                 {rightAction ? (
                     <View style={styles.rightAction}>
@@ -76,40 +81,48 @@ const PageHeader = ({
     );
 };
 
-const HEADER_HEIGHT = 56;
+const HEADER_HEIGHT = 54;
 
 const styles = StyleSheet.create({
     header: {
-        height: HEADER_HEIGHT,
         borderBottomWidth: 1,
-        justifyContent: 'center',
+        borderBottomLeftRadius: 24,
+        borderBottomRightRadius: 24,
+        overflow: 'hidden',
     },
     headerContent: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingHorizontal: 16,
-        height: '100%',
+        paddingHorizontal: 12,
+        flex: 1,
     },
     backButton: {
-        width: 32,
-        height: 32,
+        width: 34,
+        height: 34,
         justifyContent: 'center',
         alignItems: 'center',
-        marginRight: 8,
+        marginRight: 4,
+        borderRadius: 17,
+        backgroundColor: 'rgba(255,255,255,0.12)',
+    },
+    headerTextBlock: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     headerTitle: {
-        flex: 1,
-        fontSize: 20,
-        fontWeight: 'bold',
+        color: '#fff',
+        fontSize: 17,
+        fontWeight: '700',
         textAlign: 'center',
     },
     placeholder: {
-        width: 32,
-        height: 32,
+        width: 34,
+        height: 34,
     },
     rightAction: {
-        minWidth: 32,
-        height: 32,
+        minWidth: 34,
+        minHeight: 34,
         justifyContent: 'center',
         alignItems: 'center',
     },

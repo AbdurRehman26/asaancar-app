@@ -339,7 +339,7 @@ const RideRequestFormScreen = () => {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.backgroundTertiary }]} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.backgroundTertiary }]} edges={['bottom']}>
       <PageHeader title={isEditing ? 'Edit Ride Request' : 'Create Ride Request'} />
       <ScrollView contentContainerStyle={styles.content}>
         <View style={[styles.card, { backgroundColor: theme.colors.cardBackground }]}>

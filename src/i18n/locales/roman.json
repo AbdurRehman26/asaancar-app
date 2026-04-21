@@ -53,6 +53,7 @@
         "quickActions": "Fori Actions",
         "myCars": "Meri Gariyan",
         "myPickDrop": "Meri Rides",
+        "rideRequests": "Ride Requests",
         "myStores": "Meri Dukanein",
         "messages": "Messages",
         "editProfile": "Profile Edit Karein",
@@ -97,6 +98,15 @@
         "home": "Home",
         "bookings": "Bookings",
         "dashboard": "Dashboard"
+    },
+    "forceUpdate": {
+        "checking": "App version check ho rahi hai...",
+        "title": "Update Zaroori Hai",
+        "message": "AsaanCar ka naya version dastiyaab hai. Barah-e-karam app update karke hi aage barhein.",
+        "currentVersion": "Maujooda Version",
+        "requiredVersion": "Lazmi Version",
+        "latestBuild": "Latest Build",
+        "updateNow": "Abhi Update Karein"
     },
     "pickdrop": {
         "title": "Ride Talaash Karein",

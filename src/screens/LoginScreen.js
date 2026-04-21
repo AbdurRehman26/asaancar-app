@@ -23,7 +23,7 @@ import { LANGUAGES, changeLanguage } from '@/i18n';
 const LoginScreen = () => {
   const navigation = useNavigation();
   const { theme, isDark, toggleTheme } = useTheme();
-  const { login, loginWithOtp, setUserFromStorage } = useAuth();
+  const { user, login, loginWithOtp, setUserFromStorage } = useAuth();
   const { t, i18n } = useTranslation();
   const [authMethod, setAuthMethod] = useState('password'); // 'otp' or 'password'
   const [phone, setPhone] = useState('');
@@ -55,6 +55,16 @@ const LoginScreen = () => {
 
     return () => clearInterval(interval);
   }, [authMethod, resendCooldown]);
+
+  useEffect(() => {
+    if (!user) {
+      return;
+    }
+
+    navigation.navigate('Dashboard', {
+      screen: 'SettingsMain',
+    });
+  }, [navigation, user]);
 
   const handleSendOTP = async () => {
     if (!phone || phone.length !== 10) {
@@ -228,35 +238,16 @@ const LoginScreen = () => {
           </View>
         </View>
 
-        {/* Back to Listing */}
-        <TouchableOpacity
-          style={[styles.backToListing, { backgroundColor: theme.colors.primary + '14', borderColor: theme.colors.primary }]}
-          onPress={() => navigation.navigate('PickDrop')}
-        >
-          <Icon name="arrow-back" size={20} color={theme.colors.primary} />
-          <Text style={[styles.backToListingText, { color: theme.colors.primary }]}>
-            {t('common.goToListing')}
-          </Text>
-        </TouchableOpacity>
-
         {/* Main Content */}
-        <View style={styles.content}>
-          <Text style={[styles.welcomeTitle, { color: theme.colors.text }]}>{t('common.welcome')}</Text>
-          <Text style={[styles.subtitle, { color: theme.colors.textSecondary }]}>
-            {t('auth.signIn')}
-          </Text>
+        <View style={[styles.content, styles.authCard, { backgroundColor: theme.colors.cardBackground, borderColor: theme.colors.border }]}>
+          <Text style={[styles.welcomeTitle, { color: theme.colors.text }]}>{t('auth.signIn')}</Text>
 
           {/* Authentication Method Toggle */}
-          <View style={styles.authMethodContainer}>
+          <View style={[styles.authMethodContainer, { backgroundColor: theme.colors.backgroundSecondary || theme.colors.background }]}>
             <TouchableOpacity
               style={[
                 styles.authMethodButton,
                 authMethod === 'password' && { backgroundColor: theme.colors.primary },
-                authMethod !== 'password' && {
-                  backgroundColor: theme.colors.background,
-                  borderWidth: 1,
-                  borderColor: theme.colors.border,
-                },
               ]}
               onPress={() => {
                 setAuthMethod('password');
@@ -267,8 +258,7 @@ const LoginScreen = () => {
               <Text
                 style={[
                   styles.authMethodText,
-                  authMethod === 'password' && { color: '#fff' },
-                  authMethod !== 'password' && { color: theme.colors.text },
+                  authMethod === 'password' ? { color: '#fff' } : { color: theme.colors.text },
                 ]}
               >
                 {t('auth.password')}
@@ -278,11 +268,6 @@ const LoginScreen = () => {
               style={[
                 styles.authMethodButton,
                 authMethod === 'otp' && { backgroundColor: theme.colors.primary },
-                authMethod !== 'otp' && {
-                  backgroundColor: theme.colors.background,
-                  borderWidth: 1,
-                  borderColor: theme.colors.border,
-                },
               ]}
               onPress={() => {
                 setAuthMethod('otp');
@@ -293,8 +278,7 @@ const LoginScreen = () => {
               <Text
                 style={[
                   styles.authMethodText,
-                  authMethod === 'otp' && { color: '#fff' },
-                  authMethod !== 'otp' && { color: theme.colors.text },
+                  authMethod === 'otp' ? { color: '#fff' } : { color: theme.colors.text },
                 ]}
               >
                 OTP
@@ -522,24 +506,82 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
   },
-  welcomeTitle: {
-    fontSize: 32,
-    fontWeight: 'bold',
+  heroBanner: {
+    borderRadius: 24,
+    paddingHorizontal: 20,
+    paddingVertical: 22,
+    marginBottom: 18,
+  },
+  heroEyebrow: {
+    color: 'rgba(255,255,255,0.78)',
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
     marginBottom: 8,
+  },
+  heroTitle: {
+    color: '#fff',
+    fontSize: 28,
+    fontWeight: '800',
+    marginBottom: 8,
+  },
+  heroSubtitle: {
+    color: 'rgba(255,255,255,0.92)',
+    fontSize: 14,
+    lineHeight: 21,
+  },
+  heroChips: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+    marginTop: 16,
+  },
+  heroChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 999,
+    backgroundColor: 'rgba(255,255,255,0.18)',
+  },
+  heroChipText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  authCard: {
+    borderWidth: 1,
+    borderRadius: 24,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 2,
+  },
+  welcomeTitle: {
+    fontSize: 28,
+    fontWeight: '800',
+    marginBottom: 6,
+    textAlign: 'center',
   },
   subtitle: {
     fontSize: 16,
-    marginBottom: 32,
+    marginBottom: 24,
   },
   authMethodContainer: {
     flexDirection: 'row',
-    gap: 12,
+    gap: 8,
     marginBottom: 24,
+    padding: 6,
+    borderRadius: 16,
   },
   authMethodButton: {
     flex: 1,
     paddingVertical: 12,
-    borderRadius: 8,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
   },

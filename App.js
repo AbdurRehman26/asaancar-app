@@ -6,6 +6,7 @@ import { AuthProvider } from '@/context/AuthContext';
 import { ThemeProvider, useTheme } from '@/context/ThemeContext';
 import AppNavigator from '@/navigation/AppNavigator';
 import SplashScreen from '@/components/SplashScreen';
+import ForceUpdateGate from '@/components/ForceUpdateGate';
 import '@/i18n'; // Initialize i18n
 
 const AppContent = () => {
@@ -13,7 +14,9 @@ const AppContent = () => {
   return (
     <>
       <StatusBar style={isDark ? "light" : "dark"} />
-      <AppNavigator />
+      <ForceUpdateGate>
+        <AppNavigator />
+      </ForceUpdateGate>
       <Toast />
     </>
   );
@@ -43,4 +46,3 @@ export default function App() {
     </ThemeProvider>
   );
 }
-

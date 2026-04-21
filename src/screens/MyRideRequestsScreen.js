@@ -140,14 +140,14 @@ const MyRideRequestsScreen = () => {
 
   if (loading && !refreshing) {
     return (
-      <SafeAreaView style={[styles.centered, { backgroundColor: theme.colors.backgroundTertiary }]} edges={['top']}>
+      <SafeAreaView style={[styles.centered, { backgroundColor: theme.colors.backgroundTertiary }]} edges={['bottom']}>
         <ActivityIndicator size="large" color={theme.colors.primary} />
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.backgroundTertiary }]} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.backgroundTertiary }]} edges={['bottom']}>
       <PageHeader title="My Ride Requests" rightAction={addButton} />
 
       <FlatList

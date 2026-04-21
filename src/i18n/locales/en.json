@@ -54,6 +54,7 @@
         "quickActions": "Quick Actions",
         "myCars": "My Cars",
         "myPickDrop": "My Rides",
+        "rideRequests": "Ride Requests",
         "myStores": "My Stores",
         "messages": "Messages",
         "editProfile": "Edit Profile",
@@ -104,6 +105,15 @@
         "home": "Home",
         "bookings": "Bookings",
         "dashboard": "Dashboard"
+    },
+    "forceUpdate": {
+        "checking": "Checking app version...",
+        "title": "Update Required",
+        "message": "A newer version of AsaanCar is available. Please update the app to continue.",
+        "currentVersion": "Current Version",
+        "requiredVersion": "Required Version",
+        "latestBuild": "Latest Build",
+        "updateNow": "Update Now"
     },
     "pickdrop": {
         "title": "Find a Ride",

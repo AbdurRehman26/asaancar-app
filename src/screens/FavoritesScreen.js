@@ -154,7 +154,7 @@ const FavoritesScreen = () => {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.backgroundTertiary }]} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.backgroundTertiary }]} edges={['bottom']}>
       <PageHeader
         title={t('common.favorites')}
         backDestination="Profile"

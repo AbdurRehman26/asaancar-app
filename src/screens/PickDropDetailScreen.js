@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   Linking,
   Image,
+  Platform,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Constants from 'expo-constants';
@@ -19,6 +20,7 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import ErrorModal from '@/components/ErrorModal';
 import { useTranslation } from 'react-i18next';
+import PageHeader from '@/components/PageHeader';
 
 const PickDropDetailScreen = () => {
   const { t } = useTranslation();
@@ -188,6 +190,16 @@ const PickDropDetailScreen = () => {
     service.contact_whatsapp ||
     providerPhone ||
     null;
+  const glassCardStyle = {
+    backgroundColor: isDark ? 'rgba(29, 22, 36, 0.82)' : 'rgba(255, 253, 253, 0.82)',
+    borderColor: isDark ? 'rgba(216, 138, 200, 0.18)' : 'rgba(157, 58, 138, 0.16)',
+    shadowColor: isDark ? '#000' : theme.colors.primary,
+    shadowOpacity: isDark ? 0.28 : 0.12,
+  };
+  const glassChipStyle = {
+    backgroundColor: isDark ? 'rgba(126, 36, 108, 0.22)' : 'rgba(255, 255, 255, 0.52)',
+    borderColor: isDark ? 'rgba(216, 138, 200, 0.18)' : 'rgba(157, 58, 138, 0.14)',
+  };
 
   const routePoints = [
     service.start_latitude != null && service.start_longitude != null
@@ -254,9 +266,19 @@ const PickDropDetailScreen = () => {
   const handleMessageProvider = () => {
     if (!providerWhatsApp) return;
     const numericWhatsApp = providerWhatsApp.replace(/[^0-9]/g, '');
-    const whatsappUrl = `https://wa.me/${numericWhatsApp}`;
+    const contactName = provider?.name || provider?.user?.name || service.driver?.name || 'there';
+    const requesterName = user?.data?.name || 'there';
+    const scheduleDate =
+      service.departure_date
+        ? formatDisplayDate(service.departure_date)
+        : '';
+    const scheduleTime = service.departure_time ? formatDisplayTime(service.departure_time) : '';
+    const scheduleSuffix = [scheduleDate, scheduleTime].filter(Boolean).join(' at ');
+    const rideDescriptor = `${startLocation} to ${endLocation}`;
+    const message = `Hi ${contactName}, I'm ${requesterName} and I saw your ride on Sawari from ${rideDescriptor}${scheduleSuffix ? ` on ${scheduleSuffix}` : ''}. Is it still available?`;
+    const whatsappUrl = `https://wa.me/${numericWhatsApp}?text=${encodeURIComponent(message)}`;
     Linking.openURL(whatsappUrl).catch(() => {
-      const smsUrl = `sms:${providerWhatsApp}`;
+      const smsUrl = `sms:${providerWhatsApp}${Platform.OS === 'ios' ? '&' : '?'}body=${encodeURIComponent(message)}`;
       Linking.openURL(smsUrl).catch(() => {
         setErrorMessage(t('pickDropDetail.errorMsg'));
         setShowErrorModal(true);
@@ -283,22 +305,13 @@ const PickDropDetailScreen = () => {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]} edges={['bottom']}>
+      <PageHeader title="Ride Details" backDestination="PickDrop" />
       <ScrollView
         contentContainerStyle={{ paddingBottom: insets.bottom + 24 }}>
-        {/* Back Button */}
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.navigate('PickDrop')}
-        >
-          <Icon name="arrow-back" size={24} color={theme.colors.text} />
-          <Text style={[styles.backButtonText, { color: theme.colors.text }]}>
-            {t('common.backToListing')}
-          </Text>
-        </TouchableOpacity>
 
         {/* Header Banner */}
-        <View style={[styles.headerBanner, { backgroundColor: theme.colors.primary }]}>
+        <View style={[styles.headerBanner, { backgroundColor: isDark ? 'rgba(126, 36, 108, 0.82)' : 'rgba(126, 36, 108, 0.92)', borderColor: glassCardStyle.borderColor }]}>
           <View style={styles.bannerContent}>
             <View style={styles.bannerLocationRow}>
               <Icon name="location-on" size={16} color="#fff" style={{ marginRight: 6 }} />
@@ -313,14 +326,9 @@ const PickDropDetailScreen = () => {
               </Text>
             </View>
             {service.driver_gender && (
-              <View style={styles.driverGenderTag}>
-                <Text style={styles.driverGenderEmoji}>
-                  {service.driver_gender === 'female' ? '♀' : '♂'}
-                </Text>
-                <Text style={styles.driverGenderText}>
-                  <Text style={styles.driverGenderText}>
-                    {service.driver_gender === 'female' ? t('pickDropDetail.femaleDriver') : t('pickDropDetail.maleDriver')}
-                  </Text>
+              <View style={styles.driverGenderBadge}>
+                <Text style={styles.driverGenderBadgeText}>
+                  {service.driver_gender === 'female' ? '👩 Female Driver' : '👨 Male Driver'}
                 </Text>
               </View>
             )}
@@ -332,12 +340,12 @@ const PickDropDetailScreen = () => {
           {/* 1. Route Section - Spacious Timeline */}
           <View style={styles.sectionContainer}>
             <Text style={[styles.sectionHeaderTitle, { color: theme.colors.textSecondary }]}>{t('pickDropDetail.routeDetails')}</Text>
-            <View style={[styles.card, styles.routeCard, { backgroundColor: theme.colors.cardBackground, borderColor: isDark ? theme.colors.border : theme.colors.primary, shadowColor: isDark ? '#000' : theme.colors.primary, shadowOpacity: isDark ? 0.3 : 0.08 }]}>
+            <View style={[styles.card, styles.routeCard, glassCardStyle]}>
 
               {/* Start Location */}
               <View style={styles.timelineRow}>
                 <View style={styles.timelineColumn}>
-                  <View style={[styles.largeDotGreen, { backgroundColor: '#00C853', borderColor: theme.colors.cardBackground }]} />
+                  <View style={[styles.largeDotGreen, { backgroundColor: '#00C853', borderColor: glassCardStyle.backgroundColor }]} />
                   <View style={[styles.verticalLineFull, { backgroundColor: theme.colors.border }]} />
                 </View>
                 <View style={styles.locationContent}>
@@ -363,7 +371,7 @@ const PickDropDetailScreen = () => {
                     <View style={[styles.verticalLineFull, { backgroundColor: theme.colors.border }]} />
                   </View>
                   <View style={styles.stopsListContent}>
-                    <View style={[styles.stopsBadge, { backgroundColor: isDark ? 'rgba(126, 36, 108, 0.25)' : 'rgba(126, 36, 108, 0.12)' }]}>
+                    <View style={[styles.stopsBadge, glassChipStyle, { borderWidth: 1 }]}>
                       <Text style={[styles.stopsBadgeText, { color: isDark ? '#c77dba' : theme.colors.primary }]}>{service.stops.length} {t('pickDropDetail.stops')}</Text>
                     </View>
                     {service.stops.map((stop, index) => (
@@ -407,9 +415,9 @@ const PickDropDetailScreen = () => {
           {staticMapUrl ? (
             <View style={styles.sectionContainer}>
               <Text style={[styles.sectionHeaderTitle, { color: theme.colors.textSecondary }]}>{t('pickDropDetail.routeMap')}</Text>
-              <View style={[styles.card, styles.mapCard, { backgroundColor: theme.colors.cardBackground, borderColor: isDark ? theme.colors.border : theme.colors.primary, shadowColor: isDark ? '#000' : theme.colors.primary, shadowOpacity: isDark ? 0.3 : 0.08 }]}>
+              <View style={[styles.card, styles.mapCard, glassCardStyle]}>
                 {mapLoadError ? (
-                  <View style={[styles.mapFallback, { backgroundColor: theme.colors.backgroundSecondary }]}>
+                  <View style={[styles.mapFallback, { backgroundColor: glassChipStyle.backgroundColor }]}>
                     <Icon name="map" size={30} color={theme.colors.primary} />
                     <Text style={[styles.mapFallbackTitle, { color: theme.colors.text }]}>
                       {t('pickDropDetail.mapUnavailable')}
@@ -424,10 +432,10 @@ const PickDropDetailScreen = () => {
                       Points: {routePoints.length}
                     </Text>
                     <TouchableOpacity
-                      style={[styles.mapFallbackButton, { backgroundColor: theme.colors.primary }]}
+                      style={[styles.openMapsButton, { backgroundColor: theme.colors.primary }]}
                       onPress={handleOpenRouteInMaps}
                     >
-                      <Text style={styles.mapFallbackButtonText}>{t('pickDropDetail.openInMaps')}</Text>
+                      <Text style={styles.openMapsButtonText}>{t('pickDropDetail.openInMaps')}</Text>
                     </TouchableOpacity>
                   </View>
                 ) : (
@@ -444,28 +452,12 @@ const PickDropDetailScreen = () => {
                         setMapLoadError(nativeMessage || t('pickDropDetail.mapLoadError'));
                       }}
                     />
-                    <View style={styles.mapLegend}>
-                      {routePoints.map((point) => (
-                        <View key={point.key} style={styles.mapLegendRow}>
-                          <View style={[
-                            styles.mapMarkerDot,
-                            point.markerColor === 'green' && styles.mapMarkerStart,
-                            point.markerColor === 'blue' && styles.mapMarkerStop,
-                            point.markerColor === 'red' && styles.mapMarkerEnd,
-                          ]}>
-                            <Text style={styles.mapMarkerText}>{point.markerLabel}</Text>
-                          </View>
-                          <View style={styles.mapLegendContent}>
-                            <Text style={[styles.mapLegendLabel, { color: theme.colors.textSecondary }]}>
-                              {point.label}{point.time ? ` • ${point.time}` : ''}
-                            </Text>
-                            <Text style={[styles.mapLegendTitle, { color: theme.colors.text }]} numberOfLines={2}>
-                              {point.title}
-                            </Text>
-                          </View>
-                        </View>
-                      ))}
-                    </View>
+                    <TouchableOpacity
+                      style={[styles.openMapsButton, { backgroundColor: theme.colors.primary }]}
+                      onPress={handleOpenRouteInMaps}
+                    >
+                      <Text style={styles.openMapsButtonText}>{t('pickDropDetail.openInMaps')}</Text>
+                    </TouchableOpacity>
                   </>
                 )}
               </View>
@@ -478,7 +470,7 @@ const PickDropDetailScreen = () => {
             <View style={styles.gridContainer}>
 
               {/* Price Item */}
-              <View style={[styles.gridItem, { backgroundColor: theme.colors.cardBackground, borderColor: isDark ? theme.colors.border : theme.colors.primary, shadowColor: isDark ? '#000' : theme.colors.primary, shadowOpacity: isDark ? 0.3 : 0.08 }]}>
+              <View style={[styles.gridItem, glassCardStyle]}>
                 <View style={[styles.iconCircle, { backgroundColor: isDark ? 'rgba(126, 36, 108, 0.3)' : theme.colors.primary }]}>
                   <Icon name="attach-money" size={24} color={isDark ? '#c77dba' : '#fff'} />
                 </View>
@@ -498,7 +490,7 @@ const PickDropDetailScreen = () => {
               </View>
 
               {/* Schedule Item */}
-              <View style={[styles.gridItem, { backgroundColor: theme.colors.cardBackground, borderColor: isDark ? theme.colors.border : theme.colors.primary, shadowColor: isDark ? '#000' : theme.colors.primary, shadowOpacity: isDark ? 0.3 : 0.08 }]}>
+              <View style={[styles.gridItem, glassCardStyle]}>
                 <View style={[styles.iconCircle, { backgroundColor: isDark ? 'rgba(126, 36, 108, 0.3)' : theme.colors.secondary }]}>
                   <Icon name="access-time" size={24} color={isDark ? '#c77dba' : '#fff'} />
                 </View>
@@ -548,7 +540,7 @@ const PickDropDetailScreen = () => {
               </View>
 
               {/* Seats Item */}
-              <View style={[styles.gridItem, { backgroundColor: theme.colors.cardBackground, borderColor: isDark ? theme.colors.border : theme.colors.primary, shadowColor: isDark ? '#000' : theme.colors.primary, shadowOpacity: isDark ? 0.3 : 0.08 }]}>
+              <View style={[styles.gridItem, glassCardStyle]}>
                 <View style={[styles.iconCircle, { backgroundColor: isDark ? 'rgba(255, 152, 0, 0.2)' : 'rgba(255, 152, 0, 0.15)' }]}>
                   <Icon name="event-seat" size={24} color={isDark ? '#ffb74d' : '#f57c00'} />
                 </View>
@@ -559,7 +551,7 @@ const PickDropDetailScreen = () => {
               </View>
 
               {/* Gender Item */}
-              <View style={[styles.gridItem, { backgroundColor: theme.colors.cardBackground, borderColor: isDark ? theme.colors.border : theme.colors.primary, shadowColor: isDark ? '#000' : theme.colors.primary, shadowOpacity: isDark ? 0.3 : 0.08 }]}>
+              <View style={[styles.gridItem, glassCardStyle]}>
                 <View style={[styles.iconCircle, { backgroundColor: service.driver_gender === 'female' ? (isDark ? 'rgba(233, 30, 99, 0.25)' : '#EC407A') : (isDark ? 'rgba(33, 150, 243, 0.25)' : '#42A5F5') }]}>
                   <Icon name="person" size={24} color={service.driver_gender === 'female' ? (isDark ? '#f48fb1' : '#fff') : (isDark ? '#90caf9' : '#fff')} />
                 </View>
@@ -576,7 +568,7 @@ const PickDropDetailScreen = () => {
           {service.car && (
             <View style={styles.sectionContainer}>
               <Text style={[styles.sectionHeaderTitle, { color: theme.colors.textSecondary }]}>{t('pickDropDetail.vehicleDetails')}</Text>
-              <View style={[styles.card, styles.vehicleCard, { backgroundColor: theme.colors.cardBackground, borderColor: isDark ? theme.colors.border : theme.colors.primary, shadowColor: isDark ? '#000' : theme.colors.primary, shadowOpacity: isDark ? 0.3 : 0.08 }]}>
+              <View style={[styles.card, styles.vehicleCard, glassCardStyle]}>
                 <View style={styles.vehicleHeader}>
                   <View style={[styles.vehicleIconLarge, { backgroundColor: isDark ? 'rgba(255, 82, 82, 0.15)' : 'rgba(255, 82, 82, 0.1)' }]}>
                     <Icon name="directions-car" size={40} color={isDark ? '#ff8a80' : '#FF5252'} />
@@ -593,7 +585,7 @@ const PickDropDetailScreen = () => {
                   </View>
                 </View>
                 <View style={[styles.divider, { backgroundColor: theme.colors.border }]} />
-                <View style={[styles.vehicleDetailsRow, { backgroundColor: theme.colors.cardBackground }]}>
+                <View style={[styles.vehicleDetailsRow, { backgroundColor: glassChipStyle.backgroundColor, borderColor: glassChipStyle.borderColor, borderWidth: 1 }]}>
                   <View style={styles.vehicleDetailItem}>
                     <Text style={[styles.detailLabel, { color: theme.colors.textSecondary }]}>{t('pickDropDetail.brand')}</Text>
                     <Text style={[styles.detailValue, { color: theme.colors.text }]}>{service.car_brand || 'N/A'}</Text>
@@ -615,7 +607,7 @@ const PickDropDetailScreen = () => {
           {service.description && (
             <View style={styles.sectionContainer}>
               <Text style={[styles.sectionHeaderTitle, { color: theme.colors.textSecondary }]}>{t('pickDropDetail.additionalNotes')}</Text>
-              <View style={[styles.card, { padding: 16, backgroundColor: theme.colors.cardBackground, borderColor: isDark ? theme.colors.border : theme.colors.primary, shadowColor: isDark ? '#000' : theme.colors.primary, shadowOpacity: isDark ? 0.3 : 0.08 }]}>
+              <View style={[styles.card, { padding: 16 }, glassCardStyle]}>
                 <Text style={[styles.descriptionTextLarge, { color: theme.colors.text }]}>
                   {service.description}
                 </Text>
@@ -626,10 +618,10 @@ const PickDropDetailScreen = () => {
           {/* 4. Service Provider - Large Profile */}
           <View style={styles.sectionContainer}>
             <Text style={[styles.sectionHeaderTitle, { color: theme.colors.textSecondary }]}>{t('pickDropDetail.serviceProvider')}</Text>
-            <View style={[styles.card, styles.providerCard, { backgroundColor: theme.colors.cardBackground, borderColor: isDark ? theme.colors.border : theme.colors.primary, shadowColor: isDark ? '#000' : theme.colors.primary, shadowOpacity: isDark ? 0.3 : 0.08 }]}>
+            <View style={[styles.card, styles.providerCard, glassCardStyle]}>
 
               <View style={styles.providerHeader}>
-                <View style={[styles.providerAvatarXLarge, { backgroundColor: isDark ? 'rgba(126, 36, 108, 0.3)' : 'rgba(126, 36, 108, 0.1)', borderWidth: 2, borderColor: isDark ? theme.colors.border : 'transparent' }]}>
+                <View style={[styles.providerAvatarXLarge, { backgroundColor: glassChipStyle.backgroundColor, borderWidth: 1, borderColor: glassChipStyle.borderColor }]}>
                   <Text style={[styles.providerInitialsXLarge, { color: isDark ? '#c77dba' : theme.colors.primary }]}>
                     {user
                       ? (provider?.name || provider?.user?.name || service.driver?.name || 'U').charAt(0).toUpperCase()
@@ -642,7 +634,7 @@ const PickDropDetailScreen = () => {
                       ? (provider?.name || provider?.user?.name || service.driver?.name || t('pickDropDetail.user'))
                       : t('pickDropDetail.user')}
                   </Text>
-                  <Text style={[styles.providerRole, { color: theme.colors.primary, backgroundColor: theme.colors.backgroundSecondary }]}>
+                  <Text style={[styles.providerRole, { color: theme.colors.primary, backgroundColor: glassChipStyle.backgroundColor, borderColor: glassChipStyle.borderColor }]}>
                     {user ? t('pickDropDetail.verifiedDriver') : t('pickDropDetail.loginToContact')}
                   </Text>
                 </View>
@@ -697,16 +689,6 @@ const PickDropDetailScreen = () => {
             </View>
           </View>
 
-          {/* Back to listing - bottom */}
-          <TouchableOpacity
-            style={[styles.backToListingBottom, { backgroundColor: theme.colors.primary }]}
-            onPress={() => navigation.navigate('PickDrop')}
-            activeOpacity={0.8}
-          >
-            <Icon name="arrow-back" size={20} color="#fff" style={{ marginRight: 8 }} />
-            <Text style={styles.backToListingBottomText}>{t('common.backToListing')}</Text>
-          </TouchableOpacity>
-
           <View style={{ height: 40 }} />
         </View>
       </ScrollView>
@@ -729,61 +711,58 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  backButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    gap: 8,
-    zIndex: 10,
-  },
-  container: {
-    flex: 1,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  backButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    gap: 8,
-    zIndex: 10,
-  },
-  backButtonText: {
-    fontSize: 16,
-    fontWeight: '500',
-  },
   headerBanner: {
-    display: 'none',
+    marginHorizontal: 16,
+    marginTop: 16,
+    borderRadius: 22,
+    overflow: 'hidden',
+    borderWidth: 1,
+  },
+  bannerContent: {
+    padding: 20,
+  },
+  bannerLocationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  bannerTitle: {
+    color: '#fff',
+    fontSize: 22,
+    fontWeight: '700',
+    flex: 1,
+  },
+  bannerRoute: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+    flex: 1,
   },
   contentContainer: {
-    paddingHorizontal: 20,
-    paddingTop: 10,
+    paddingHorizontal: 16,
+    paddingTop: 20,
     paddingBottom: 40,
   },
   sectionContainer: {
-    marginBottom: 24,
+    marginBottom: 20,
   },
   sectionHeaderTitle: {
-    fontSize: 12,
-    fontWeight: 'bold',
+    fontSize: 13,
+    fontWeight: '700',
     marginBottom: 10,
-    letterSpacing: 1,
+    letterSpacing: 0.6,
     textTransform: 'uppercase',
   },
   card: {
-    borderRadius: 16,
-    borderWidth: 1,
+    borderRadius: 18,
+    borderWidth: 1.5,
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
     shadowRadius: 8,
     elevation: 3,
-    overflow: 'hidden',
   },
   routeCard: {
-    padding: 20,
+    padding: 16,
+    paddingBottom: 10,
   },
   mapCard: {
     overflow: 'hidden',
@@ -800,16 +779,17 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   mapFallbackTitle: {
-    fontSize: 17,
+    fontSize: 22,
     fontWeight: '700',
-    marginTop: 10,
-    marginBottom: 8,
+    textAlign: 'center',
+    marginTop: 12,
   },
   mapFallbackText: {
-    fontSize: 13,
-    lineHeight: 19,
+    fontSize: 14,
+    lineHeight: 20,
     textAlign: 'center',
-    marginBottom: 14,
+    marginTop: 10,
+    marginBottom: 18,
   },
   mapDebugText: {
     fontSize: 12,
@@ -817,60 +797,31 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 6,
   },
-  mapFallbackButton: {
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 10,
-  },
-  mapFallbackButtonText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  mapLegend: {
-    padding: 16,
-    gap: 12,
-  },
-  mapLegendRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-  },
-  mapMarkerDot: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
+  openMapsButton: {
+    marginTop: 14,
+    borderRadius: 14,
+    paddingHorizontal: 18,
+    paddingVertical: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 12,
-    marginTop: 2,
   },
-  mapMarkerStart: {
-    backgroundColor: '#00C853',
+  openMapsButtonText: {
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: '700',
   },
-  mapMarkerStop: {
-    backgroundColor: '#2196F3',
+  driverGenderBadge: {
+    alignSelf: 'flex-start',
+    marginTop: 12,
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
   },
-  mapMarkerEnd: {
-    backgroundColor: '#FF5252',
-  },
-  mapMarkerText: {
+  driverGenderBadgeText: {
     color: '#fff',
     fontSize: 12,
     fontWeight: '700',
-  },
-  mapLegendContent: {
-    flex: 1,
-  },
-  mapLegendLabel: {
-    fontSize: 12,
-    fontWeight: '600',
-    marginBottom: 2,
-    textTransform: 'uppercase',
-  },
-  mapLegendTitle: {
-    fontSize: 15,
-    lineHeight: 21,
-    fontWeight: '500',
   },
   timelineRow: {
     flexDirection: 'row',
@@ -879,45 +830,48 @@ const styles = StyleSheet.create({
   timelineColumn: {
     width: 24,
     alignItems: 'center',
-    marginRight: 16,
   },
   largeDotGreen: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
+    width: 14,
+    height: 14,
+    borderRadius: 7,
     borderWidth: 3,
-    zIndex: 2,
+    marginTop: 2,
   },
   verticalLineFull: {
     width: 2,
     flex: 1,
-    minHeight: 40,
+    marginVertical: 4,
   },
   verticalLineTop: {
     width: 2,
-    height: 12,
+    height: 16,
+    marginBottom: 6,
   },
   locationContent: {
     flex: 1,
-    paddingBottom: 20,
+    paddingLeft: 14,
+    paddingBottom: 18,
   },
   largeLocationLabel: {
-    fontSize: 12,
-    marginBottom: 4,
-    fontWeight: '600',
+    fontSize: 11,
+    fontWeight: '700',
     textTransform: 'uppercase',
+    marginBottom: 4,
+    letterSpacing: 0.4,
   },
   largeLocationTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    lineHeight: 24,
+    fontSize: 16,
+    fontWeight: '700',
+    lineHeight: 22,
   },
   stopsContainer: {
     flexDirection: 'row',
   },
   stopsListContent: {
     flex: 1,
-    paddingBottom: 20,
+    paddingLeft: 14,
+    paddingBottom: 18,
   },
   stopsBadge: {
     paddingHorizontal: 10,
@@ -949,16 +903,16 @@ const styles = StyleSheet.create({
   gridContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 16,
+    gap: 12,
   },
   gridItem: {
-    width: '47%',
+    width: '48%',
     padding: 16,
-    borderRadius: 16,
-    borderWidth: 1,
+    borderRadius: 18,
+    borderWidth: 1.5,
     alignItems: 'center',
     justifyContent: 'center',
-    aspectRatio: 1,
+    minHeight: 166,
   },
   iconCircle: {
     width: 48,
@@ -1037,40 +991,41 @@ const styles = StyleSheet.create({
 
   /* Provider Card */
   providerCard: {
-    padding: 24,
-    alignItems: 'center',
+    padding: 16,
   },
   providerHeader: {
+    flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: 16,
   },
   providerAvatarXLarge: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 12,
+    marginRight: 12,
   },
   providerInitialsXLarge: {
-    fontSize: 32,
-    fontWeight: 'bold',
+    fontSize: 22,
+    fontWeight: '700',
   },
   providerInfoCenter: {
-    alignItems: 'center',
+    flex: 1,
   },
   providerNameXLarge: {
-    fontSize: 22,
-    fontWeight: 'bold',
+    fontSize: 18,
+    fontWeight: '700',
     marginBottom: 4,
   },
   providerRole: {
-    fontSize: 14,
-    fontWeight: '500',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
-    overflow: 'hidden',
+    fontSize: 12,
+    fontWeight: '600',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 999,
+    alignSelf: 'flex-start',
+    borderWidth: 1,
   },
   providerActionsColumn: {
     width: '100%',
@@ -1080,33 +1035,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 14,
-    borderRadius: 12,
+    minHeight: 52,
+    borderRadius: 14,
     width: '100%',
-    gap: 10,
+    gap: 8,
   },
   actionBtnText: {
     color: '#fff',
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   loginHint: {
-    marginTop: 16,
+    marginTop: 12,
     fontSize: 12,
-  },
-  backToListingBottom: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 16,
-    borderRadius: 12,
-    marginTop: 8,
-    marginBottom: 16,
-  },
-  backToListingBottomText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
   },
   errorText: {
     fontSize: 16,

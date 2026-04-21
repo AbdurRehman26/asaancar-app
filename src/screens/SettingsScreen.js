@@ -24,6 +24,15 @@ const SettingsScreen = () => {
   const { t } = useTranslation();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
+  const navigateToLoginIfNeeded = (destination, params) => {
+    if (!user) {
+      navigation.navigate('Login');
+      return;
+    }
+
+    navigation.navigate(destination, params);
+  };
+
   // Ensure we're on the SettingsMain screen when this screen is focused
   // This is a backup to ensure the dashboard always shows the default state
   useFocusEffect(
@@ -47,14 +56,35 @@ const SettingsScreen = () => {
       title: t('settings.myPickDrop'),
       icon: 'directions-transit',
       color: '#0EA5E9', // Sky Blue
-      onPress: () => navigation.navigate('MyPickDropServices'),
+      onPress: () => navigateToLoginIfNeeded('MyPickDropServices'),
+    },
+    {
+      id: 'rideRequests',
+      title: t('settings.rideRequests'),
+      icon: 'description',
+      color: '#F59E0B', // Amber
+      onPress: () => {
+        if (!user) {
+          navigation.navigate('Login');
+          return;
+        }
+
+        navigation.navigate('RideRequests', { screen: 'MyRideRequests' });
+      },
     },
     {
       id: 'messages',
       title: t('settings.messages'),
       icon: 'chat-bubble',
       color: '#10B981', // Emerald
-      onPress: () => navigation.navigate('Conversations'),
+      onPress: () => {
+        if (!user) {
+          navigation.navigate('Login');
+          return;
+        }
+
+        navigation.navigate('Home', { screen: 'Conversations' });
+      },
     },
   ];
 
@@ -63,13 +93,7 @@ const SettingsScreen = () => {
       id: 'profile',
       title: t('settings.editProfile'),
       icon: 'person',
-      onPress: () => navigation.navigate('Profile'),
-    },
-    {
-      id: 'notifications',
-      title: t('settings.notifications'),
-      icon: 'notifications',
-      onPress: () => navigation.navigate('Notifications'),
+      onPress: () => navigateToLoginIfNeeded('Profile'),
     },
     {
       id: 'contact',
@@ -100,29 +124,33 @@ const SettingsScreen = () => {
   );
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.backgroundTertiary }]} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.primaryDark || theme.colors.primary }]} edges={['top']}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
 
         {/* Modern Header Section */}
-        <View style={styles.headerSection}>
+        <View style={[styles.headerSection, { backgroundColor: theme.colors.primaryDark || theme.colors.primary }]}>
           <View style={styles.headerTop}>
             <View>
-              <Text style={[styles.welcomeText, { color: theme.colors.textSecondary }]}>{t('settings.welcomeBack')}</Text>
-              <Text style={[styles.headerName, { color: theme.colors.text }]}>{user?.data?.name || t('settings.guest')}</Text>
+              <Text style={[styles.welcomeText, { color: 'rgba(255,255,255,0.78)' }]}>{t('settings.welcomeBack')}</Text>
+              <Text style={[styles.headerName, { color: '#fff' }]}>{user?.data?.name || t('settings.guest')}</Text>
             </View>
-            <TouchableOpacity onPress={() => navigation.navigate('Profile')} style={styles.avatarContainer}>
+            <TouchableOpacity
+              onPress={() => navigateToLoginIfNeeded('Profile')}
+              style={[styles.avatarContainer, { backgroundColor: 'rgba(255,255,255,0.12)', borderColor: 'rgba(255,255,255,0.18)' }]}
+            >
               {user?.data?.profile_image ? (
                 <Image
                   source={{ uri: user.data.profile_image }}
                   style={styles.avatarImage}
                 />
               ) : (
-                <Icon name="person" size={32} color={theme.colors.primary} />
+                <Icon name="person" size={32} color="#fff" />
               )}
             </TouchableOpacity>
           </View>
         </View>
 
+        <View style={[styles.dashboardSurface, { backgroundColor: theme.colors.backgroundTertiary }]}>
         {/* Quick Actions Grid */}
         <View style={styles.sectionHeader}>
           <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>{t('settings.quickActions')}</Text>
@@ -181,14 +209,17 @@ const SettingsScreen = () => {
         </View>
 
         {/* Logout Button */}
-        <TouchableOpacity
-          style={[styles.logoutButton, { borderColor: '#ff4444' }]}
-          onPress={() => setShowLogoutModal(true)}
-        >
-          <Text style={styles.logoutText}>{t('common.logout')}</Text>
-        </TouchableOpacity>
+        {user ? (
+          <TouchableOpacity
+            style={[styles.logoutButton, { borderColor: 'rgba(255,255,255,0.18)', backgroundColor: theme.colors.primaryDark || theme.colors.primary }]}
+            onPress={() => setShowLogoutModal(true)}
+          >
+            <Text style={[styles.logoutText, { color: '#fff' }]}>{t('common.logout')}</Text>
+          </TouchableOpacity>
+        ) : null}
 
         <View style={{ height: 40 }} />
+        </View>
       </ScrollView>
 
       <ConfirmModal
@@ -211,11 +242,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingHorizontal: 20,
     paddingTop: 20,
   },
   headerSection: {
-    marginBottom: 24,
+    marginBottom: 0,
+    paddingHorizontal: 20,
+    paddingBottom: 24,
   },
   headerTop: {
     flexDirection: 'row',
@@ -248,7 +280,15 @@ const styles = StyleSheet.create({
     borderRadius: 23,
   },
   sectionHeader: {
+    marginTop: 24,
     marginBottom: 16,
+  },
+  dashboardSurface: {
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    paddingHorizontal: 20,
+    marginTop: -6,
+    minHeight: '100%',
   },
   sectionTitle: {
     fontSize: 18,
@@ -343,15 +383,13 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 16,
     borderWidth: 1,
-    borderStyle: 'dashed',
     marginHorizontal: 0,
+    marginTop: 6,
   },
   logoutText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#ff4444',
   },
 });
 
 export default SettingsScreen;
-

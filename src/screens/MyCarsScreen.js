@@ -264,7 +264,7 @@ const MyCarsScreen = () => {
 
   if (authLoading || (loading && !refreshing && user)) {
     return (
-      <SafeAreaView style={[styles.loadingContainer, { backgroundColor: theme.colors.backgroundTertiary }]} edges={['top']}>
+      <SafeAreaView style={[styles.loadingContainer, { backgroundColor: theme.colors.backgroundTertiary }]} edges={['bottom']}>
         <ActivityIndicator size="large" color={theme.colors.primary} />
       </SafeAreaView>
     );
@@ -272,7 +272,7 @@ const MyCarsScreen = () => {
 
   if (!user) {
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.backgroundTertiary }]} edges={['top']}>
+      <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.backgroundTertiary }]} edges={['bottom']}>
         <PageHeader title="My Cars" backDestination="SettingsMain" />
         <View style={styles.emptyContainer}>
           <Icon name="lock" size={64} color={theme.colors.border} />
@@ -302,7 +302,7 @@ const MyCarsScreen = () => {
   );
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.backgroundTertiary }]} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.backgroundTertiary }]} edges={['bottom']}>
       <PageHeader
         title="My Cars"
         backDestination="SettingsMain"
@@ -562,5 +562,4 @@ const styles = StyleSheet.create({
 });
 
 export default MyCarsScreen;
-
 

@@ -19,7 +19,7 @@ const AboutUsScreen = () => {
   const { t } = useTranslation();
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.backgroundTertiary }]} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.backgroundTertiary }]} edges={['bottom']}>
       <PageHeader title={t('aboutUs.title')} backDestination="SettingsMain" />
 
       <ScrollView
@@ -179,4 +179,3 @@ const styles = StyleSheet.create({
 });
 
 export default AboutUsScreen;
-

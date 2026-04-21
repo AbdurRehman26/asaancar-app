@@ -76,7 +76,7 @@ const ContactUsScreen = () => {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.backgroundTertiary }} edges={['top']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.backgroundTertiary }} edges={['bottom']}>
       <KeyboardAvoidingView
         style={[styles.container, { backgroundColor: theme.colors.backgroundTertiary }]}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -279,7 +279,6 @@ const styles = StyleSheet.create({
 });
 
 export default ContactUsScreen;
-
 
 
 

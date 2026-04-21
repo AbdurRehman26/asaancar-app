@@ -53,6 +53,7 @@
         "quickActions": "فوری کارروائیاں",
         "myCars": "میری گاڑیاں",
         "myPickDrop": "میری رائیڈز",
+        "rideRequests": "رائیڈ ریکویسٹس",
         "myStores": "میری دکانیں",
         "messages": "پیغامات",
         "editProfile": "پروفائل میں ترمیم",
@@ -97,6 +98,15 @@
         "home": "ہوم",
         "bookings": "بکنگز",
         "dashboard": "ڈیش بورڈ"
+    },
+    "forceUpdate": {
+        "checking": "ایپ ورژن چیک ہو رہا ہے...",
+        "title": "اپ ڈیٹ ضروری ہے",
+        "message": "AsaanCar کا نیا ورژن دستیاب ہے۔ براہِ کرم ایپ اپ ڈیٹ کر کے ہی آگے بڑھیں۔",
+        "currentVersion": "موجودہ ورژن",
+        "requiredVersion": "لازمی ورژن",
+        "latestBuild": "تازہ ترین بلڈ",
+        "updateNow": "ابھی اپ ڈیٹ کریں"
     },
     "pickdrop": {
         "title": "رائیڈ تلاش کریں",

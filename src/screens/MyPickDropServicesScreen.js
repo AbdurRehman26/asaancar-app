@@ -133,12 +133,6 @@ const MyPickDropServicesScreen = () => {
     return timeString;
   };
 
-  const formatStopTimes = (stops = []) =>
-    stops
-      .map((stop) => formatTime(stop?.stop_time))
-      .filter((time) => time && time !== 'N/A')
-      .join(', ');
-
   const renderServiceItem = ({ item }) => {
     const startLocation = item.start_location || item.start_area || 'N/A';
     const endLocation = item.end_location || item.end_area || 'N/A';
@@ -151,8 +145,6 @@ const MyPickDropServicesScreen = () => {
     const driverGender = item.driver_gender || item.driverGender || 'N/A';
     const price = item.price_per_person || item.pricePerPerson || null;
     const currency = item.currency || 'PKR';
-    const stopTimes = formatStopTimes(item.stops || []);
-
     return (
       <View style={[styles.serviceCard, { backgroundColor: theme.colors.cardBackground }]}>
         <View style={styles.serviceHeader}>
@@ -193,15 +185,6 @@ const MyPickDropServicesScreen = () => {
               </Text>
             </View>
           )}
-
-          {stopTimes ? (
-            <View style={styles.detailRow}>
-              <Icon name="more-horiz" size={14} color={theme.colors.textSecondary} style={{ marginRight: 8 }} />
-              <Text style={[styles.detailText, { color: theme.colors.textSecondary }]}>
-                Stops: {stopTimes}
-              </Text>
-            </View>
-          ) : null}
 
           <View style={styles.detailRow}>
             <Icon name="people" size={14} color={theme.colors.textSecondary} style={{ marginRight: 8 }} />
@@ -250,7 +233,7 @@ const MyPickDropServicesScreen = () => {
 
   if (loading && !refreshing) {
     return (
-      <SafeAreaView style={[styles.loadingContainer, { backgroundColor: theme.colors.backgroundTertiary }]} edges={['top']}>
+      <SafeAreaView style={[styles.loadingContainer, { backgroundColor: theme.colors.backgroundTertiary }]} edges={['bottom']}>
         <ActivityIndicator size="large" color={theme.colors.primary} />
       </SafeAreaView>
     );
@@ -267,7 +250,7 @@ const MyPickDropServicesScreen = () => {
   );
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.backgroundTertiary }]} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.backgroundTertiary }]} edges={['bottom']}>
       <PageHeader
         title="My Rides"
         backDestination="SettingsMain"

@@ -140,7 +140,7 @@ const CreateStoreScreen = () => {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]} edges={['bottom']}>
       <PageHeader title="Create Store" />
 
       <ScrollView

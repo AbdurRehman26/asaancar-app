@@ -21,6 +21,7 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import ErrorModal from '@/components/ErrorModal';
 import SuccessModal from '@/components/SuccessModal';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import PageHeader from '@/components/PageHeader';
 
 const CreatePickDropServiceScreen = () => {
   const navigation = useNavigation();
@@ -1262,16 +1263,8 @@ const CreatePickDropServiceScreen = () => {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.backgroundTertiary }]} edges={['top']}>
-      <View style={[styles.header, { backgroundColor: theme.colors.cardBackground, borderBottomColor: theme.colors.border }]}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Icon name="arrow-back" size={24} color={theme.colors.text} />
-        </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: theme.colors.text }]}>
-          {isEditing ? 'Edit Ride' : 'Add Ride'}
-        </Text>
-        <View style={styles.placeholder} />
-      </View>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.backgroundTertiary }]} edges={['bottom']}>
+      <PageHeader title={isEditing ? 'Edit Ride' : 'Add Ride'} />
 
       {/* Stepper Header */}
       <View style={[styles.stepperContainer, { backgroundColor: theme.colors.background }]}>

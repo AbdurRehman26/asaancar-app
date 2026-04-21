@@ -256,7 +256,7 @@ const NotificationsScreen = () => {
 
   if (loading && !refreshing) {
     return (
-      <SafeAreaView style={[styles.loadingContainer, { backgroundColor: theme.colors.backgroundTertiary }]} edges={['top']}>
+      <SafeAreaView style={[styles.loadingContainer, { backgroundColor: theme.colors.backgroundTertiary }]} edges={['bottom']}>
         <ActivityIndicator size="large" color={theme.colors.primary} />
       </SafeAreaView>
     );
@@ -271,7 +271,7 @@ const NotificationsScreen = () => {
   ) : null;
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.backgroundTertiary }]} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.backgroundTertiary }]} edges={['bottom']}>
       <PageHeader
         title="Notifications"
         backDestination="SettingsMain"
@@ -443,7 +443,6 @@ const styles = StyleSheet.create({
 });
 
 export default NotificationsScreen;
-
 
 
 

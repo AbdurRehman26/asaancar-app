@@ -21,6 +21,7 @@ import ServiceTabs from '@/components/ServiceTabs';
 import PickDropFilterDrawer from '@/components/PickDropFilterDrawer';
 import ErrorModal from '@/components/ErrorModal';
 import { useTranslation } from 'react-i18next';
+import PageHeader from '@/components/PageHeader';
 
 const PickDropScreen = () => {
   const { theme, isDark, toggleTheme } = useTheme();
@@ -54,6 +55,16 @@ const PickDropScreen = () => {
   const [pageSize] = useState(12);
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const glassCardStyle = {
+    backgroundColor: isDark ? 'rgba(29, 22, 36, 0.82)' : '#FFFFFF',
+    borderColor: isDark ? 'rgba(232, 170, 220, 0.28)' : 'rgba(157, 58, 138, 0.16)',
+    shadowColor: isDark ? '#000' : theme.colors.primary,
+    shadowOpacity: isDark ? 0.28 : 0.12,
+  };
+  const glassChipStyle = {
+    backgroundColor: isDark ? 'rgba(126, 36, 108, 0.22)' : '#FFFFFF',
+    borderColor: isDark ? 'rgba(232, 170, 220, 0.24)' : 'rgba(157, 58, 138, 0.14)',
+  };
 
   const formatDate = (dateString) => {
     if (!dateString) return null;
@@ -91,13 +102,6 @@ const PickDropScreen = () => {
       return timeString;
     }
   };
-
-  const getFormattedStopTimes = (stops = []) => (
-    stops
-      .map((stop) => formatTime(stop?.stop_time))
-      .filter(Boolean)
-      .join(', ')
-  );
 
   // Helper function to handle phone calls
   const handleCall = async (phoneNumber) => {
@@ -306,16 +310,8 @@ const PickDropScreen = () => {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.backgroundTertiary }]} edges={['top']}>
-      <View style={[styles.header, { backgroundColor: theme.colors.background, borderBottomColor: theme.colors.border }]}>
-        <View style={styles.headerTop}>
-          <View style={styles.headerTitleSection}>
-          </View>
-          <View style={styles.headerActions}>
-
-          </View>
-        </View>
-      </View>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.backgroundTertiary }]} edges={['bottom']}>
+      <PageHeader title="Find Ride" showBack={false} />
 
       {/* Filter and Add Service Section (match Rental Cars layout) */}
       <View style={[styles.searchSection, { backgroundColor: theme.colors.background, borderBottomColor: theme.colors.border }]}>
@@ -345,24 +341,6 @@ const PickDropScreen = () => {
         </View>
       </View>
 
-      {/* Pagination Info */}
-      {!loading && services.length > 0 && (
-        <View style={[styles.paginationInfo, { backgroundColor: theme.colors.cardBackground, borderBottomColor: theme.colors.border }]}>
-          <Text style={[styles.paginationText, { color: theme.colors.textSecondary }]}>
-            {(() => {
-              const currentPageNum = Number(apiCurrentPage) || 1;
-              const pageSizeNum = Number(pageSize) || 12;
-              const totalNum = Number(totalServices) || 0;
-              const startNumber = (currentPageNum - 1) * pageSizeNum + 1;
-              const endNumber = Math.min(currentPageNum * pageSizeNum, totalNum);
-              return totalNum > 0
-                ? `Showing ${startNumber}-${endNumber} of ${totalNum}`
-                : `Showing ${startNumber}-${endNumber}`;
-            })()}
-          </Text>
-        </View>
-      )}
-
       {/* Reverting to use ScrollView with ref for minimal impact */}
       <ScrollView>
         {/* Services List */}
@@ -377,25 +355,19 @@ const PickDropScreen = () => {
                 key={service.id}
                 style={[
                   styles.serviceCard,
-                  {
-                    backgroundColor: theme.colors.cardBackground,
-                    borderColor: isDark ? theme.colors.border : theme.colors.primary,
-                    shadowColor: isDark ? '#000' : theme.colors.primary,
-                    shadowOpacity: isDark ? 0.3 : 0.08,
-                  }
+                  glassCardStyle,
                 ]}
                 onPress={() => {
                   navigation.navigate('PickDropDetail', { serviceId: service.id, serviceData: service });
                 }}
                 activeOpacity={0.7}
               >
-                {/* Top Section: Route & Price */}
+                {/* Top Section: Route */}
                 <View style={styles.cardHeader}>
-                  {/* Left: Route Timeline */}
                   <View style={styles.routeContainer}>
                     {/* Start Point */}
                     <View style={styles.timelineItem}>
-                      <View style={[styles.timelineDotGreen, { borderColor: theme.colors.cardBackground }]} />
+                      <View style={[styles.timelineDotGreen, { borderColor: glassCardStyle.backgroundColor }]} />
                       <View style={styles.timelineContent}>
                         <Text style={[styles.locationTitle, { color: theme.colors.text }]} numberOfLines={1}>
                           {service.start_location || 'Start Location'}
@@ -405,10 +377,16 @@ const PickDropScreen = () => {
                     </View>
 
                     {/* Connecting Line & Stops */}
-                    <View style={[styles.timelineLineContainer, { borderLeftColor: isDark ? theme.colors.border : '#E0E0E0' }]}>
+                    <View
+                      style={[
+                        styles.timelineLineContainer,
+                        !service.stops?.length && styles.timelineLineContainerCompact,
+                        { borderLeftColor: isDark ? theme.colors.border : '#E0E0E0' },
+                      ]}
+                    >
                       <View style={styles.timelineLine} />
                       {service.stops && service.stops.length > 0 && (
-                        <View style={[styles.stopsTag, { backgroundColor: isDark ? 'rgba(126, 36, 108, 0.25)' : 'rgba(126, 36, 108, 0.12)' }]}>
+                        <View style={[styles.stopsTag, glassChipStyle]}>
                           <Text style={[styles.stopsTagText, { color: isDark ? '#c77dba' : theme.colors.primary }]}>
                             {service.stops.length} Stop{service.stops.length > 1 ? 's' : ''} in between
                           </Text>
@@ -429,28 +407,30 @@ const PickDropScreen = () => {
                     </View>
                   </View>
 
-                  {/* Right: Price */}
-                  <View style={[styles.priceContainer, { backgroundColor: isDark ? 'rgba(126, 36, 108, 0.2)' : 'rgba(126, 36, 108, 0.08)', borderWidth: 1, borderColor: isDark ? 'rgba(126, 36, 108, 0.4)' : 'transparent' }]}>
-                    <Text style={[styles.priceLabel, { color: theme.colors.textSecondary }]}>{t('pickdrop.perPerson')}</Text>
-                    {(() => {
-                      const price =
-                        service.price_per_person ||
-                        service.pricePerPerson ||
-                        (service.price && typeof service.price === 'object' ? service.price.perPerson || service.price.amount : null) ||
-                        service.price ||
-                        null;
-                      const currency = service.currency || 'PKR';
+                </View>
 
-                      if (!price) return null;
+                {(() => {
+                  const price =
+                    service.price_per_person ||
+                    service.pricePerPerson ||
+                    (service.price && typeof service.price === 'object' ? service.price.perPerson || service.price.amount : null) ||
+                    service.price ||
+                    null;
+                  const currency = service.currency || 'PKR';
 
-                      return (
+                  if (!price) return null;
+
+                  return (
+                    <View style={styles.priceRow}>
+                      <View style={[styles.priceContainer, glassChipStyle, { borderWidth: 1 }]}>
+                        <Text style={[styles.priceLabel, { color: theme.colors.textSecondary }]}>{t('pickdrop.perPerson')}</Text>
                         <Text style={[styles.priceValue, { color: isDark ? '#c77dba' : theme.colors.primary }]}>
                           {currency} {typeof price === 'number' ? price.toLocaleString() : price}
                         </Text>
-                      );
-                    })()}
-                  </View>
-                </View>
+                      </View>
+                    </View>
+                  );
+                })()}
 
                 {/* Tags Row: Schedule, Seats, Gender */}
                 <View style={styles.tagsRow}>
@@ -496,7 +476,7 @@ const PickDropScreen = () => {
                     }
 
                     return (
-                      <View style={[styles.scheduleTag, { backgroundColor: isDark ? 'rgba(126, 36, 108, 0.25)' : 'rgba(126, 36, 108, 0.12)' }]}>
+                      <View style={[styles.scheduleTag, glassChipStyle, { borderWidth: 1 }]}>
                         <Icon name="access-time" size={14} color={isDark ? '#c77dba' : theme.colors.primary} />
                         <Text style={[styles.scheduleTagText, { color: isDark ? '#c77dba' : theme.colors.primary }]}>
                           {labelText} {timeText ? `• ${timeText}` : ''}
@@ -506,22 +486,13 @@ const PickDropScreen = () => {
                   })()}
 
                   {service.return_time && (
-                    <View style={[styles.scheduleTag, { backgroundColor: isDark ? 'rgba(33, 150, 243, 0.2)' : 'rgba(33, 150, 243, 0.12)' }]}>
+                    <View style={[styles.scheduleTag, { backgroundColor: isDark ? 'rgba(59, 130, 246, 0.18)' : 'rgba(255, 255, 255, 0.48)', borderWidth: 1, borderColor: isDark ? 'rgba(147, 197, 253, 0.18)' : 'rgba(59, 130, 246, 0.14)' }]}>
                       <Icon name="reply" size={14} color={isDark ? '#90caf9' : '#2196f3'} />
                       <Text style={[styles.scheduleTagText, { color: isDark ? '#90caf9' : '#2196f3' }]}>
                         Return • {formatTime(service.return_time)}
                       </Text>
                     </View>
                   )}
-
-                  {service.stops && service.stops.length > 0 && getFormattedStopTimes(service.stops) ? (
-                    <View style={[styles.scheduleTag, { backgroundColor: isDark ? 'rgba(255, 152, 0, 0.2)' : 'rgba(255, 152, 0, 0.12)' }]}>
-                      <Icon name="more-horiz" size={14} color={isDark ? '#ffcc80' : '#ef6c00'} />
-                      <Text style={[styles.scheduleTagText, { color: isDark ? '#ffcc80' : '#ef6c00' }]}>
-                        Stops • {getFormattedStopTimes(service.stops)}
-                      </Text>
-                    </View>
-                  ) : null}
 
                   {/* Seats Tag */}
                   {(() => {
@@ -535,7 +506,7 @@ const PickDropScreen = () => {
                     if (availableSpaces === null || availableSpaces === undefined) return null;
 
                     return (
-                      <View style={[styles.seatsTag, { backgroundColor: isDark ? 'rgba(255, 152, 0, 0.2)' : 'rgba(255, 152, 0, 0.12)' }]}>
+                      <View style={[styles.seatsTag, { backgroundColor: isDark ? 'rgba(245, 158, 11, 0.18)' : 'rgba(255, 255, 255, 0.48)', borderWidth: 1, borderColor: isDark ? 'rgba(252, 211, 77, 0.18)' : 'rgba(245, 158, 11, 0.14)' }]}>
                         <Icon name="people-outline" size={14} color={isDark ? '#ffb74d' : '#f57c00'} />
                         <Text style={[styles.seatsTagText, { color: isDark ? '#ffb74d' : '#f57c00' }]}>
                           {availableSpaces} Seat{availableSpaces !== 1 ? 's' : ''} left
@@ -548,8 +519,12 @@ const PickDropScreen = () => {
                   {service.driver_gender && (
                     <View style={[styles.driverGenderTag, {
                       backgroundColor: service.driver_gender === 'female'
-                        ? (isDark ? 'rgba(233, 30, 99, 0.2)' : 'rgba(233, 30, 99, 0.12)')
-                        : (isDark ? 'rgba(33, 150, 243, 0.2)' : 'rgba(33, 150, 243, 0.12)')
+                        ? (isDark ? 'rgba(233, 30, 99, 0.18)' : 'rgba(255, 255, 255, 0.48)')
+                        : (isDark ? 'rgba(33, 150, 243, 0.18)' : 'rgba(255, 255, 255, 0.48)'),
+                      borderWidth: 1,
+                      borderColor: service.driver_gender === 'female'
+                        ? (isDark ? 'rgba(244, 143, 177, 0.18)' : 'rgba(233, 30, 99, 0.14)')
+                        : (isDark ? 'rgba(144, 202, 249, 0.18)' : 'rgba(33, 150, 243, 0.14)'),
                     }]}>
                       <Text style={[styles.driverGenderText, {
                         color: service.driver_gender === 'female'
@@ -632,7 +607,7 @@ const PickDropScreen = () => {
                       <View style={styles.driverInfo}>
                         {user ? (
                           <>
-                            <View style={[styles.driverAvatar, { backgroundColor: isDark ? 'rgba(126, 36, 108, 0.3)' : 'rgba(126, 36, 108, 0.1)', borderWidth: 1, borderColor: isDark ? theme.colors.border : 'transparent' }]}>
+                            <View style={[styles.driverAvatar, glassChipStyle, { borderWidth: 1 }]}>
                               {providerImage ? (
                                 <Image
                                   source={{ uri: providerImage }}
@@ -655,7 +630,7 @@ const PickDropScreen = () => {
                           </>
                         ) : (
                           <>
-                            <View style={[styles.driverAvatar, { backgroundColor: isDark ? 'rgba(126, 36, 108, 0.3)' : 'rgba(126, 36, 108, 0.1)', borderWidth: 1, borderColor: isDark ? theme.colors.border : 'transparent' }]}>
+                            <View style={[styles.driverAvatar, glassChipStyle, { borderWidth: 1 }]}>
                               <Icon name="lock-outline" size={18} color={isDark ? '#c77dba' : theme.colors.primary} />
                             </View>
                             <View>
@@ -691,23 +666,20 @@ const PickDropScreen = () => {
           </View>
         )}
 
-        <View style={styles.infoSection}>
-          <View style={[styles.infoCard, { backgroundColor: theme.colors.backgroundSecondary }]}>
-            <Icon name="info" size={24} color={theme.colors.primary} />
-            <Text style={[styles.infoText, { color: theme.colors.textSecondary }]}>
-              Currently available in Karachi only. We'll be expanding to other cities soon!
-            </Text>
-          </View>
-        </View>
       </ScrollView>
 
       {/* Pagination Controls */}
       {!loading && services.length > 0 && (
-        <View style={[styles.paginationContainer, { paddingBottom: user ? 8 : Math.max(insets.bottom + 10, 8) }]}>
+        <View
+          style={[
+            styles.paginationContainer,
+            { marginBottom: user ? -Math.max(insets.bottom, 0) + 2 : 0, paddingBottom: 0 },
+          ]}
+        >
           <TouchableOpacity
             style={[
               styles.paginationButton,
-              { backgroundColor: theme.colors.backgroundSecondary },
+              { backgroundColor: glassCardStyle.backgroundColor, borderColor: glassCardStyle.borderColor, borderWidth: 1 },
               currentPage === 1 && styles.paginationButtonDisabled,
             ]}
             onPress={() => {
@@ -721,19 +693,16 @@ const PickDropScreen = () => {
             <Text style={[styles.paginationButtonText, { color: currentPage === 1 ? theme.colors.textLight : theme.colors.text }]}>{t('common.back')}</Text>
           </TouchableOpacity>
 
-          {!user && (
-            <TouchableOpacity
-              onPress={() => navigation.navigate('Login')}
-              style={[styles.loginButton, { backgroundColor: theme.colors.primary }]}
-            >
-              <Text style={styles.loginButtonText}>{t('common.login')}</Text>
-            </TouchableOpacity>
-          )}
+          <View style={[styles.pageIndicator, { backgroundColor: glassCardStyle.backgroundColor, borderColor: glassCardStyle.borderColor, borderWidth: 1 }]}>
+            <Text style={[styles.pageIndicatorText, { color: theme.colors.text }]}>
+              {apiCurrentPage} / {totalPages}
+            </Text>
+          </View>
 
           <TouchableOpacity
             style={[
               styles.paginationButton,
-              { backgroundColor: theme.colors.backgroundSecondary },
+              { backgroundColor: glassCardStyle.backgroundColor, borderColor: glassCardStyle.borderColor, borderWidth: 1 },
               currentPage >= totalPages && styles.paginationButtonDisabled,
             ]}
             onPress={() => {
@@ -747,6 +716,21 @@ const PickDropScreen = () => {
             <Icon name="chevron-right" size={20} color={currentPage >= totalPages ? theme.colors.textLight : theme.colors.text} />
           </TouchableOpacity>
         </View>
+      )}
+
+      {!loading && services.length > 0 && !user && (
+        <TouchableOpacity
+          onPress={() => navigation.navigate('Login')}
+          style={[
+            styles.loginButton,
+            {
+              backgroundColor: theme.colors.primary,
+              marginBottom: -Math.max(insets.bottom, 0) + 2,
+            },
+          ]}
+        >
+          <Text style={styles.loginButtonText}>{t('common.login')}</Text>
+        </TouchableOpacity>
       )}
 
       {/* Filter Drawer */}
@@ -808,26 +792,44 @@ const styles = StyleSheet.create({
     gap: 8,
     flexShrink: 0,
   },
+  topButton: {
+    height: 38,
+    paddingHorizontal: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+  },
+  topButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
   themeToggleButton: {
     padding: 4,
   },
   loginButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
+    height: 46,
+    paddingHorizontal: 18,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginHorizontal: 16,
+    marginTop: 2,
   },
   loginButtonText: {
     color: '#fff',
-    fontWeight: '600',
+    fontWeight: '700',
     fontSize: 14,
   },
   addServiceButton: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    gap: 6,
+    height: 44,
+    borderRadius: 12,
+    gap: 8,
+    flex: 1,
   },
   addServiceButtonText: {
     color: '#ffffff',
@@ -836,20 +838,21 @@ const styles = StyleSheet.create({
   },
   // Match Rental Cars filter layout
   searchSection: {
-    paddingHorizontal: 8,
-    paddingVertical: 6,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
     borderBottomWidth: 1,
   },
   searchBarContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    gap: 12,
   },
   filterButton: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    borderWidth: 1.5,
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    borderWidth: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -883,7 +886,9 @@ const styles = StyleSheet.create({
     color: '#999999',
   },
   servicesContainer: {
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 8,
   },
   servicesHeader: {
     flexDirection: 'row',
@@ -899,7 +904,7 @@ const styles = StyleSheet.create({
   serviceCard: {
     borderRadius: 16,
     borderWidth: 1.5,
-    padding: 16,
+    padding: 14,
     marginBottom: 16,
     marginHorizontal: 0,
     shadowOffset: { width: 0, height: 4 },
@@ -907,14 +912,10 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 16,
+    marginBottom: 12,
   },
   routeContainer: {
     flex: 1,
-    marginRight: 16,
   },
   timelineItem: {
     flexDirection: 'row',
@@ -949,6 +950,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     position: 'relative',
   },
+  timelineLineContainerCompact: {
+    minHeight: 26,
+  },
   timelineLine: {
     // handled by container border
   },
@@ -968,8 +972,12 @@ const styles = StyleSheet.create({
     marginRight: 2,
     fontWeight: '600',
   },
+  priceRow: {
+    alignItems: 'flex-start',
+    marginBottom: 16,
+  },
   priceContainer: {
-    alignItems: 'flex-end',
+    alignItems: 'flex-start',
     padding: 10,
     borderRadius: 10,
   },
@@ -986,7 +994,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
-    marginBottom: 16,
+    marginBottom: 14,
   },
   scheduleTag: {
     flexDirection: 'row',
@@ -1044,7 +1052,7 @@ const styles = StyleSheet.create({
   },
   cardDivider: {
     height: 1,
-    marginVertical: 12,
+    marginVertical: 10,
   },
   cardFooter: {
     flexDirection: 'row',
@@ -1100,34 +1108,22 @@ const styles = StyleSheet.create({
     color: '#999',
     marginTop: 16,
   },
-  paginationInfo: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-  },
-  paginationText: {
-    fontSize: 14,
-    color: '#666',
-    fontWeight: '500',
-  },
   paginationContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingTop: 8,
-    paddingBottom: 8,
-    gap: 8,
+    paddingTop: 6,
+    gap: 12,
   },
   paginationButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 8,
-    gap: 6,
+    justifyContent: 'center',
+    height: 46,
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    flex: 1,
   },
   paginationButtonDisabled: {
     opacity: 0.5,
@@ -1135,6 +1131,18 @@ const styles = StyleSheet.create({
   paginationButtonText: {
     fontSize: 14,
     fontWeight: '600',
+  },
+  pageIndicator: {
+    minWidth: 76,
+    height: 46,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 12,
+  },
+  pageIndicatorText: {
+    fontSize: 14,
+    fontWeight: '700',
   },
 });
 

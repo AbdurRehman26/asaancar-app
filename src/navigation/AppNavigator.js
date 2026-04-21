@@ -171,6 +171,33 @@ const SettingsStack = () => {
           headerShown: false,
         }}
       />
+      <Stack.Screen
+        name="Login"
+        component={LoginScreen}
+        options={{
+          headerShown: false,
+          presentation: 'modal',
+          gestureEnabled: false,
+        }}
+      />
+      <Stack.Screen
+        name="Register"
+        component={RegisterScreen}
+        options={{
+          headerShown: false,
+          presentation: 'modal',
+          gestureEnabled: false,
+        }}
+      />
+      <Stack.Screen
+        name="VerifySignupOtp"
+        component={VerifySignupOtpScreen}
+        options={{
+          headerShown: false,
+          presentation: 'modal',
+          gestureEnabled: false,
+        }}
+      />
     </Stack.Navigator>
   );
 };
@@ -211,10 +238,10 @@ const RideRequestsStack = () => {
   );
 };
 
-// Authenticated tabs (only shown when logged in)
-const AuthenticatedTabs = () => {
+const AppTabs = () => {
   const { theme } = useTheme();
   const { t } = useTranslation();
+  const { user } = useAuth();
 
   return (
     <Tab.Navigator
@@ -232,11 +259,12 @@ const AuthenticatedTabs = () => {
 
           return <Icon name={iconName} size={size} color={color} />;
         },
-        tabBarActiveTintColor: theme.colors.secondary,
-        tabBarInactiveTintColor: theme.colors.textLight,
+        tabBarActiveTintColor: '#ffffff',
+        tabBarInactiveTintColor: 'rgba(255,255,255,0.7)',
         tabBarStyle: {
-          backgroundColor: theme.colors.background,
-          borderTopColor: theme.colors.border,
+          backgroundColor: theme.colors.primaryDark || theme.colors.primary,
+          borderTopColor: 'transparent',
+          elevation: 0,
         },
         headerShown: false,
       })}
@@ -268,20 +296,22 @@ const AuthenticatedTabs = () => {
           },
         })}
       />
-      <Tab.Screen
-        name="Dashboard"
-        component={SettingsStack}
-        options={{ tabBarLabel: t('navigation.dashboard') }}
-        listeners={({ navigation }) => ({
-          tabPress: (e) => {
-            // Always reset Dashboard tab to SettingsMain when pressed
-            e.preventDefault();
-            navigation.navigate('Dashboard', {
-              screen: 'SettingsMain',
-            });
-          },
-        })}
-      />
+      {user ? (
+        <Tab.Screen
+          name="Dashboard"
+          component={SettingsStack}
+          options={{ tabBarLabel: t('navigation.dashboard') }}
+          listeners={({ navigation }) => ({
+            tabPress: (e) => {
+              // Always reset Dashboard tab to SettingsMain when pressed
+              e.preventDefault();
+              navigation.navigate('Dashboard', {
+                screen: 'SettingsMain',
+              });
+            },
+          })}
+        />
+      ) : null}
     </Tab.Navigator>
   );
 };
@@ -307,19 +337,18 @@ const AppNavigator = () => {
     return null; // You can add a loading screen here
   }
 
-  // If user is logged in, show Authenticated Tabs (skip onboarding)
-  // If not logged in AND first launch, show Onboarding
-  // Otherwise show MainStack
+// If not logged in AND first launch, show Onboarding
+// Otherwise show the main tab shell
 
   return (
     <View style={{ flex: 1 }}>
       <NavigationContainer>
         <Stack.Navigator
           screenOptions={{ headerShown: false }}
-          initialRouteName={user ? 'Root' : isOnboardingVisible ? 'Onboarding' : 'Root'}
+          initialRouteName={isOnboardingVisible ? 'Onboarding' : 'Root'}
         >
           <Stack.Screen name="Root">
-            {({ route }) => (user ? <AuthenticatedTabs /> : <MainStack initialScreen={route.params?.screen} />)}
+            {() => <AppTabs />}
           </Stack.Screen>
           <Stack.Screen name="Onboarding" component={OnboardingScreen} />
         </Stack.Navigator>
