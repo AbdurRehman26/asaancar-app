@@ -275,7 +275,7 @@ const PickDropDetailScreen = () => {
     const scheduleTime = service.departure_time ? formatDisplayTime(service.departure_time) : '';
     const scheduleSuffix = [scheduleDate, scheduleTime].filter(Boolean).join(' at ');
     const rideDescriptor = `${startLocation} to ${endLocation}`;
-    const message = `Hi ${contactName}, I'm ${requesterName} and I saw your ride on Sawari from ${rideDescriptor}${scheduleSuffix ? ` on ${scheduleSuffix}` : ''}. Is it still available?`;
+    const message = `Hi ${contactName}, I'm ${requesterName} and I saw your ride on AsaanCar from ${rideDescriptor}${scheduleSuffix ? ` on ${scheduleSuffix}` : ''}. Is it still available?`;
     const whatsappUrl = `https://wa.me/${numericWhatsApp}?text=${encodeURIComponent(message)}`;
     Linking.openURL(whatsappUrl).catch(() => {
       const smsUrl = `sms:${providerWhatsApp}${Platform.OS === 'ios' ? '&' : '?'}body=${encodeURIComponent(message)}`;
