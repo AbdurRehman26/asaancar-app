@@ -15,7 +15,7 @@ import Constants from 'expo-constants';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
-import { pickDropAPI } from '@/services/api';
+import { contactStatsAPI, pickDropAPI } from '@/services/api';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import ErrorModal from '@/components/ErrorModal';
@@ -190,6 +190,14 @@ const PickDropDetailScreen = () => {
     service.contact_whatsapp ||
     providerPhone ||
     null;
+  const providerRecipientUserId =
+    provider?.id ||
+    provider?.user_id ||
+    provider?.user?.id ||
+    service.user_id ||
+    service.provider_user_id ||
+    service.owner_user_id ||
+    null;
   const glassCardStyle = {
     backgroundColor: isDark ? 'rgba(29, 22, 36, 0.82)' : 'rgba(255, 253, 253, 0.82)',
     borderColor: isDark ? 'rgba(216, 138, 200, 0.18)' : 'rgba(157, 58, 138, 0.16)',
@@ -257,10 +265,29 @@ const PickDropDetailScreen = () => {
   const handleCallProvider = () => {
     if (!providerPhone) return;
     const phoneUrl = `tel:${providerPhone}`;
-    Linking.openURL(phoneUrl).catch(() => {
-      setErrorMessage(t('pickDropDetail.errorPhone'));
-      setShowErrorModal(true);
+    recordContactStat('call').finally(() => {
+      Linking.openURL(phoneUrl).catch(() => {
+        setErrorMessage(t('pickDropDetail.errorPhone'));
+        setShowErrorModal(true);
+      });
     });
+  };
+
+  const recordContactStat = async (contactMethod) => {
+    if (!user || !providerRecipientUserId || !service?.id || !contactMethod) {
+      return;
+    }
+
+    try {
+      await contactStatsAPI.storeContactingStat({
+        recipient_user_id: providerRecipientUserId,
+        contactable_type: 'pick_and_drop',
+        contactable_id: service.id,
+        contact_method: contactMethod,
+      });
+    } catch (error) {
+      console.error('Failed to store contact stat:', error?.response?.data || error?.message || error);
+    }
   };
 
   const handleMessageProvider = () => {
@@ -277,11 +304,38 @@ const PickDropDetailScreen = () => {
     const rideDescriptor = `${startLocation} to ${endLocation}`;
     const message = `Hi ${contactName}, I'm ${requesterName} and I saw your ride on AsaanCar from ${rideDescriptor}${scheduleSuffix ? ` on ${scheduleSuffix}` : ''}. Is it still available?`;
     const whatsappUrl = `https://wa.me/${numericWhatsApp}?text=${encodeURIComponent(message)}`;
-    Linking.openURL(whatsappUrl).catch(() => {
-      const smsUrl = `sms:${providerWhatsApp}${Platform.OS === 'ios' ? '&' : '?'}body=${encodeURIComponent(message)}`;
-      Linking.openURL(smsUrl).catch(() => {
-        setErrorMessage(t('pickDropDetail.errorMsg'));
-        setShowErrorModal(true);
+
+    recordContactStat('whatsapp').finally(() => {
+      Linking.openURL(whatsappUrl).catch(() => {
+        const smsUrl = `sms:${providerWhatsApp}${Platform.OS === 'ios' ? '&' : '?'}body=${encodeURIComponent(message)}`;
+        Linking.openURL(smsUrl).catch(() => {
+          setErrorMessage(t('pickDropDetail.errorMsg'));
+          setShowErrorModal(true);
+        });
+      });
+    });
+  };
+
+  const handleChatWithProvider = () => {
+    if (!user) {
+      navigation.navigate('Login');
+      return;
+    }
+
+    if (!providerRecipientUserId) {
+      setErrorMessage(t('pickDropDetail.errorPhone'));
+      setShowErrorModal(true);
+      return;
+    }
+
+    const providerName = provider?.name || provider?.user?.name || service.driver?.name || t('pickDropDetail.provider');
+
+    recordContactStat('chat').finally(() => {
+      navigation.navigate('Chat', {
+        userId: providerRecipientUserId,
+        userName: providerName,
+        type: 'pick_and_drop',
+        serviceId: service.id,
       });
     });
   };
@@ -653,21 +707,8 @@ const PickDropDetailScreen = () => {
                     <Text style={styles.actionBtnText}>{t('pickDropDetail.whatsapp')}</Text>
                   </TouchableOpacity>
                 )}
-                {user && (provider?.id || provider?.user_id) && (
-                  <TouchableOpacity style={[styles.actionBtnFull, { backgroundColor: theme.colors.secondary }]} onPress={() => {
-                    if (!user) {
-                      navigation.navigate('Login');
-                    } else {
-                      const pId = provider.id || provider.user_id;
-                      const pName = provider.name || provider.user?.name || service.driver?.name || t('pickDropDetail.provider');
-                      navigation.navigate('Chat', {
-                        userId: pId,
-                        userName: pName,
-                        type: 'pick_and_drop',
-                        serviceId: service.id
-                      });
-                    }
-                  }}>
+                {user && providerRecipientUserId && (
+                  <TouchableOpacity style={[styles.actionBtnFull, { backgroundColor: theme.colors.secondary }]} onPress={handleChatWithProvider}>
                     <Icon name="forum" size={20} color="#fff" />
                     <Text style={styles.actionBtnText}>{t('pickDropDetail.chatInApp')}</Text>
                   </TouchableOpacity>

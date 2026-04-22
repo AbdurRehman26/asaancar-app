@@ -274,6 +274,13 @@ export const forceUpdateAPI = {
   },
 };
 
+export const contactStatsAPI = {
+  storeContactingStat: async (payload) => {
+    const response = await api.post('/contacting-stats', payload);
+    return response.data;
+  },
+};
+
 export const storeAPI = {
   // Get all stores
   getStores: async () => {

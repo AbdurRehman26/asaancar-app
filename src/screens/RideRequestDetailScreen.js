@@ -16,7 +16,7 @@ import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useTheme } from '@/context/ThemeContext';
 import { useAuth } from '@/context/AuthContext';
-import { rideRequestAPI } from '@/services/api';
+import { contactStatsAPI, rideRequestAPI } from '@/services/api';
 import PageHeader from '@/components/PageHeader';
 import ErrorModal from '@/components/ErrorModal';
 
@@ -91,6 +91,7 @@ const RideRequestDetailScreen = () => {
   const handleCall = async () => {
     if (!rideRequest?.contact) return;
     const phoneUrl = `tel:${rideRequest.contact}`;
+    await recordContactStat('call');
     const canOpen = await Linking.canOpenURL(phoneUrl);
     if (canOpen) {
       await Linking.openURL(phoneUrl);
@@ -103,6 +104,7 @@ const RideRequestDetailScreen = () => {
 
     const cleanNumber = phone.replace(/[^\d+]/g, '');
     const whatsappUrl = `https://wa.me/${cleanNumber}`;
+    await recordContactStat('whatsapp');
     const canOpen = await Linking.canOpenURL(whatsappUrl);
 
     if (canOpen) {
@@ -128,6 +130,34 @@ const RideRequestDetailScreen = () => {
 
   const requesterName = user ? rideRequest.user?.name || rideRequest.name || 'Rider' : 'Rider';
   const requesterUserId = rideRequest.user?.id || rideRequest.user_id || null;
+  const contactableId = rideRequest.id || requestId || null;
+
+  const recordContactStat = async (contactMethod) => {
+    if (!user || !requesterUserId || !contactableId || !contactMethod) {
+      return;
+    }
+
+    try {
+      await contactStatsAPI.storeContactingStat({
+        recipient_user_id: requesterUserId,
+        contactable_type: 'ride_request',
+        contactable_id: contactableId,
+        contact_method: contactMethod,
+      });
+    } catch (error) {
+      console.error('Failed to store contact stat:', error?.response?.data || error?.message || error);
+    }
+  };
+
+  const handleChatInApp = async () => {
+    await recordContactStat('chat');
+    navigation.navigate('Chat', {
+      userId: requesterUserId,
+      userName: rideRequest.user?.name || rideRequest.name || 'Rider',
+      type: 'ride_request',
+      serviceId: rideRequest.id,
+    });
+  };
   const departureLabel = rideRequest.schedule_type === 'once' && rideRequest.departure_date
     ? formatDate(rideRequest.departure_date)
     : rideRequest.schedule_type === 'everyday'
@@ -370,12 +400,7 @@ const RideRequestDetailScreen = () => {
               {requesterUserId ? (
                 <TouchableOpacity
                   style={[styles.ctaButton, { backgroundColor: theme.colors.secondary }]}
-                  onPress={() => navigation.navigate('Chat', {
-                    userId: requesterUserId,
-                    userName: rideRequest.user?.name || rideRequest.name || 'Rider',
-                    type: 'ride_request',
-                    serviceId: rideRequest.id,
-                  })}
+                  onPress={handleChatInApp}
                 >
                   <Icon name="forum" size={18} color="#fff" />
                   <Text style={styles.ctaButtonText}>Chat in App</Text>
