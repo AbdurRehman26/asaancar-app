@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   ActivityIndicator,
   Linking,
@@ -7,12 +7,17 @@ import {
   Text,
   TouchableOpacity,
   View,
+  AppState,
+  Dimensions,
 } from 'react-native';
 import Constants from 'expo-constants';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useTranslation } from 'react-i18next';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '@/context/ThemeContext';
 import { forceUpdateAPI } from '@/services/api';
+
+const { width } = Dimensions.get('window');
 
 const normalizeBoolean = (value) => {
   if (value === true || value === 1) return true;
@@ -113,7 +118,8 @@ const getForceUpdateDecision = (config, installedInfo) => {
 const ForceUpdateGate = ({ children }) => {
   const { theme } = useTheme();
   const { t } = useTranslation();
-  const [state, setState] = React.useState({
+  const appState = useRef(AppState.currentState);
+  const [state, setState] = useState({
     checking: true,
     required: false,
     title: null,
@@ -123,19 +129,23 @@ const ForceUpdateGate = ({ children }) => {
     minimumVersionCode: null,
   });
 
-  React.useEffect(() => {
-    let isMounted = true;
+  const checkForceUpdate = async (isManual = false) => {
+    if (isManual) {
+      setState((prev) => ({ ...prev, checking: true }));
+    }
 
-    const checkForceUpdate = async () => {
-      const expoConfig = Constants.expoConfig || Constants.manifest || {};
-      const localConfig = expoConfig?.extra?.forceUpdate || {};
-      const endpoint = localConfig?.endpoint || expoConfig?.extra?.forceUpdateEndpoint;
-      const packageName = expoConfig?.android?.package;
+    const expoConfig = Constants.expoConfig || Constants.manifest || {};
+    const localConfig = expoConfig?.extra?.forceUpdate || {};
+    const endpoint = localConfig?.endpoint || expoConfig?.extra?.forceUpdateEndpoint;
+    const packageName = expoConfig?.android?.package;
 
-      try {
-        let remoteConfig = endpoint ? await forceUpdateAPI.getConfig(endpoint) : null;
+    try {
+      // Try to get remote config from endpoint first
+      let remoteConfig = endpoint ? await forceUpdateAPI.getConfig(endpoint) : null;
 
-        if (!remoteConfig && Platform.OS === 'android' && packageName) {
+      // If no endpoint or fetch failed, and we're on Android, try Play Store scraping
+      if (!remoteConfig && Platform.OS === 'android' && packageName) {
+        try {
           const playStoreVersion = await forceUpdateAPI.getPlayStoreVersion(packageName);
           if (playStoreVersion) {
             remoteConfig = {
@@ -146,43 +156,49 @@ const ForceUpdateGate = ({ children }) => {
               title: localConfig?.title,
             };
           }
+        } catch (scrapeError) {
+          console.warn('Play Store scraping failed:', scrapeError);
         }
-
-        const mergedConfig = resolveForceUpdateConfig(remoteConfig, localConfig);
-        const installedInfo = getInstalledAppInfo();
-        const decision = getForceUpdateDecision(mergedConfig, installedInfo);
-
-        if (!isMounted) {
-          return;
-        }
-
-        setState({
-          checking: false,
-          required: decision.required,
-          title: mergedConfig.title || null,
-          message: mergedConfig.message || null,
-          storeUrl: mergedConfig.storeUrl || null,
-          minimumVersion: decision.minimumVersion,
-          minimumVersionCode: decision.minimumVersionCode,
-        });
-      } catch (error) {
-        console.error('Force update check failed:', error);
-
-        if (!isMounted) {
-          return;
-        }
-
-        setState((prev) => ({
-          ...prev,
-          checking: false,
-        }));
       }
-    };
 
+      const mergedConfig = resolveForceUpdateConfig(remoteConfig, localConfig);
+      const installedInfo = getInstalledAppInfo();
+      const decision = getForceUpdateDecision(mergedConfig, installedInfo);
+
+      setState({
+        checking: false,
+        required: decision.required,
+        title: mergedConfig.title || null,
+        message: mergedConfig.message || null,
+        storeUrl: mergedConfig.storeUrl || null,
+        minimumVersion: decision.minimumVersion,
+        minimumVersionCode: decision.minimumVersionCode,
+      });
+    } catch (error) {
+      console.error('Force update check failed:', error);
+      setState((prev) => ({
+        ...prev,
+        checking: false,
+      }));
+    }
+  };
+
+  useEffect(() => {
     checkForceUpdate();
 
+    const subscription = AppState.addEventListener('change', (nextAppState) => {
+      if (
+        appState.current.match(/inactive|background/) &&
+        nextAppState === 'active'
+      ) {
+        // App has come to the foreground
+        checkForceUpdate();
+      }
+      appState.current = nextAppState;
+    });
+
     return () => {
-      isMounted = false;
+      subscription.remove();
     };
   }, []);
 
@@ -231,52 +247,91 @@ const ForceUpdateGate = ({ children }) => {
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <View
-        style={[
-          styles.card,
-          {
-            backgroundColor: theme.colors.cardBackground || theme.colors.backgroundSecondary,
-            borderColor: theme.colors.border,
-          },
-        ]}
+      <LinearGradient
+        colors={[theme.colors.secondary + '20', theme.colors.background]}
+        style={styles.gradient}
       >
-        <View style={[styles.iconWrap, { backgroundColor: `${theme.colors.secondary}20` }]}>
-          <Icon name="system-update-alt" size={44} color={theme.colors.secondary} />
-        </View>
-
-        <Text style={[styles.title, { color: theme.colors.text }]}>{title}</Text>
-        <Text style={[styles.message, { color: theme.colors.textLight }]}>{message}</Text>
-
-        <View style={[styles.versionBox, { backgroundColor: theme.colors.backgroundSecondary || theme.colors.background }]}>
-          <Text style={[styles.versionLabel, { color: theme.colors.textLight }]}>
-            {t('forceUpdate.currentVersion')}
-          </Text>
-          <Text style={[styles.versionValue, { color: theme.colors.text }]}>
-            {installedInfo.version}
-            {installedInfo.versionCode ? ` (${installedInfo.versionCode})` : ''}
-          </Text>
-
-          {(state.minimumVersion || state.minimumVersionCode) ? (
-            <>
-              <Text style={[styles.versionLabel, styles.requiredSpacing, { color: theme.colors.textLight }]}>
-                {t('forceUpdate.requiredVersion')}
-              </Text>
-              <Text style={[styles.versionValue, { color: theme.colors.text }]}>
-                {state.minimumVersion || t('forceUpdate.latestBuild')}
-                {state.minimumVersionCode ? ` (${state.minimumVersionCode})` : ''}
-              </Text>
-            </>
-          ) : null}
-        </View>
-
-        <TouchableOpacity
-          activeOpacity={0.85}
-          style={[styles.button, { backgroundColor: theme.colors.secondary }]}
-          onPress={openStore}
+        <View
+          style={[
+            styles.card,
+            {
+              backgroundColor: theme.colors.cardBackground || theme.colors.backgroundSecondary || '#fff',
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 10 },
+              shadowOpacity: 0.1,
+              shadowRadius: 20,
+              elevation: 5,
+            },
+          ]}
         >
-          <Text style={styles.buttonText}>{t('forceUpdate.updateNow')}</Text>
-        </TouchableOpacity>
-      </View>
+          <LinearGradient
+            colors={[theme.colors.secondary, theme.colors.secondary + 'CC']}
+            style={styles.iconWrap}
+          >
+            <Icon name="system-update-alt" size={40} color="#fff" />
+          </LinearGradient>
+
+          <Text style={[styles.title, { color: theme.colors.text }]}>{title}</Text>
+          <Text style={[styles.message, { color: theme.colors.textLight || '#666' }]}>
+            {message}
+          </Text>
+
+          <View style={[styles.versionBox, { backgroundColor: theme.colors.background + '80' }]}>
+            <View style={styles.versionRow}>
+              <View>
+                <Text style={[styles.versionLabel, { color: theme.colors.textLight || '#666' }]}>
+                  {t('forceUpdate.currentVersion')}
+                </Text>
+                <Text style={[styles.versionValue, { color: theme.colors.text }]}>
+                  {installedInfo.version}
+                  {installedInfo.versionCode ? ` (${installedInfo.versionCode})` : ''}
+                </Text>
+              </View>
+              
+              {(state.minimumVersion || state.minimumVersionCode) ? (
+                <View style={styles.versionDivider} />
+              ) : null}
+
+              {(state.minimumVersion || state.minimumVersionCode) ? (
+                <View>
+                  <Text style={[styles.versionLabel, { color: theme.colors.textLight || '#666' }]}>
+                    {t('forceUpdate.requiredVersion')}
+                  </Text>
+                  <Text style={[styles.versionValue, { color: theme.colors.secondary }]}>
+                    {state.minimumVersion || t('forceUpdate.latestBuild')}
+                    {state.minimumVersionCode ? ` (${state.minimumVersionCode})` : ''}
+                  </Text>
+                </View>
+              ) : null}
+            </View>
+          </View>
+
+          <TouchableOpacity
+            activeOpacity={0.8}
+            style={styles.buttonContainer}
+            onPress={openStore}
+          >
+            <LinearGradient
+              colors={[theme.colors.secondary, theme.colors.secondary + 'EE']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.button}
+            >
+              <Text style={styles.buttonText}>{t('forceUpdate.updateNow')}</Text>
+              <Icon name="arrow-forward" size={20} color="#fff" style={{ marginLeft: 8 }} />
+            </LinearGradient>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            onPress={() => checkForceUpdate(true)}
+            style={styles.retryButton}
+          >
+            <Text style={[styles.retryText, { color: theme.colors.textLight || '#666' }]}>
+              Already updated? Tap to check again
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </LinearGradient>
     </View>
   );
 };
@@ -296,67 +351,98 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
+  },
+  gradient: {
+    flex: 1,
     justifyContent: 'center',
     paddingHorizontal: 24,
   },
   card: {
-    borderWidth: 1,
-    borderRadius: 24,
+    borderRadius: 32,
     paddingHorizontal: 24,
-    paddingVertical: 28,
+    paddingVertical: 32,
     alignItems: 'center',
+    width: '100%',
   },
   iconWrap: {
-    width: 84,
-    height: 84,
-    borderRadius: 42,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 24,
   },
   title: {
-    fontSize: 28,
-    fontWeight: '700',
+    fontSize: 26,
+    fontWeight: '800',
     textAlign: 'center',
     marginBottom: 12,
+    letterSpacing: -0.5,
   },
   message: {
-    fontSize: 15,
-    lineHeight: 22,
+    fontSize: 16,
+    lineHeight: 24,
     textAlign: 'center',
-    marginBottom: 22,
+    marginBottom: 32,
+    paddingHorizontal: 10,
   },
   versionBox: {
     width: '100%',
-    borderRadius: 16,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    marginBottom: 24,
+    borderRadius: 20,
+    paddingHorizontal: 20,
+    paddingVertical: 18,
+    marginBottom: 32,
+  },
+  versionRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+  },
+  versionDivider: {
+    width: 1,
+    height: 40,
+    backgroundColor: 'rgba(0,0,0,0.05)',
   },
   versionLabel: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: 11,
+    fontWeight: '700',
     textTransform: 'uppercase',
-    letterSpacing: 0.7,
+    letterSpacing: 1,
+    marginBottom: 6,
   },
   versionValue: {
     fontSize: 16,
-    fontWeight: '700',
-    marginTop: 4,
+    fontWeight: '800',
   },
-  requiredSpacing: {
-    marginTop: 16,
+  buttonContainer: {
+    width: '100%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
   },
   button: {
     width: '100%',
-    borderRadius: 16,
-    paddingVertical: 16,
+    borderRadius: 18,
+    paddingVertical: 18,
+    flexDirection: 'row',
+    justifyContent: 'center',
     alignItems: 'center',
   },
   buttonText: {
     color: '#fff',
-    fontSize: 17,
-    fontWeight: '700',
+    fontSize: 18,
+    fontWeight: '800',
+  },
+  retryButton: {
+    marginTop: 20,
+    padding: 10,
+  },
+  retryText: {
+    fontSize: 13,
+    fontWeight: '500',
+    textDecorationLine: 'underline',
   },
 });
 
