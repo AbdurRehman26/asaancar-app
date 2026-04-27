@@ -835,6 +835,18 @@ export const chatAPI = {
     return response.data;
   },
 
+  // Get unread conversation/message summary
+  getUnreadSummary: async (type = null) => {
+    const params = new URLSearchParams();
+    if (type) {
+      params.append('type', type);
+    }
+
+    const queryString = params.toString();
+    const response = await api.get(queryString ? `/chat/unread-summary?${queryString}` : '/chat/unread-summary');
+    return response.data;
+  },
+
   // Get messages for a conversation
   getMessages: async (conversationId, page = 1, perPage = 50) => {
     const params = new URLSearchParams();

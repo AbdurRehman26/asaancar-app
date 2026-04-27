@@ -34,6 +34,7 @@ import RideRequestsScreen from '@/screens/RideRequestsScreen';
 import RideRequestDetailScreen from '@/screens/RideRequestDetailScreen';
 import RideRequestFormScreen from '@/screens/RideRequestFormScreen';
 import MyRideRequestsScreen from '@/screens/MyRideRequestsScreen';
+import { chatAPI } from '@/services/api';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -238,10 +239,80 @@ const RideRequestsStack = () => {
   );
 };
 
+const ChatStack = () => {
+  return (
+    <Stack.Navigator initialRouteName="ConversationsMain">
+      <Stack.Screen
+        name="ConversationsMain"
+        component={ConversationsScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="Chat"
+        component={ChatScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="Login"
+        component={LoginScreen}
+        options={{
+          headerShown: false,
+          presentation: 'modal',
+          gestureEnabled: false,
+        }}
+      />
+    </Stack.Navigator>
+  );
+};
+
 const AppTabs = () => {
   const { theme } = useTheme();
   const { t } = useTranslation();
   const { user } = useAuth();
+  const [unreadChatSummary, setUnreadChatSummary] = React.useState({
+    unread_conversations: 0,
+    unread_messages: 0,
+  });
+
+  React.useEffect(() => {
+    if (!user) {
+      setUnreadChatSummary({
+        unread_conversations: 0,
+        unread_messages: 0,
+      });
+      return undefined;
+    }
+
+    let isActive = true;
+
+    const loadUnreadSummary = async () => {
+      try {
+        const data = await chatAPI.getUnreadSummary();
+        if (!isActive) {
+          return;
+        }
+
+        setUnreadChatSummary({
+          unread_conversations: data?.unread_conversations || 0,
+          unread_messages: data?.unread_messages || 0,
+        });
+      } catch (error) {
+        if (!isActive) {
+          return;
+        }
+
+        setUnreadChatSummary((prev) => prev);
+      }
+    };
+
+    loadUnreadSummary();
+    const intervalId = setInterval(loadUnreadSummary, 30000);
+
+    return () => {
+      isActive = false;
+      clearInterval(intervalId);
+    };
+  }, [user]);
 
   return (
     <Tab.Navigator
@@ -253,6 +324,8 @@ const AppTabs = () => {
             iconName = 'alt-route';
           } else if (route.name === 'RideRequests') {
             iconName = 'description';
+          } else if (route.name === 'ChatTab') {
+            iconName = 'chat';
           } else if (route.name === 'Dashboard') {
             iconName = 'dashboard';
           }
@@ -296,6 +369,34 @@ const AppTabs = () => {
           },
         })}
       />
+      {user ? (
+        <Tab.Screen
+          name="ChatTab"
+          component={ChatStack}
+          options={{
+            tabBarLabel: t('chat.title'),
+            tabBarBadge: unreadChatSummary.unread_messages > 0
+              ? unreadChatSummary.unread_messages > 99
+                ? '99+'
+                : unreadChatSummary.unread_messages
+              : undefined,
+            tabBarBadgeStyle: {
+              backgroundColor: '#ef4444',
+              color: '#fff',
+              fontSize: 11,
+              fontWeight: '700',
+            },
+          }}
+          listeners={({ navigation }) => ({
+            tabPress: (e) => {
+              e.preventDefault();
+              navigation.navigate('ChatTab', {
+                screen: 'ConversationsMain',
+              });
+            },
+          })}
+        />
+      ) : null}
       {user ? (
         <Tab.Screen
           name="Dashboard"

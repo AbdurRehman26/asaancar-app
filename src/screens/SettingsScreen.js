@@ -72,20 +72,6 @@ const SettingsScreen = () => {
         navigation.navigate('RideRequests', { screen: 'MyRideRequests' });
       },
     },
-    {
-      id: 'messages',
-      title: t('settings.messages'),
-      icon: 'chat-bubble',
-      color: '#10B981', // Emerald
-      onPress: () => {
-        if (!user) {
-          navigation.navigate('Login');
-          return;
-        }
-
-        navigation.navigate('Home', { screen: 'Conversations' });
-      },
-    },
   ];
 
   const secondaryMenuItems = [

@@ -310,7 +310,7 @@ const ConversationsScreen = () => {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.backgroundTertiary }]} edges={['bottom']}>
-      <PageHeader title={t('chat.messages')} backDestination="SettingsMain" />
+      <PageHeader title={t('chat.messages')} backDestination="Home" />
 
       <FlatList
         data={conversations}

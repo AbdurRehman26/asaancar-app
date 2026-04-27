@@ -2,7 +2,7 @@
   "expo": {
     "name": "AsaanCar",
     "slug": "asaancar-app",
-    "version": "1.0.10",
+    "version": "1.0.11",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -16,7 +16,10 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.asaancar.app"
+      "bundleIdentifier": "com.asaancar.app",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -30,7 +33,7 @@
         "WRITE_EXTERNAL_STORAGE",
         "READ_MEDIA_IMAGES"
       ],
-      "versionCode": 69
+      "versionCode": 70
     },
     "web": {
       "bundler": "metro"
@@ -40,8 +43,8 @@
       "googleMapsApiKey": "AIzaSyAl7gcr1SOMOmVcINkah0IjMVTqXaA8zw4",
       "forceUpdate": {
         "enabled": true,
-        "minimumVersion": "1.0.10",
-        "minimumVersionCode": 69,
+        "minimumVersion": "1.0.11",
+        "minimumVersionCode": 70,
         "message": "A newer version of AsaanCar is available. Please update the app to continue.",
         "storeUrl": "https://play.google.com/store/apps/details?id=com.asaancar.app",
         "endpoint": null
