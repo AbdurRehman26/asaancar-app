@@ -27,6 +27,7 @@ import NotificationsScreen from '@/screens/NotificationsScreen';
 import AboutUsScreen from '@/screens/AboutUsScreen';
 import CreateStoreScreen from '@/screens/CreateStoreScreen';
 import OnboardingScreen from '@/screens/OnboardingScreen';
+import AppHomeScreen from '@/screens/AppHomeScreen';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import VerifySignupOtpScreen from '@/screens/VerifySignupOtpScreen';
 import SetPasswordModal from '@/components/SetPasswordModal';
@@ -265,6 +266,45 @@ const ChatStack = () => {
   );
 };
 
+const AppHomeStack = () => {
+  return (
+    <Stack.Navigator initialRouteName="AppHomeMain">
+      <Stack.Screen
+        name="AppHomeMain"
+        component={AppHomeScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="Login"
+        component={LoginScreen}
+        options={{
+          headerShown: false,
+          presentation: 'modal',
+          gestureEnabled: false,
+        }}
+      />
+      <Stack.Screen
+        name="Register"
+        component={RegisterScreen}
+        options={{
+          headerShown: false,
+          presentation: 'modal',
+          gestureEnabled: false,
+        }}
+      />
+      <Stack.Screen
+        name="VerifySignupOtp"
+        component={VerifySignupOtpScreen}
+        options={{
+          headerShown: false,
+          presentation: 'modal',
+          gestureEnabled: false,
+        }}
+      />
+    </Stack.Navigator>
+  );
+};
+
 const AppTabs = () => {
   const { theme } = useTheme();
   const { t } = useTranslation();
@@ -320,7 +360,9 @@ const AppTabs = () => {
         tabBarIcon: ({ focused, color, size }) => {
           let iconName;
 
-          if (route.name === 'Home') {
+          if (route.name === 'AppHomeTab') {
+            iconName = 'home';
+          } else if (route.name === 'Home') {
             iconName = 'alt-route';
           } else if (route.name === 'RideRequests') {
             iconName = 'description';
@@ -342,6 +384,19 @@ const AppTabs = () => {
         headerShown: false,
       })}
     >
+      <Tab.Screen
+        name="AppHomeTab"
+        component={AppHomeStack}
+        options={{ tabBarLabel: t('navigation.home') }}
+        listeners={({ navigation }) => ({
+          tabPress: (e) => {
+            e.preventDefault();
+            navigation.navigate('AppHomeTab', {
+              screen: 'AppHomeMain',
+            });
+          },
+        })}
+      />
       <Tab.Screen
         name="Home"
         component={MainStack}
@@ -446,8 +501,9 @@ const AppNavigator = () => {
       <NavigationContainer>
         <Stack.Navigator
           screenOptions={{ headerShown: false }}
-          initialRouteName={isOnboardingVisible ? 'Onboarding' : 'Root'}
+          initialRouteName={isOnboardingVisible ? 'Onboarding' : 'AppHome'}
         >
+          <Stack.Screen name="AppHome" component={AppHomeScreen} />
           <Stack.Screen name="Root">
             {() => <AppTabs />}
           </Stack.Screen>

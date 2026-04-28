@@ -43,6 +43,15 @@
         "automatic": "Automatic",
         "seats": "{{count}} Seats"
     },
+    "appHome": {
+        "eyebrow": "Apna route chunein",
+        "title": "Aaj aap kis tarah safar karna chahte hain?",
+        "subtitle": "Dastiyaab rides dekh kar shuru karein ya un logon ki ride requests browse karein jo aap ki simt ja rahe hain.",
+        "findRideTitle": "Ride Talaash Karein",
+        "findRideDescription": "Dastiyaab rides dekhein, routes compare karein, aur drivers se seedha rabta karein.",
+        "rideRequestsTitle": "Ride Requests",
+        "rideRequestsDescription": "Dekhein kaun ride dhoond raha hai aur agar aap ka route milta hai to rabta karein."
+    },
     "services": {
         "pickDrop": "Ride Talaash Karein",
         "rentalCars": "Kiraye ki Gariyan"

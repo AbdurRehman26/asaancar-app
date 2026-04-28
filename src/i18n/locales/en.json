@@ -44,6 +44,15 @@
         "automatic": "Automatic",
         "seats": "{{count}} Seats"
     },
+    "appHome": {
+        "eyebrow": "Choose your route",
+        "title": "How would you like to travel today?",
+        "subtitle": "Start by exploring available rides or browse rider requests from people heading your way.",
+        "findRideTitle": "Find a Ride",
+        "findRideDescription": "Browse available rides, compare routes, and contact drivers directly.",
+        "rideRequestsTitle": "Ride Requests",
+        "rideRequestsDescription": "See who is looking for a ride and connect if your route matches."
+    },
     "services": {
         "pickDrop": "Find a Ride",
         "rentalCars": "Rental Cars"
