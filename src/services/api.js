@@ -7,8 +7,30 @@ const API_BASE_URL = 'https://asaancar.com/api';
 const pickFirstDefined = (...values) =>
   values.find((value) => value !== undefined && value !== null && value !== '');
 
+const isIntegerLikeValue = (value) => {
+  if (typeof value === 'number') {
+    return Number.isFinite(value) && Number.isInteger(value);
+  }
+
+  if (typeof value === 'string') {
+    return /^\d+$/.test(value.trim());
+  }
+
+  return false;
+};
+
 const normalizeForceUpdatePayload = (payload = {}) => {
   const raw = payload?.data || payload;
+  const nestedConfig = raw?.data || {};
+  const androidVersion = nestedConfig.android_version;
+  const androidVersionAsBuild = isIntegerLikeValue(androidVersion) ? Number(androidVersion) : null;
+  const androidVersionAsVersion =
+    androidVersion !== undefined &&
+    androidVersion !== null &&
+    androidVersion !== '' &&
+    !isIntegerLikeValue(androidVersion)
+      ? String(androidVersion).trim()
+      : null;
 
   return {
     enabled: pickFirstDefined(
@@ -21,6 +43,7 @@ const normalizeForceUpdatePayload = (payload = {}) => {
       raw.is_required
     ),
     minimumVersion: pickFirstDefined(
+      androidVersionAsVersion,
       raw.minimum_version,
       raw.minimumVersion,
       raw.min_version,
@@ -29,6 +52,9 @@ const normalizeForceUpdatePayload = (payload = {}) => {
       raw.requiredVersion
     ),
     minimumVersionCode: pickFirstDefined(
+      androidVersionAsBuild,
+      nestedConfig.minimum_version_code,
+      nestedConfig.minimumVersionCode,
       raw.minimum_version_code,
       raw.minimumVersionCode,
       raw.min_build,

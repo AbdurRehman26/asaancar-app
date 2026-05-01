@@ -88,6 +88,23 @@ const resolveForceUpdateConfig = (remoteConfig, localConfig) => ({
   storeUrl: remoteConfig?.storeUrl || localConfig?.storeUrl,
 });
 
+const normalizeForceUpdateEndpoint = (endpoint) => {
+  if (!endpoint) {
+    return '/config';
+  }
+
+  const normalized = String(endpoint).trim();
+  if (
+    normalized === '/settings/force-update' ||
+    normalized === 'settings/force-update' ||
+    normalized.endsWith('/api/settings/force-update')
+  ) {
+    return '/config';
+  }
+
+  return normalized;
+};
+
 const getForceUpdateDecision = (config, installedInfo) => {
   const minimumVersion = config.minimumVersion ? String(config.minimumVersion) : null;
   const minimumVersionCode =
@@ -136,7 +153,9 @@ const ForceUpdateGate = ({ children }) => {
 
     const expoConfig = Constants.expoConfig || Constants.manifest || {};
     const localConfig = expoConfig?.extra?.forceUpdate || {};
-    const endpoint = localConfig?.endpoint || expoConfig?.extra?.forceUpdateEndpoint;
+    const endpoint = normalizeForceUpdateEndpoint(
+      localConfig?.endpoint || expoConfig?.extra?.forceUpdateEndpoint
+    );
     const packageName = expoConfig?.android?.package;
 
     try {
