@@ -19,6 +19,7 @@ import { useAuth } from '@/context/AuthContext';
 import { contactStatsAPI, rideRequestAPI } from '@/services/api';
 import PageHeader from '@/components/PageHeader';
 import ErrorModal from '@/components/ErrorModal';
+import { useTranslation } from 'react-i18next';
 
 const formatTime = (timeString) => {
   if (!timeString) return '';
@@ -44,6 +45,7 @@ const RideRequestDetailScreen = () => {
   const route = useRoute();
   const { theme, isDark } = useTheme();
   const { user } = useAuth();
+  const { t } = useTranslation();
   const { requestId, rideRequest: initialRequest } = route.params || {};
   const [rideRequest, setRideRequest] = useState(initialRequest || null);
   const [loading, setLoading] = useState(!initialRequest);
@@ -78,7 +80,7 @@ const RideRequestDetailScreen = () => {
         const data = await rideRequestAPI.getRideRequest(requestId);
         setRideRequest(data?.data || data);
       } catch (error) {
-        setErrorMessage(error.response?.data?.message || error.message || 'Failed to load ride request.');
+        setErrorMessage(error.response?.data?.message || error.message || t('rideRequestDetail.loadError'));
         setShowErrorModal(true);
       } finally {
         setLoading(false);
@@ -123,12 +125,12 @@ const RideRequestDetailScreen = () => {
   if (!rideRequest) {
     return (
       <SafeAreaView style={[styles.centered, { backgroundColor: theme.colors.background }]} edges={['bottom']}>
-        <Text style={{ color: theme.colors.text }}>Ride request not found.</Text>
+        <Text style={{ color: theme.colors.text }}>{t('rideRequestDetail.notFound')}</Text>
       </SafeAreaView>
     );
   }
 
-  const requesterName = user ? rideRequest.user?.name || rideRequest.name || 'Rider' : 'Rider';
+  const requesterName = user ? rideRequest.user?.name || rideRequest.name || t('rideRequestDetail.rider') : t('rideRequestDetail.rider');
   const requesterUserId = rideRequest.user?.id || rideRequest.user_id || null;
   const contactableId = rideRequest.id || requestId || null;
 
@@ -153,7 +155,7 @@ const RideRequestDetailScreen = () => {
     await recordContactStat('chat');
     navigation.navigate('Chat', {
       userId: requesterUserId,
-      userName: rideRequest.user?.name || rideRequest.name || 'Rider',
+      userName: rideRequest.user?.name || rideRequest.name || t('rideRequestDetail.rider'),
       type: 'ride_request',
       serviceId: rideRequest.id,
     });
@@ -161,16 +163,16 @@ const RideRequestDetailScreen = () => {
   const departureLabel = rideRequest.schedule_type === 'once' && rideRequest.departure_date
     ? formatDate(rideRequest.departure_date)
     : rideRequest.schedule_type === 'everyday'
-      ? 'Everyday'
+      ? t('pickDropDetail.everyday')
       : rideRequest.schedule_type === 'custom' && Array.isArray(rideRequest.selected_days) && rideRequest.selected_days.length
         ? rideRequest.selected_days.join(', ')
-        : rideRequest.schedule_type || 'Flexible';
+        : rideRequest.schedule_type || t('pickDropDetail.flexible');
   const routePoints = [
     rideRequest.start_latitude != null && rideRequest.start_longitude != null
       ? {
           key: 'start',
           label: 'Pick Up',
-          title: rideRequest.start_location || 'Start Location',
+          title: rideRequest.start_location || t('pickDropDetail.startLocation'),
           latitude: Number(rideRequest.start_latitude),
           longitude: Number(rideRequest.start_longitude),
           markerColor: 'green',
@@ -181,7 +183,7 @@ const RideRequestDetailScreen = () => {
       ? {
           key: 'end',
           label: 'Drop Off',
-          title: rideRequest.end_location || 'End Location',
+          title: rideRequest.end_location || t('pickDropDetail.endLocation'),
           latitude: Number(rideRequest.end_latitude),
           longitude: Number(rideRequest.end_longitude),
           markerColor: 'red',
@@ -210,29 +212,31 @@ const RideRequestDetailScreen = () => {
     const mapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(destination)}&travelmode=driving`;
 
     Linking.openURL(mapsUrl).catch(() => {
-      setErrorMessage('Unable to open route in Google Maps.');
+      setErrorMessage(t('pickDropDetail.mapOpenError'));
       setShowErrorModal(true);
     });
   };
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]} edges={['bottom']}>
-      <PageHeader title="Ride Request Details" />
+      <PageHeader title={t('rideRequestDetail.title')} />
       <ScrollView contentContainerStyle={styles.content}>
         <View style={[styles.headerBanner, { backgroundColor: isDark ? 'rgba(126, 36, 108, 0.82)' : 'rgba(126, 36, 108, 0.92)', borderColor: glassCardStyle.borderColor }]}>
           <View style={styles.bannerContent}>
             <View style={styles.bannerLocationRow}>
               <Icon name="location-on" size={16} color="#fff" style={{ marginRight: 6 }} />
-              <Text style={styles.bannerTitle}>{rideRequest.start_location || 'Start Location'}</Text>
+              <Text style={styles.bannerTitle}>{rideRequest.start_location || t('pickDropDetail.startLocation')}</Text>
             </View>
             <View style={styles.bannerLocationRow}>
               <Icon name="send" size={16} color="#fff" style={{ marginRight: 6 }} />
-              <Text style={styles.bannerRoute}>{rideRequest.end_location || 'End Location'}</Text>
+              <Text style={styles.bannerRoute}>{rideRequest.end_location || t('pickDropDetail.endLocation')}</Text>
             </View>
             {rideRequest.preferred_driver_gender ? (
               <View style={styles.driverGenderBadge}>
                 <Text style={styles.driverGenderBadgeText}>
-                  {rideRequest.preferred_driver_gender === 'female' ? '👩 Female Driver' : '👨 Male Driver'}
+                  {rideRequest.preferred_driver_gender === 'female'
+                    ? `👩 ${t('pickDropDetail.femaleDriver')}`
+                    : `👨 ${t('pickDropDetail.maleDriver')}`}
                 </Text>
               </View>
             ) : null}
@@ -241,7 +245,7 @@ const RideRequestDetailScreen = () => {
 
         <View style={styles.contentContainer}>
           <View style={styles.sectionContainer}>
-            <Text style={[styles.sectionHeaderTitle, { color: theme.colors.textSecondary }]}>Route Details</Text>
+            <Text style={[styles.sectionHeaderTitle, { color: theme.colors.textSecondary }]}>{t('pickDropDetail.routeDetails')}</Text>
             <View style={[styles.card, styles.routeCard, glassCardStyle]}>
               <View style={styles.timelineRow}>
                 <View style={styles.timelineColumn}>
@@ -249,7 +253,7 @@ const RideRequestDetailScreen = () => {
                   <View style={[styles.verticalLineFull, { backgroundColor: theme.colors.border }]} />
                 </View>
                 <View style={styles.locationContent}>
-                  <Text style={[styles.largeLocationLabel, { color: theme.colors.textSecondary }]}>Pick Up</Text>
+                  <Text style={[styles.largeLocationLabel, { color: theme.colors.textSecondary }]}>{t('pickDropDetail.pickUp')}</Text>
                   <Text style={[styles.largeLocationTitle, { color: theme.colors.text }]}>{rideRequest.start_location}</Text>
                 </View>
               </View>
@@ -260,7 +264,7 @@ const RideRequestDetailScreen = () => {
                   <Icon name="location-pin" size={24} color={isDark ? '#c77dba' : theme.colors.primary} style={{ marginLeft: -12 }} />
                 </View>
                 <View style={styles.locationContent}>
-                  <Text style={[styles.largeLocationLabel, { color: theme.colors.textSecondary }]}>Drop Off</Text>
+                  <Text style={[styles.largeLocationLabel, { color: theme.colors.textSecondary }]}>{t('pickDropDetail.dropOff')}</Text>
                   <Text style={[styles.largeLocationTitle, { color: theme.colors.text }]}>{rideRequest.end_location}</Text>
                 </View>
               </View>
@@ -269,13 +273,13 @@ const RideRequestDetailScreen = () => {
 
           {staticMapUrl ? (
             <View style={styles.sectionContainer}>
-              <Text style={[styles.sectionHeaderTitle, { color: theme.colors.textSecondary }]}>Route Map</Text>
+              <Text style={[styles.sectionHeaderTitle, { color: theme.colors.textSecondary }]}>{t('pickDropDetail.routeMap')}</Text>
               <View style={[styles.card, styles.mapCard, glassCardStyle]}>
                 {mapLoadError ? (
                   <View style={[styles.mapFallback, { backgroundColor: glassChipStyle.backgroundColor }]}>
                     <Icon name="map" size={30} color={theme.colors.primary} />
                     <Text style={[styles.mapFallbackTitle, { color: theme.colors.text }]}>
-                      Map unavailable
+                      {t('pickDropDetail.mapUnavailable')}
                     </Text>
                     <Text style={[styles.mapFallbackText, { color: theme.colors.textSecondary }]}>
                       {mapLoadError}
@@ -284,7 +288,7 @@ const RideRequestDetailScreen = () => {
                       style={[styles.openMapsButton, { backgroundColor: theme.colors.primary }]}
                       onPress={handleOpenRouteInMaps}
                     >
-                      <Text style={styles.openMapsButtonText}>Open in Google Maps</Text>
+                      <Text style={styles.openMapsButtonText}>{t('pickDropDetail.openInMaps')}</Text>
                     </TouchableOpacity>
                   </View>
                 ) : (
@@ -294,7 +298,7 @@ const RideRequestDetailScreen = () => {
                       style={styles.mapImage}
                       resizeMode="cover"
                       onError={(event) => {
-                        const nativeMessage = event?.nativeEvent?.error || 'Unable to load route map image.';
+                        const nativeMessage = event?.nativeEvent?.error || t('pickDropDetail.mapLoadError');
                         setMapLoadError(nativeMessage);
                       }}
                     />
@@ -302,7 +306,7 @@ const RideRequestDetailScreen = () => {
                       style={[styles.openMapsButton, { backgroundColor: theme.colors.primary }]}
                       onPress={handleOpenRouteInMaps}
                     >
-                      <Text style={styles.openMapsButtonText}>Open in Google Maps</Text>
+                      <Text style={styles.openMapsButtonText}>{t('pickDropDetail.openInMaps')}</Text>
                     </TouchableOpacity>
                   </>
                 )}
@@ -311,7 +315,7 @@ const RideRequestDetailScreen = () => {
           ) : null}
 
           <View style={styles.sectionContainer}>
-            <Text style={[styles.sectionHeaderTitle, { color: theme.colors.textSecondary }]}>Ride Preferences</Text>
+            <Text style={[styles.sectionHeaderTitle, { color: theme.colors.textSecondary }]}>{t('rideRequestDetail.preferences')}</Text>
             <View style={[styles.card, glassCardStyle]}>
               <View style={styles.tagsRow}>
                 <View style={[styles.scheduleTag, glassChipStyle, { borderWidth: 1 }]}>
@@ -324,7 +328,7 @@ const RideRequestDetailScreen = () => {
                 <View style={[styles.seatsTag, { backgroundColor: isDark ? 'rgba(245, 158, 11, 0.18)' : 'rgba(255, 255, 255, 0.48)', borderWidth: 1, borderColor: isDark ? 'rgba(252, 211, 77, 0.18)' : 'rgba(245, 158, 11, 0.14)' }]}>
                   <Icon name="people-outline" size={14} color={isDark ? '#ffb74d' : '#f57c00'} />
                   <Text style={[styles.seatsTagText, { color: isDark ? '#ffb74d' : '#f57c00' }]}>
-                    {rideRequest.required_seats || 1} Seat{(rideRequest.required_seats || 1) !== 1 ? 's' : ''} needed
+                    {t('rideRequestDetail.seatsNeeded', { count: rideRequest.required_seats || 1 })}
                   </Text>
                 </View>
 
@@ -332,7 +336,7 @@ const RideRequestDetailScreen = () => {
                   <View style={[styles.priceTag, { backgroundColor: isDark ? 'rgba(59, 130, 246, 0.18)' : 'rgba(255, 255, 255, 0.48)', borderWidth: 1, borderColor: isDark ? 'rgba(147, 197, 253, 0.18)' : 'rgba(59, 130, 246, 0.14)' }]}>
                     <Icon name="payments" size={14} color={isDark ? '#90caf9' : '#2196f3'} />
                     <Text style={[styles.priceTagText, { color: isDark ? '#90caf9' : '#2196f3' }]}>
-                      {rideRequest.currency || 'PKR'} {rideRequest.budget_per_seat}/seat
+                      {rideRequest.currency || 'PKR'} {rideRequest.budget_per_seat}/{t('rideRequestDetail.seatUnit')}
                     </Text>
                   </View>
                 ) : null}
@@ -341,7 +345,7 @@ const RideRequestDetailScreen = () => {
                   <View style={[styles.priceTag, { backgroundColor: isDark ? 'rgba(76, 175, 80, 0.18)' : 'rgba(255, 255, 255, 0.48)', borderWidth: 1, borderColor: isDark ? 'rgba(165, 214, 167, 0.18)' : 'rgba(46, 125, 50, 0.14)' }]}>
                     <Icon name="reply" size={14} color={isDark ? '#a5d6a7' : '#2e7d32'} />
                     <Text style={[styles.priceTagText, { color: isDark ? '#a5d6a7' : '#2e7d32' }]}>
-                      Return • {formatTime(rideRequest.return_time)}
+                      {t('pickdrop.return')} • {formatTime(rideRequest.return_time)}
                     </Text>
                   </View>
                 ) : null}
@@ -350,7 +354,7 @@ const RideRequestDetailScreen = () => {
           </View>
 
           <View style={styles.sectionContainer}>
-            <Text style={[styles.sectionHeaderTitle, { color: theme.colors.textSecondary }]}>Requester</Text>
+            <Text style={[styles.sectionHeaderTitle, { color: theme.colors.textSecondary }]}>{t('rideRequestDetail.requester')}</Text>
             <View style={[styles.card, glassCardStyle]}>
               <View style={styles.requesterRow}>
                 <View style={[styles.requesterAvatar, glassChipStyle, { borderWidth: 1 }]}>
@@ -365,7 +369,7 @@ const RideRequestDetailScreen = () => {
                 <View style={{ flex: 1 }}>
                   <Text style={[styles.requesterName, { color: theme.colors.text }]}>{requesterName}</Text>
                   <Text style={[styles.requesterMeta, { color: theme.colors.textSecondary }]}>
-                    {user && rideRequest.contact ? rideRequest.contact : 'Login to view contact details'}
+                    {user && rideRequest.contact ? rideRequest.contact : t('rideRequestDetail.loginToViewContact')}
                   </Text>
                 </View>
               </View>
@@ -374,7 +378,7 @@ const RideRequestDetailScreen = () => {
 
           {rideRequest.description ? (
             <View style={styles.sectionContainer}>
-              <Text style={[styles.sectionHeaderTitle, { color: theme.colors.textSecondary }]}>Notes</Text>
+              <Text style={[styles.sectionHeaderTitle, { color: theme.colors.textSecondary }]}>{t('rideRequestDetail.notes')}</Text>
               <View style={[styles.card, glassCardStyle]}>
                 <Text style={[styles.notesText, { color: theme.colors.textSecondary }]}>{rideRequest.description}</Text>
               </View>
@@ -386,14 +390,14 @@ const RideRequestDetailScreen = () => {
               {rideRequest.contact ? (
                 <TouchableOpacity style={[styles.ctaButton, { backgroundColor: theme.colors.primary }]} onPress={handleCall}>
                   <Icon name="call" size={18} color="#fff" />
-                  <Text style={styles.ctaButtonText}>Call Now</Text>
+                  <Text style={styles.ctaButtonText}>{t('pickDropDetail.callNow')}</Text>
                 </TouchableOpacity>
               ) : null}
 
               {rideRequest.contact ? (
                 <TouchableOpacity style={[styles.ctaButton, { backgroundColor: '#25D366' }]} onPress={handleWhatsApp}>
                   <FontAwesome name="whatsapp" size={18} color="#fff" />
-                  <Text style={styles.ctaButtonText}>WhatsApp</Text>
+                  <Text style={styles.ctaButtonText}>{t('pickDropDetail.whatsapp')}</Text>
                 </TouchableOpacity>
               ) : null}
 
@@ -403,14 +407,14 @@ const RideRequestDetailScreen = () => {
                   onPress={handleChatInApp}
                 >
                   <Icon name="forum" size={18} color="#fff" />
-                  <Text style={styles.ctaButtonText}>Chat in App</Text>
+                  <Text style={styles.ctaButtonText}>{t('pickDropDetail.chatInApp')}</Text>
                 </TouchableOpacity>
               ) : null}
             </View>
           ) : (
             <TouchableOpacity style={[styles.ctaButton, { backgroundColor: theme.colors.primary }]} onPress={() => navigation.navigate('Login')}>
               <Icon name="lock-open" size={18} color="#fff" />
-              <Text style={styles.ctaButtonText}>Login to Contact</Text>
+              <Text style={styles.ctaButtonText}>{t('pickDropDetail.loginToContact')}</Text>
             </TouchableOpacity>
           )}
         </View>

@@ -30,7 +30,9 @@
         "resendOtp": "دوبارہ OTP بھیجیں",
         "backToListing": "فہرست پر واپس",
         "goToListing": "فہرست پر جائیں",
-        "done": "ہو گیا"
+        "done": "ہو گیا",
+        "ok": "ٹھیک ہے",
+        "select": "منتخب کریں..."
     },
     "home": {
         "carsAvailable": "{{count}} گاڑیاں دستیاب ہیں",
@@ -132,7 +134,12 @@
         "addService": "رائیڈ شامل کریں",
         "startPoint": "شروعاتی مقام",
         "destination": "منزل",
-        "perPerson": "فی شخص"
+        "perPerson": "فی شخص",
+        "stopsInBetween_one": "{{count}} اسٹاپ درمیان میں",
+        "stopsInBetween_other": "{{count}} اسٹاپس درمیان میں",
+        "return": "واپسی",
+        "seatsLeft_one": "{{count}} سیٹ باقی",
+        "seatsLeft_other": "{{count}} سیٹیں باقی"
     },
     "carDetail": {
         "specifications": "تفصیلات",
@@ -291,6 +298,21 @@
         "loginToContact": "ڈرائیور سے رابطہ کرنے کے لیے لاگ ان کریں",
         "loadError": "سروس کی تفصیلات لوڈ نہیں ہو سکیں۔ دوبارہ کوشش کریں۔",
         "errorPhone": "اس ڈیوائس پر فون ڈائلر کھولنے سے قاصر۔",
-        "errorMsg": "اس ڈیوائس پر میسجنگ ایپ کھولنے سے قاصر۔"
+        "errorMsg": "اس ڈیوائس پر میسجنگ ایپ کھولنے سے قاصر۔",
+        "errorPhoneUnavailable": "فون نمبر دستیاب نہیں ہے۔",
+        "errorContactUnavailable": "رابطہ نمبر دستیاب نہیں ہے۔"
+    },
+    "rideRequestDetail": {
+        "title": "رائیڈ ریکویسٹ کی تفصیلات",
+        "notFound": "رائیڈ ریکویسٹ نہیں ملی۔",
+        "rider": "رائیڈر",
+        "loadError": "رائیڈ ریکویسٹ لوڈ نہیں ہو سکی۔",
+        "preferences": "رائیڈ ترجیحات",
+        "requester": "ریکویسٹر",
+        "loginToViewContact": "رابطہ تفصیل دیکھنے کے لیے لاگ ان کریں",
+        "notes": "نوٹس",
+        "seatUnit": "سیٹ",
+        "seatsNeeded_one": "{{count}} سیٹ درکار",
+        "seatsNeeded_other": "{{count}} سیٹیں درکار"
     }
 }

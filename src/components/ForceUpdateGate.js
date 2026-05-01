@@ -81,8 +81,8 @@ const getInstalledAppInfo = () => {
 
 const resolveForceUpdateConfig = (remoteConfig, localConfig) => ({
   enabled: remoteConfig?.enabled ?? localConfig?.enabled,
-  minimumVersion: remoteConfig?.minimumVersion ?? localConfig?.minimumVersion,
-  minimumVersionCode: remoteConfig?.minimumVersionCode ?? localConfig?.minimumVersionCode,
+  androidVersion: remoteConfig?.androidVersion ?? null,
+  androidBuildCode: remoteConfig?.androidBuildCode ?? null,
   message: remoteConfig?.message || localConfig?.message,
   title: remoteConfig?.title || localConfig?.title,
   storeUrl: remoteConfig?.storeUrl || localConfig?.storeUrl,
@@ -106,29 +106,29 @@ const normalizeForceUpdateEndpoint = (endpoint) => {
 };
 
 const getForceUpdateDecision = (config, installedInfo) => {
-  const minimumVersion = config.minimumVersion ? String(config.minimumVersion) : null;
-  const minimumVersionCode =
-    config.minimumVersionCode !== undefined && config.minimumVersionCode !== null
-      ? Number(config.minimumVersionCode)
+  const androidVersion = config.androidVersion ? String(config.androidVersion) : null;
+  const androidBuildCode =
+    config.androidBuildCode !== undefined && config.androidBuildCode !== null
+      ? Number(config.androidBuildCode)
       : null;
 
   const isVersionOutdated =
-    minimumVersion && compareVersionStrings(installedInfo.version, minimumVersion) < 0;
+    androidVersion && compareVersionStrings(installedInfo.version, androidVersion) < 0;
   const isBuildOutdated =
-    Number.isFinite(minimumVersionCode) &&
-    minimumVersionCode > 0 &&
+    Number.isFinite(androidBuildCode) &&
+    androidBuildCode > 0 &&
     installedInfo.versionCode > 0 &&
-    installedInfo.versionCode < minimumVersionCode;
+    installedInfo.versionCode < androidBuildCode;
 
-  const hasThresholds = Boolean(minimumVersion || minimumVersionCode);
+  const hasThresholds = Boolean(androidVersion || androidBuildCode);
   const explicitlyRequired = normalizeBoolean(config.enabled);
 
   return {
     required:
       (hasThresholds && (isVersionOutdated || isBuildOutdated)) ||
       (!hasThresholds && explicitlyRequired),
-    minimumVersion,
-    minimumVersionCode,
+    minimumVersion: androidVersion,
+    minimumVersionCode: androidBuildCode,
   };
 };
 
@@ -169,7 +169,7 @@ const ForceUpdateGate = ({ children }) => {
           if (playStoreVersion) {
             remoteConfig = {
               enabled: true,
-              minimumVersion: playStoreVersion,
+              androidVersion: playStoreVersion,
               storeUrl: localConfig?.storeUrl,
               message: localConfig?.message,
               title: localConfig?.title,

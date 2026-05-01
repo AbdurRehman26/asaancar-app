@@ -23,7 +23,6 @@ const normalizeForceUpdatePayload = (payload = {}) => {
   const raw = payload?.data || payload;
   const nestedConfig = raw?.data || {};
   const androidVersion = nestedConfig.android_version;
-  const androidVersionAsBuild = isIntegerLikeValue(androidVersion) ? Number(androidVersion) : null;
   const androidVersionAsVersion =
     androidVersion !== undefined &&
     androidVersion !== null &&
@@ -42,26 +41,12 @@ const normalizeForceUpdatePayload = (payload = {}) => {
       raw.required,
       raw.is_required
     ),
-    minimumVersion: pickFirstDefined(
-      androidVersionAsVersion,
-      raw.minimum_version,
-      raw.minimumVersion,
-      raw.min_version,
-      raw.minVersion,
-      raw.required_version,
-      raw.requiredVersion
-    ),
-    minimumVersionCode: pickFirstDefined(
-      androidVersionAsBuild,
-      nestedConfig.minimum_version_code,
+    androidVersion: androidVersionAsVersion,
+    androidBuildCode: pickFirstDefined(
       nestedConfig.minimumVersionCode,
-      raw.minimum_version_code,
+      nestedConfig.minimum_version_code,
       raw.minimumVersionCode,
-      raw.min_build,
-      raw.minBuild,
-      raw.minimum_build,
-      raw.minimumBuild,
-      raw.required_build
+      raw.minimum_version_code
     ),
     message: pickFirstDefined(raw.message, raw.description, raw.note),
     title: pickFirstDefined(raw.title, raw.heading),

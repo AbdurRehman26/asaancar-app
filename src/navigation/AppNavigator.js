@@ -400,7 +400,7 @@ const AppTabs = () => {
       <Tab.Screen
         name="Home"
         component={MainStack}
-        options={{ tabBarLabel: 'Find Ride' }}
+        options={{ tabBarLabel: t('pickdrop.title') }}
         listeners={({ navigation }) => ({
           tabPress: (e) => {
             // Always reset Home tab to PickDrop when pressed
@@ -414,7 +414,7 @@ const AppTabs = () => {
       <Tab.Screen
         name="RideRequests"
         component={RideRequestsStack}
-        options={{ tabBarLabel: 'Ride Requests' }}
+        options={{ tabBarLabel: t('settings.rideRequests') }}
         listeners={({ navigation }) => ({
           tabPress: (e) => {
             e.preventDefault();

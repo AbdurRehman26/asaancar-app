@@ -30,7 +30,9 @@
         "resendOtp": "Dobara OTP Bhejein",
         "backToListing": "Listing pe Wapas",
         "goToListing": "Listing pe Jayein",
-        "done": "Ho Gaya"
+        "done": "Ho Gaya",
+        "ok": "Theek Hai",
+        "select": "Select Karein..."
     },
     "home": {
         "carsAvailable": "{{count}} gariyan dastiyaab hain",
@@ -132,7 +134,12 @@
         "addService": "Ride Add Karein",
         "startPoint": "Shuruwati Maqam",
         "destination": "Manzil",
-        "perPerson": "Per Shakhs"
+        "perPerson": "Per Shakhs",
+        "stopsInBetween_one": "Beech mein {{count}} Stop",
+        "stopsInBetween_other": "Beech mein {{count}} Stops",
+        "return": "Wapsi",
+        "seatsLeft_one": "{{count}} Seat baqi",
+        "seatsLeft_other": "{{count}} Seats baqi"
     },
     "carDetail": {
         "specifications": "Specifications",
@@ -291,7 +298,22 @@
         "loginToContact": "Driver se raabta karne ke liye Login karein",
         "loadError": "Service details load nahi ho sakin. Dobara koshish karein.",
         "errorPhone": "Is device par phone dialer khul nahi raha.",
-        "errorMsg": "Is device par messaging app khul nahi raha."
+        "errorMsg": "Is device par messaging app khul nahi raha.",
+        "errorPhoneUnavailable": "Phone number dastiyaab nahi hai.",
+        "errorContactUnavailable": "Raabta number dastiyaab nahi hai."
+    },
+    "rideRequestDetail": {
+        "title": "Ride Request Details",
+        "notFound": "Ride request nahi mili.",
+        "rider": "Rider",
+        "loadError": "Ride request load nahi ho saki.",
+        "preferences": "Ride Preferences",
+        "requester": "Requester",
+        "loginToViewContact": "Raabta details dekhne ke liye Login karein",
+        "notes": "Notes",
+        "seatUnit": "seat",
+        "seatsNeeded_one": "{{count}} Seat darkaar",
+        "seatsNeeded_other": "{{count}} Seats darkaar"
     },
     "onboarding": {
         "skip": "Skip",

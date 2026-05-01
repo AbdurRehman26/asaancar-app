@@ -8,8 +8,11 @@ import {
   TouchableWithoutFeedback,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import { useTranslation } from 'react-i18next';
 
-const ErrorModal = ({ visible, onClose, title = 'Error', message }) => {
+const ErrorModal = ({ visible, onClose, title, message }) => {
+  const { t } = useTranslation();
+
   return (
     <Modal
       visible={visible}
@@ -23,12 +26,12 @@ const ErrorModal = ({ visible, onClose, title = 'Error', message }) => {
             <View style={styles.modalContainer}>
               <View style={styles.header}>
                 <Icon name="error-outline" size={48} color="#ff4444" />
-                <Text style={styles.title}>{title}</Text>
+                <Text style={styles.title}>{title || t('common.error')}</Text>
                 <Text style={styles.message}>{message}</Text>
               </View>
 
               <TouchableOpacity style={styles.button} onPress={onClose}>
-                <Text style={styles.buttonText}>OK</Text>
+                <Text style={styles.buttonText}>{t('common.ok')}</Text>
               </TouchableOpacity>
             </View>
           </TouchableWithoutFeedback>
@@ -88,8 +91,6 @@ const styles = StyleSheet.create({
 });
 
 export default ErrorModal;
-
-
 
 
 

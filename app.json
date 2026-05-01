@@ -2,7 +2,7 @@
   "expo": {
     "name": "AsaanCar",
     "slug": "asaancar-app",
-    "version": "1.0.15",
+    "version": "1.0.17",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -33,7 +33,7 @@
         "WRITE_EXTERNAL_STORAGE",
         "READ_MEDIA_IMAGES"
       ],
-      "versionCode": 74
+      "versionCode": 76
     },
     "web": {
       "bundler": "metro"
@@ -43,8 +43,6 @@
       "googleMapsApiKey": "AIzaSyAl7gcr1SOMOmVcINkah0IjMVTqXaA8zw4",
       "forceUpdate": {
         "enabled": true,
-        "minimumVersion": "1.0.15",
-        "minimumVersionCode": 74,
         "message": "A newer version of AsaanCar is available with exciting new features and improvements. Please update the app to continue.",
         "storeUrl": "https://play.google.com/store/apps/details?id=com.asaancar.app",
         "endpoint": "/config"

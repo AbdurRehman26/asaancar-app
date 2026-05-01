@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { useTheme } from '@/context/ThemeContext';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import { useTranslation } from 'react-i18next';
 
 const SearchableDropdown = ({
   label,
@@ -26,6 +27,7 @@ const SearchableDropdown = ({
   onClose,
 }) => {
   const { theme } = useTheme();
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredOptions, setFilteredOptions] = useState(options);
@@ -99,7 +101,7 @@ const SearchableDropdown = ({
         onPress={handleOpen}
       >
         <Text style={[styles.dropdownText, { color: selectedOption ? theme.colors.text : theme.colors.textSecondary }]}>
-          {selectedOption ? selectedOption.label : placeholder}
+          {selectedOption ? selectedOption.label : (placeholder || t('common.select'))}
         </Text>
         <Icon name="arrow-drop-down" size={24} color={theme.colors.textSecondary} />
       </TouchableOpacity>
@@ -123,7 +125,7 @@ const SearchableDropdown = ({
                   <Icon name="search" size={20} color={theme.colors.textSecondary} />
                   <TextInput
                     style={[styles.searchInput, { color: theme.colors.text }]}
-                    placeholder="Search locations..."
+                    placeholder={t('common.search')}
                     placeholderTextColor={theme.colors.textSecondary}
                     value={searchQuery}
                     onChangeText={setSearchQuery}
@@ -169,7 +171,7 @@ const SearchableDropdown = ({
               ) : (
                 <View style={styles.emptyContainer}>
                   <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>
-                    {loading ? 'Loading...' : 'No locations found'}
+                    {loading ? t('common.loading') : t('common.noResults')}
                   </Text>
                 </View>
               )}
@@ -256,7 +258,6 @@ const styles = StyleSheet.create({
 });
 
 export default SearchableDropdown;
-
 
 
 

@@ -106,7 +106,7 @@ const PickDropScreen = () => {
   // Helper function to handle phone calls
   const handleCall = async (phoneNumber) => {
     if (!phoneNumber) {
-      setErrorMessage('Phone number not available');
+      setErrorMessage(t('pickDropDetail.errorPhoneUnavailable'));
       setShowErrorModal(true);
       return;
     }
@@ -117,12 +117,12 @@ const PickDropScreen = () => {
       if (canOpen) {
         await Linking.openURL(phoneUrl);
       } else {
-        setErrorMessage('Unable to open phone dialer');
+        setErrorMessage(t('pickDropDetail.errorPhone'));
         setShowErrorModal(true);
       }
     } catch (error) {
       console.error('Error opening phone dialer:', error);
-      setErrorMessage('Failed to make call');
+      setErrorMessage(t('pickDropDetail.errorPhone'));
       setShowErrorModal(true);
     }
   };
@@ -131,7 +131,7 @@ const PickDropScreen = () => {
   const handleMessage = async (phoneNumber, whatsappNumber = null) => {
     const numberToUse = whatsappNumber || phoneNumber;
     if (!numberToUse) {
-      setErrorMessage('Contact number not available');
+      setErrorMessage(t('pickDropDetail.errorContactUnavailable'));
       setShowErrorModal(true);
       return;
     }
@@ -157,12 +157,12 @@ const PickDropScreen = () => {
       if (canOpenSMS) {
         await Linking.openURL(smsUrl);
       } else {
-        setErrorMessage('Unable to open messaging app');
+        setErrorMessage(t('pickDropDetail.errorMsg'));
         setShowErrorModal(true);
       }
     } catch (error) {
       console.error('Error opening messaging app:', error);
-      setErrorMessage('Failed to open messaging app');
+      setErrorMessage(t('pickDropDetail.errorMsg'));
       setShowErrorModal(true);
     }
   };
@@ -311,7 +311,7 @@ const PickDropScreen = () => {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.backgroundTertiary }]} edges={['bottom']}>
-      <PageHeader title="Find Ride" showBack={false} />
+      <PageHeader title={t('pickdrop.title')} showBack={false} />
 
       {/* Filter and Add Service Section (match Rental Cars layout) */}
       <View style={[styles.searchSection, { backgroundColor: theme.colors.background, borderBottomColor: theme.colors.border }]}>
@@ -370,7 +370,7 @@ const PickDropScreen = () => {
                       <View style={[styles.timelineDotGreen, { borderColor: glassCardStyle.backgroundColor }]} />
                       <View style={styles.timelineContent}>
                         <Text style={[styles.locationTitle, { color: theme.colors.text }]} numberOfLines={1}>
-                          {service.start_location || 'Start Location'}
+                          {service.start_location || t('pickDropDetail.startLocation')}
                         </Text>
                         <Text style={[styles.locationLabel, { color: theme.colors.textLight }]}>{t('pickdrop.startPoint')}</Text>
                       </View>
@@ -388,7 +388,7 @@ const PickDropScreen = () => {
                       {service.stops && service.stops.length > 0 && (
                         <View style={[styles.stopsTag, glassChipStyle]}>
                           <Text style={[styles.stopsTagText, { color: isDark ? '#c77dba' : theme.colors.primary }]}>
-                            {service.stops.length} Stop{service.stops.length > 1 ? 's' : ''} in between
+                            {t('pickdrop.stopsInBetween', { count: service.stops.length })}
                           </Text>
                           <Icon name="keyboard-arrow-down" size={14} color={isDark ? '#c77dba' : theme.colors.primary} />
                         </View>
@@ -400,7 +400,7 @@ const PickDropScreen = () => {
                       <Icon name="location-pin" size={18} color={isDark ? '#c77dba' : theme.colors.primary} style={{ marginLeft: -1 }} />
                       <View style={styles.timelineContent}>
                         <Text style={[styles.locationTitle, { color: theme.colors.text }]} numberOfLines={1}>
-                          {service.end_location || 'End Location'}
+                          {service.end_location || t('pickDropDetail.endLocation')}
                         </Text>
                         <Text style={[styles.locationLabel, { color: theme.colors.textLight }]}>{t('pickdrop.destination')}</Text>
                       </View>
@@ -444,21 +444,21 @@ const PickDropScreen = () => {
                     if (schedule_type) {
                       switch (schedule_type.toLowerCase()) {
                         case 'everyday':
-                          labelText = 'Everyday';
+                          labelText = t('pickDropDetail.everyday');
                           break;
                         case 'weekday':
                         case 'weekdays':
-                          labelText = 'Mon-Fri';
+                          labelText = t('pickDropDetail.weekday');
                           break;
                         case 'weekend':
                         case 'weekends':
-                          labelText = 'Sat-Sun';
+                          labelText = t('pickDropDetail.weekend');
                           break;
                         case 'custom':
-                          labelText = selected_days || 'Custom';
+                          labelText = selected_days || t('pickDropDetail.custom');
                           break;
                         case 'once':
-                          labelText = departure_date ? formatDate(departure_date) : 'Once';
+                          labelText = departure_date ? formatDate(departure_date) : t('pickDropDetail.once');
                           break;
                         default:
                           labelText = schedule_type;
@@ -467,11 +467,11 @@ const PickDropScreen = () => {
                       // Fallback logic
                       const isEverydayService = is_everyday || everyday_service;
                       if (isEverydayService) {
-                        labelText = 'Everyday';
+                        labelText = t('pickDropDetail.everyday');
                       } else if (departure_date) {
                         labelText = formatDate(departure_date);
                       } else {
-                        labelText = 'Flexible';
+                        labelText = t('pickDropDetail.flexible');
                       }
                     }
 
@@ -489,7 +489,7 @@ const PickDropScreen = () => {
                     <View style={[styles.scheduleTag, { backgroundColor: isDark ? 'rgba(59, 130, 246, 0.18)' : 'rgba(255, 255, 255, 0.48)', borderWidth: 1, borderColor: isDark ? 'rgba(147, 197, 253, 0.18)' : 'rgba(59, 130, 246, 0.14)' }]}>
                       <Icon name="reply" size={14} color={isDark ? '#90caf9' : '#2196f3'} />
                       <Text style={[styles.scheduleTagText, { color: isDark ? '#90caf9' : '#2196f3' }]}>
-                        Return • {formatTime(service.return_time)}
+                        {t('pickdrop.return')} • {formatTime(service.return_time)}
                       </Text>
                     </View>
                   )}
@@ -509,7 +509,7 @@ const PickDropScreen = () => {
                       <View style={[styles.seatsTag, { backgroundColor: isDark ? 'rgba(245, 158, 11, 0.18)' : 'rgba(255, 255, 255, 0.48)', borderWidth: 1, borderColor: isDark ? 'rgba(252, 211, 77, 0.18)' : 'rgba(245, 158, 11, 0.14)' }]}>
                         <Icon name="people-outline" size={14} color={isDark ? '#ffb74d' : '#f57c00'} />
                         <Text style={[styles.seatsTagText, { color: isDark ? '#ffb74d' : '#f57c00' }]}>
-                          {availableSpaces} Seat{availableSpaces !== 1 ? 's' : ''} left
+                          {t('pickdrop.seatsLeft', { count: availableSpaces })}
                         </Text>
                       </View>
                     );
@@ -531,7 +531,9 @@ const PickDropScreen = () => {
                           ? (isDark ? '#f48fb1' : '#e91e63')
                           : (isDark ? '#90caf9' : '#2196f3')
                       }]}>
-                        {service.driver_gender === 'female' ? '👩 Female Driver' : '👨 Male Driver'}
+                        {service.driver_gender === 'female'
+                          ? `👩 ${t('pickDropDetail.femaleDriver')}`
+                          : `👨 ${t('pickDropDetail.maleDriver')}`}
                       </Text>
                     </View>
                   )}
@@ -564,7 +566,7 @@ const PickDropScreen = () => {
                       service.driver ||
                       service.name ||
                       service.contact_name ||
-                      'User';
+                      t('pickDropDetail.user');
                     const phone =
                       provider?.phone_number ||
                       provider?.phone ||

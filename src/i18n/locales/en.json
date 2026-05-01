@@ -31,7 +31,9 @@
         "enterOtp": "Enter OTP",
         "backToListing": "Back to Listing",
         "goToListing": "Go to Listing",
-        "done": "Done"
+        "done": "Done",
+        "ok": "OK",
+        "select": "Select..."
     },
     "home": {
         "carsAvailable": "{{count}} cars available",
@@ -139,7 +141,12 @@
         "addService": "Add Ride",
         "startPoint": "Start Point",
         "destination": "Destination",
-        "perPerson": "Per Person"
+        "perPerson": "Per Person",
+        "stopsInBetween_one": "{{count}} Stop in between",
+        "stopsInBetween_other": "{{count}} Stops in between",
+        "return": "Return",
+        "seatsLeft_one": "{{count}} Seat left",
+        "seatsLeft_other": "{{count}} Seats left"
     },
     "carDetail": {
         "specifications": "Specifications",
@@ -298,7 +305,22 @@
         "loginToContact": "Login to contact the driver",
         "loadError": "Failed to load service details. Please try again.",
         "errorPhone": "Unable to open phone dialer on this device.",
-        "errorMsg": "Unable to open messaging app on this device."
+        "errorMsg": "Unable to open messaging app on this device.",
+        "errorPhoneUnavailable": "Phone number not available.",
+        "errorContactUnavailable": "Contact number not available."
+    },
+    "rideRequestDetail": {
+        "title": "Ride Request Details",
+        "notFound": "Ride request not found.",
+        "rider": "Rider",
+        "loadError": "Failed to load ride request.",
+        "preferences": "Ride Preferences",
+        "requester": "Requester",
+        "loginToViewContact": "Login to view contact details",
+        "notes": "Notes",
+        "seatUnit": "seat",
+        "seatsNeeded_one": "{{count}} Seat needed",
+        "seatsNeeded_other": "{{count}} Seats needed"
     },
     "onboarding": {
         "skip": "Skip",
