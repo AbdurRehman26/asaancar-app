@@ -11,6 +11,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useAuth } from '@/context/AuthContext';
+import { usePushNotifications } from '@/context/PushNotificationContext';
 import { useTheme } from '@/context/ThemeContext';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import ConfirmModal from '@/components/ConfirmModal';
@@ -20,6 +21,12 @@ import { useTranslation } from 'react-i18next';
 const SettingsScreen = () => {
   const navigation = useNavigation();
   const { user, logout } = useAuth();
+  const {
+    devicePushToken,
+    isRegistering: isPushRegistering,
+    enablePushNotifications,
+    disablePushNotifications,
+  } = usePushNotifications();
   const { theme, isDark, toggleTheme } = useTheme();
   const { t } = useTranslation();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
@@ -47,6 +54,38 @@ const SettingsScreen = () => {
 
   const handleLogout = async () => {
     await logout();
+  };
+
+  const handleTogglePushNotifications = async () => {
+    if (!user) {
+      navigation.navigate('Login');
+      return;
+    }
+
+    if (devicePushToken) {
+      const result = await disablePushNotifications();
+      if (result?.error) {
+        Alert.alert(t('common.error'), result.error);
+        return;
+      }
+      if (result?.ok) {
+        Alert.alert(t('common.success'), t('notifications.pushDisabled'));
+      }
+      return;
+    }
+
+    const result = await enablePushNotifications();
+    if (result?.error) {
+      Alert.alert(t('common.error'), result.error);
+      return;
+    }
+    if (result?.status === 'granted') {
+      Alert.alert(t('common.success'), t('notifications.pushReady'));
+      return;
+    }
+    if (result?.status !== 'granted') {
+      Alert.alert(t('common.error'), t('notifications.permissionRequired'));
+    }
   };
 
   /* Redesigned Dashboard Component */
@@ -186,6 +225,32 @@ const SettingsScreen = () => {
                 styles.toggleThumb,
                 { backgroundColor: '#fff' },
                 isDark && styles.toggleThumbActive
+              ]} />
+            </TouchableOpacity>
+          </View>
+
+          <View style={[styles.menuListItem, { borderTopWidth: 1, borderTopColor: theme.colors.border }]}>
+            <View style={styles.menuListLeft}>
+              <View style={[styles.smallIconBox, { backgroundColor: theme.colors.backgroundTertiary }]}>
+                <Icon name="notifications-active" size={20} color={theme.colors.text} />
+              </View>
+              <Text style={[styles.menuListText, { color: theme.colors.text }]}>
+                {t('settings.pushNotifications')}
+              </Text>
+            </View>
+            <TouchableOpacity
+              onPress={handleTogglePushNotifications}
+              disabled={isPushRegistering}
+              style={[
+                styles.toggle,
+                { backgroundColor: devicePushToken ? theme.colors.primary : theme.colors.border },
+                isPushRegistering && styles.toggleDisabled,
+              ]}
+            >
+              <View style={[
+                styles.toggleThumb,
+                { backgroundColor: '#fff' },
+                devicePushToken && styles.toggleThumbActive
               ]} />
             </TouchableOpacity>
           </View>
@@ -362,6 +427,9 @@ const styles = StyleSheet.create({
   },
   toggleThumbActive: {
     alignSelf: 'flex-end',
+  },
+  toggleDisabled: {
+    opacity: 0.7,
   },
   logoutButton: {
     flexDirection: 'row',

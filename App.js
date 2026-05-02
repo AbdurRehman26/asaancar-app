@@ -3,6 +3,7 @@ import { StatusBar } from 'expo-status-bar';
 import { View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { AuthProvider } from '@/context/AuthContext';
+import { PushNotificationProvider } from '@/context/PushNotificationContext';
 import { ThemeProvider, useTheme } from '@/context/ThemeContext';
 import AppNavigator from '@/navigation/AppNavigator';
 import SplashScreen from '@/components/SplashScreen';
@@ -41,7 +42,9 @@ export default function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <AppContent />
+        <PushNotificationProvider>
+          <AppContent />
+        </PushNotificationProvider>
       </AuthProvider>
     </ThemeProvider>
   );

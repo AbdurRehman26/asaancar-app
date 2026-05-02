@@ -3,6 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 
 const API_BASE_URL = 'https://asaancar.com/api';
+const PUSH_DEVICE_TOKEN_STORAGE_KEY = 'pushDeviceToken';
 
 const pickFirstDefined = (...values) =>
   values.find((value) => value !== undefined && value !== null && value !== '');
@@ -21,7 +22,7 @@ const isIntegerLikeValue = (value) => {
 
 const normalizeForceUpdatePayload = (payload = {}) => {
   const raw = payload?.data || payload;
-  const nestedConfig = raw?.data || {};
+  const nestedConfig = raw?.data || raw || {};
   const androidVersion = nestedConfig.android_version;
   const androidVersionAsVersion =
     androidVersion !== undefined &&
@@ -41,7 +42,7 @@ const normalizeForceUpdatePayload = (payload = {}) => {
       raw.required,
       raw.is_required
     ),
-    androidVersion: androidVersionAsVersion,
+    androidVersion: androidVersionAsVersion ?? androidVersion,
     androidBuildCode: pickFirstDefined(
       nestedConfig.minimumVersionCode,
       nestedConfig.minimum_version_code,
@@ -259,7 +260,7 @@ export const forceUpdateAPI = {
       ? await axios.get(endpoint)
       : await api.get(endpoint);
 
-    return normalizeForceUpdatePayload(response.data);
+    return normalizeForceUpdatePayload(response);
   },
 
   getPlayStoreVersion: async (packageName) => {
@@ -756,6 +757,21 @@ export const authAPI = {
 
   // Logout
   logout: async () => {
+    const pushDeviceToken = await AsyncStorage.getItem(PUSH_DEVICE_TOKEN_STORAGE_KEY);
+
+    if (pushDeviceToken) {
+      try {
+        await api.delete('/fcm/tokens', {
+          data: {
+            token: pushDeviceToken,
+          },
+        });
+      } catch (error) {
+        console.error('Error deleting FCM token during logout:', error);
+      }
+    }
+
+    await AsyncStorage.removeItem(PUSH_DEVICE_TOKEN_STORAGE_KEY);
     await AsyncStorage.removeItem('authToken');
     await AsyncStorage.removeItem('user');
   },
@@ -963,6 +979,22 @@ export const notificationAPI = {
   // Delete notification
   deleteNotification: async (id) => {
     const response = await api.delete(`/notifications/${id}`);
+    return response.data;
+  },
+};
+
+export const fcmAPI = {
+  registerToken: async (payload) => {
+    const response = await api.post('/fcm/tokens', payload);
+    return response.data;
+  },
+
+  deleteToken: async (token) => {
+    const response = await api.delete('/fcm/tokens', {
+      data: {
+        token,
+      },
+    });
     return response.data;
   },
 };

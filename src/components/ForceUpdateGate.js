@@ -33,6 +33,21 @@ const parseVersionPart = (part) => {
   return numeric ? Number(numeric[0]) : 0;
 };
 
+const parseBuildNumber = (value) => {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return Math.trunc(value);
+  }
+
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (/^\d+$/.test(trimmed)) {
+      return Number(trimmed);
+    }
+  }
+
+  return 0;
+};
+
 const compareVersionStrings = (currentVersion, minimumVersion) => {
   const currentParts = String(currentVersion || '0').split('.');
   const minimumParts = String(minimumVersion || '0').split('.');
@@ -72,11 +87,37 @@ const getInstalledAppInfo = () => {
   const nativeBuildVersion = Constants.nativeBuildVersion;
   const configVersion = expoConfig?.version;
   const configVersionCode = expoConfig?.android?.versionCode;
+  const parsedNativeBuildVersion = parseBuildNumber(nativeBuildVersion);
+  const parsedConfigVersionCode = parseBuildNumber(configVersionCode);
 
   return {
     version: nativeVersion || configVersion || '0.0.0',
-    versionCode: Number(nativeBuildVersion || configVersionCode || 0),
+    // On real APK/AAB installs, prefer the native installed build number.
+    versionCode: parsedNativeBuildVersion || parsedConfigVersionCode || 0,
   };
+};
+
+const shouldSkipForceUpdateCheck = () => {
+  const appOwnership = Constants.appOwnership;
+  const executionEnvironment = Constants.executionEnvironment;
+
+  if (__DEV__) {
+    return true;
+  }
+
+  if (appOwnership && appOwnership !== 'standalone') {
+    return true;
+  }
+
+  if (
+    executionEnvironment &&
+    executionEnvironment !== 'standalone' &&
+    executionEnvironment !== 'storeClient'
+  ) {
+    return true;
+  }
+
+  return false;
 };
 
 const resolveForceUpdateConfig = (remoteConfig, localConfig) => ({
@@ -147,6 +188,15 @@ const ForceUpdateGate = ({ children }) => {
   });
 
   const checkForceUpdate = async (isManual = false) => {
+    if (shouldSkipForceUpdateCheck()) {
+      setState((prev) => ({
+        ...prev,
+        checking: false,
+        required: false,
+      }));
+      return;
+    }
+
     if (isManual) {
       setState((prev) => ({ ...prev, checking: true }));
     }
@@ -156,12 +206,13 @@ const ForceUpdateGate = ({ children }) => {
     const endpoint = normalizeForceUpdateEndpoint(
       localConfig?.endpoint || expoConfig?.extra?.forceUpdateEndpoint
     );
+
     const packageName = expoConfig?.android?.package;
 
     try {
       // Try to get remote config from endpoint first
       let remoteConfig = endpoint ? await forceUpdateAPI.getConfig(endpoint) : null;
-
+      console.log(remoteConfig, 222);
       // If no endpoint or fetch failed, and we're on Android, try Play Store scraping
       if (!remoteConfig && Platform.OS === 'android' && packageName) {
         try {

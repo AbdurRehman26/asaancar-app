@@ -10,17 +10,18 @@ import {
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect } from '@react-navigation/native';
 import { useTheme } from '@/context/ThemeContext';
 import { notificationAPI } from '@/services/api';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import ErrorModal from '@/components/ErrorModal';
 import ConfirmModal from '@/components/ConfirmModal';
 import PageHeader from '@/components/PageHeader';
+import { useTranslation } from 'react-i18next';
 
 const NotificationsScreen = () => {
-  const navigation = useNavigation();
   const { theme } = useTheme();
+  const { t } = useTranslation();
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -80,7 +81,7 @@ const NotificationsScreen = () => {
       }
     } catch (error) {
       console.error('Error loading notifications:', error);
-      setErrorMessage('Failed to load notifications');
+      setErrorMessage(t('notifications.failedToLoad'));
       setShowErrorModal(true);
       if (reset) {
         setNotifications([]);
@@ -113,7 +114,7 @@ const NotificationsScreen = () => {
       );
     } catch (error) {
       console.error('Error marking notification as read:', error);
-      Alert.alert('Error', 'Failed to mark notification as read');
+      Alert.alert(t('common.error'), t('notifications.failedToMarkAsRead'));
     }
   };
 
@@ -123,10 +124,10 @@ const NotificationsScreen = () => {
       setNotifications((prev) =>
         prev.map((n) => ({ ...n, read: true, read_at: new Date().toISOString() }))
       );
-      Alert.alert('Success', 'All notifications marked as read');
+      Alert.alert(t('common.success'), t('notifications.markedAllAsRead'));
     } catch (error) {
       console.error('Error marking all as read:', error);
-      Alert.alert('Error', 'Failed to mark all notifications as read');
+      Alert.alert(t('common.error'), t('notifications.failedToMarkAllAsRead'));
     }
   };
 
@@ -145,7 +146,7 @@ const NotificationsScreen = () => {
       setNotificationToDelete(null);
     } catch (error) {
       console.error('Error deleting notification:', error);
-      Alert.alert('Error', 'Failed to delete notification');
+      Alert.alert(t('common.error'), t('notifications.failedToDelete'));
       setShowDeleteModal(false);
       setNotificationToDelete(null);
     }
@@ -266,14 +267,14 @@ const NotificationsScreen = () => {
 
   const markAllButton = unreadCount > 0 ? (
     <TouchableOpacity onPress={handleMarkAllAsRead} style={styles.markAllButton}>
-      <Text style={[styles.markAllText, { color: theme.colors.primary }]}>Mark all read</Text>
+      <Text style={[styles.markAllText, { color: theme.colors.primary }]}>{t('notifications.markAllRead')}</Text>
     </TouchableOpacity>
   ) : null;
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.backgroundTertiary }]} edges={['bottom']}>
       <PageHeader
-        title="Notifications"
+        title={t('notifications.title')}
         backDestination="SettingsMain"
         rightAction={markAllButton}
       />
@@ -297,10 +298,10 @@ const NotificationsScreen = () => {
           <View style={styles.emptyContainer}>
             <Icon name="notifications-off" size={64} color={theme.colors.border} />
             <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>
-              No notifications yet
+              {t('notifications.emptyTitle')}
             </Text>
             <Text style={[styles.emptySubtext, { color: theme.colors.textSecondary }]}>
-              You'll see notifications here when you receive them
+              {t('notifications.emptySubtitle')}
             </Text>
           </View>
         }
@@ -318,10 +319,10 @@ const NotificationsScreen = () => {
           setShowDeleteModal(false);
           setNotificationToDelete(null);
         }}
-        title="Delete Notification"
-        message="Are you sure you want to delete this notification?"
-        confirmText="Delete"
-        cancelText="Cancel"
+        title={t('notifications.deleteTitle')}
+        message={t('notifications.deleteMessage')}
+        confirmText={t('common.delete')}
+        cancelText={t('common.cancel')}
         confirmColor="#ff4444"
         destructive={true}
         onConfirm={confirmDelete}
@@ -443,7 +444,3 @@ const styles = StyleSheet.create({
 });
 
 export default NotificationsScreen;
-
-
-
-
