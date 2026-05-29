@@ -2,7 +2,7 @@
   "expo": {
     "name": "AsaanCar",
     "slug": "asaancar-app",
-    "version": "1.0.18",
+    "version": "1.0.25",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -43,7 +43,7 @@
         "READ_MEDIA_IMAGES",
         "POST_NOTIFICATIONS"
       ],
-      "versionCode": 77
+      "versionCode": 84
     },
     "web": {
       "bundler": "metro"

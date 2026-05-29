@@ -10,14 +10,24 @@ import {
   Dimensions,
   TextInput,
 } from 'react-native';
-import Constants from 'expo-constants';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/context/ThemeContext';
-import { googlePlacesAPI } from '@/services/api';
+import { locationAPI } from '@/services/api';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import SearchableDropdown from '@/components/SearchableDropdown';
 
 const { width, height } = Dimensions.get('window');
+const AREA_CITY_ID = 197;
+
+const normalizeArea = (area) => {
+  const id = area?.id ?? area?.area_id ?? null;
+  const label = area?.name || area?.area || area?.title || area?.location || '';
+  return {
+    id,
+    value: label,
+    label,
+  };
+};
 
 const PickDropFilterDrawer = ({ 
   visible, 
@@ -34,10 +44,6 @@ const PickDropFilterDrawer = ({
   const [endLocations, setEndLocations] = React.useState([]);
   const [loadingStartLocations, setLoadingStartLocations] = React.useState(false);
   const [loadingEndLocations, setLoadingEndLocations] = React.useState(false);
-  const googleMapsApiKey =
-    Constants.expoConfig?.extra?.googleMapsApiKey ||
-    Constants.manifest?.extra?.googleMapsApiKey ||
-    '';
 
   React.useEffect(() => {
     if (visible) {
@@ -52,52 +58,49 @@ const PickDropFilterDrawer = ({
     }
   }, [visible]);
 
-  const mapPredictionsToOptions = React.useCallback((predictions = [], currentValue = '') => {
-    const placeOptions = predictions.map((prediction) => ({
-      value: prediction.description || prediction.structured_formatting?.main_text || '',
-      label: prediction.description || prediction.structured_formatting?.main_text || '',
-      id: prediction.place_id,
-    }));
-
-    const hasCurrentValue = currentValue && placeOptions.some((option) => option.value === currentValue);
+  const mapAreaOptions = React.useCallback((areas = [], currentValue = '', currentAreaId = '') => {
+    const normalizedAreas = areas.map(normalizeArea).filter((area) => area.id && area.label);
+    const hasCurrentValue = currentValue && normalizedAreas.some((option) => option.value === currentValue || option.id === currentAreaId);
 
     return [
       { value: '', label: 'Any Location', id: 'any-location' },
-      ...(hasCurrentValue ? [] : currentValue ? [{ value: currentValue, label: currentValue, id: `current-${currentValue}` }] : []),
-      ...placeOptions,
+      ...(hasCurrentValue ? [] : currentValue ? [{ value: currentValue, label: currentValue, id: currentAreaId || `current-${currentValue}` }] : []),
+      ...normalizedAreas,
     ];
   }, []);
 
-  const loadPlaces = async (search = '', target = 'start') => {
+  const loadAreas = async (search = '', target = 'start') => {
     const setLoading = target === 'start' ? setLoadingStartLocations : setLoadingEndLocations;
     const setOptions = target === 'start' ? setStartLocations : setEndLocations;
     const currentValue = target === 'start' ? filters.startLocation : filters.endLocation;
+    const currentAreaId = target === 'start' ? filters.startAreaId : filters.endAreaId;
 
     if (!search.trim()) {
-      setOptions(mapPredictionsToOptions([], currentValue));
+      setOptions(mapAreaOptions([], currentValue, currentAreaId));
       return;
     }
 
     try {
       setLoading(true);
-      const predictions = await googlePlacesAPI.autocomplete(search, googleMapsApiKey);
-      setOptions(mapPredictionsToOptions(predictions, currentValue));
+      const response = await locationAPI.getAreas(AREA_CITY_ID, search);
+      const areas = Array.isArray(response?.data) ? response.data : Array.isArray(response) ? response : [];
+      setOptions(mapAreaOptions(areas, currentValue, currentAreaId));
     } catch (error) {
-      console.error(`Error loading ${target} places:`, error);
-      setOptions(mapPredictionsToOptions([], currentValue));
+      console.error(`Error loading ${target} areas:`, error);
+      setOptions(mapAreaOptions([], currentValue, currentAreaId));
     } finally {
       setLoading(false);
     }
   };
 
   const startLocationOptions = React.useMemo(
-    () => mapPredictionsToOptions([], filters.startLocation),
-    [filters.startLocation, mapPredictionsToOptions]
+    () => mapAreaOptions([], filters.startLocation, filters.startAreaId),
+    [filters.startAreaId, filters.startLocation, mapAreaOptions]
   );
 
   const endLocationOptions = React.useMemo(
-    () => mapPredictionsToOptions([], filters.endLocation),
-    [filters.endLocation, mapPredictionsToOptions]
+    () => mapAreaOptions([], filters.endLocation, filters.endAreaId),
+    [filters.endAreaId, filters.endLocation, mapAreaOptions]
   );
 
   React.useEffect(() => {
@@ -109,51 +112,25 @@ const PickDropFilterDrawer = ({
   }, [endLocationOptions]);
 
   const handleStartLocationSearch = (searchQuery) => {
-    loadPlaces(searchQuery, 'start');
+    loadAreas(searchQuery, 'start');
   };
 
   const handleEndLocationSearch = (searchQuery) => {
-    loadPlaces(searchQuery, 'end');
+    loadAreas(searchQuery, 'end');
   };
 
-  const applyPlaceSelection = async (target, value, option) => {
+  const applyAreaSelection = (target, value, option) => {
     const locationKey = target === 'start' ? 'startLocation' : 'endLocation';
-    const latitudeKey = target === 'start' ? 'startLatitude' : 'endLatitude';
-    const longitudeKey = target === 'start' ? 'startLongitude' : 'endLongitude';
-    const placeIdKey = target === 'start' ? 'startPlaceId' : 'endPlaceId';
+    const areaIdKey = target === 'start' ? 'startAreaId' : 'endAreaId';
 
     if (!value) {
       onFilterChange(locationKey, '');
-      onFilterChange(latitudeKey, '');
-      onFilterChange(longitudeKey, '');
-      onFilterChange(placeIdKey, '');
+      onFilterChange(areaIdKey, '');
       return;
     }
 
     onFilterChange(locationKey, value);
-    onFilterChange(placeIdKey, option?.id || '');
-
-    if (!option?.id) {
-      onFilterChange(latitudeKey, '');
-      onFilterChange(longitudeKey, '');
-      return;
-    }
-
-    try {
-      const details = await googlePlacesAPI.getPlaceDetails(option.id, googleMapsApiKey);
-      const location = details?.geometry?.location;
-      const latitude =
-        typeof location?.lat === 'function' ? location.lat() : location?.lat;
-      const longitude =
-        typeof location?.lng === 'function' ? location.lng() : location?.lng;
-
-      onFilterChange(latitudeKey, latitude ?? '');
-      onFilterChange(longitudeKey, longitude ?? '');
-    } catch (error) {
-      console.error(`Error loading ${target} place details:`, error);
-      onFilterChange(latitudeKey, '');
-      onFilterChange(longitudeKey, '');
-    }
+    onFilterChange(areaIdKey, option?.id || '');
   };
 
   const handleClose = () => {
@@ -240,7 +217,7 @@ const PickDropFilterDrawer = ({
                 label="Start Location"
                 options={startLocations}
                 value={filters.startLocation}
-                onSelect={(value, option) => applyPlaceSelection('start', value || '', option)}
+                onSelect={(value, option) => applyAreaSelection('start', value || '', option)}
                 placeholder="Select start location"
                 searchable={true}
                 onSearch={handleStartLocationSearch}
@@ -255,7 +232,7 @@ const PickDropFilterDrawer = ({
                 label="End Location"
                 options={endLocations}
                 value={filters.endLocation}
-                onSelect={(value, option) => applyPlaceSelection('end', value || '', option)}
+                onSelect={(value, option) => applyAreaSelection('end', value || '', option)}
                 placeholder="Select end location"
                 searchable={true}
                 onSearch={handleEndLocationSearch}
@@ -329,13 +306,9 @@ const PickDropFilterDrawer = ({
                   // Create empty filters object
                   const emptyFilters = {
                     startLocation: '',
-                    startLatitude: '',
-                    startLongitude: '',
-                    startPlaceId: '',
+                    startAreaId: '',
                     endLocation: '',
-                    endLatitude: '',
-                    endLongitude: '',
-                    endPlaceId: '',
+                    endAreaId: '',
                     driverGender: '',
                     departureTime: '',
                     departureDate: '',

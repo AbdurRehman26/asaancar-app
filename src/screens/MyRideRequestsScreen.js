@@ -30,6 +30,22 @@ const formatTime = (timeString) => {
   return `${h}:${String(minutes).slice(0, 2)} ${ampm}`;
 };
 
+const getAreaLabel = (value) => {
+  if (typeof value === 'string') {
+    return value;
+  }
+
+  return value?.name || value?.area || value?.title || value?.location || '';
+};
+
+const getRequestRouteLabel = (request, target) => {
+  const areaKey = target === 'start' ? 'start_area' : 'end_area';
+  const locationKey = target === 'start' ? 'start_location' : 'end_location';
+  const areaLabel = getAreaLabel(request?.[areaKey]);
+
+  return areaLabel || request?.[locationKey] || '';
+};
+
 const MyRideRequestsScreen = () => {
   const navigation = useNavigation();
   const { theme } = useTheme();
@@ -91,43 +107,48 @@ const MyRideRequestsScreen = () => {
     }
   };
 
-  const renderRequest = ({ item }) => (
-    <View style={[styles.card, { backgroundColor: theme.colors.cardBackground }]}>
-      <TouchableOpacity onPress={() => navigation.navigate('RideRequestDetail', { requestId: item.id, rideRequest: item })}>
-        <Text style={[styles.routeText, { color: theme.colors.text }]} numberOfLines={1}>
-          {item.start_location} -> {item.end_location}
-        </Text>
-        <Text style={[styles.subtleText, { color: theme.colors.textSecondary }]}>
-          {item.schedule_type === 'once' && item.departure_date ? `${item.departure_date} • ` : ''}
-          {formatTime(item.departure_time)}
-        </Text>
-        <Text style={[styles.subtleText, { color: theme.colors.textSecondary }]}>
-          {item.required_seats || 1} seat{item.required_seats !== 1 ? 's' : ''} • {item.preferred_driver_gender || 'any'} driver
-        </Text>
-      </TouchableOpacity>
+  const renderRequest = ({ item }) => {
+    const startLabel = getRequestRouteLabel(item, 'start') || 'Start Location';
+    const endLabel = getRequestRouteLabel(item, 'end') || 'End Location';
 
-      <View style={styles.actionsRow}>
-        <TouchableOpacity
-          style={[styles.actionButton, { backgroundColor: theme.colors.backgroundSecondary }]}
-          onPress={() => navigation.navigate('CreateRideRequest', { rideRequest: item })}
-        >
-          <Icon name="edit" size={16} color={theme.colors.text} />
-          <Text style={[styles.actionButtonText, { color: theme.colors.text }]}>Edit</Text>
+    return (
+      <View style={[styles.card, { backgroundColor: theme.colors.cardBackground }]}>
+        <TouchableOpacity onPress={() => navigation.navigate('RideRequestDetail', { requestId: item.id, rideRequest: item })}>
+          <Text style={[styles.routeText, { color: theme.colors.text }]} numberOfLines={1}>
+            {startLabel} -> {endLabel}
+          </Text>
+          <Text style={[styles.subtleText, { color: theme.colors.textSecondary }]}>
+            {item.schedule_type === 'once' && item.departure_date ? `${item.departure_date} • ` : ''}
+            {formatTime(item.departure_time)}
+          </Text>
+          <Text style={[styles.subtleText, { color: theme.colors.textSecondary }]}>
+            {item.required_seats || 1} seat{item.required_seats !== 1 ? 's' : ''} • {item.preferred_driver_gender || 'any'} driver
+          </Text>
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={[styles.actionButton, { backgroundColor: '#fee2e2' }]}
-          onPress={() => {
-            setRequestToDelete(item);
-            setShowDeleteModal(true);
-          }}
-        >
-          <Icon name="delete-outline" size={16} color="#dc2626" />
-          <Text style={[styles.actionButtonText, { color: '#dc2626' }]}>Delete</Text>
-        </TouchableOpacity>
+        <View style={styles.actionsRow}>
+          <TouchableOpacity
+            style={[styles.actionButton, { backgroundColor: theme.colors.backgroundSecondary }]}
+            onPress={() => navigation.navigate('CreateRideRequest', { rideRequest: item })}
+          >
+            <Icon name="edit" size={16} color={theme.colors.text} />
+            <Text style={[styles.actionButtonText, { color: theme.colors.text }]}>Edit</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.actionButton, { backgroundColor: '#fee2e2' }]}
+            onPress={() => {
+              setRequestToDelete(item);
+              setShowDeleteModal(true);
+            }}
+          >
+            <Icon name="delete-outline" size={16} color="#dc2626" />
+            <Text style={[styles.actionButtonText, { color: '#dc2626' }]}>Delete</Text>
+          </TouchableOpacity>
+        </View>
       </View>
-    </View>
-  );
+    );
+  };
 
   const addButton = (
     <TouchableOpacity

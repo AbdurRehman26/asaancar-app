@@ -10,7 +10,7 @@ import {
   Platform,
   ScrollView,
 } from 'react-native';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { CommonActions, useNavigation, useRoute } from '@react-navigation/native';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
 import Icon from 'react-native-vector-icons/MaterialIcons';
@@ -22,11 +22,12 @@ const VerifySignupOtpScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
   const { theme } = useTheme();
-  const { registerWithOtp } = useAuth();
+  const { registerWithOtp, user } = useAuth();
   const { t } = useTranslation();
 
   const phone = route.params?.phone || '';
   const name = route.params?.name || '';
+  const signupRole = route.params?.role || 'rider';
 
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
@@ -48,6 +49,71 @@ const VerifySignupOtpScreen = () => {
     return () => clearInterval(interval);
   }, [resendCooldown]);
 
+  useEffect(() => {
+    if (!user) {
+      return;
+    }
+
+    let rootNavigation = navigation;
+    let currentNavigation = navigation;
+
+    while (currentNavigation) {
+      const state = currentNavigation.getState?.();
+      if (state?.routeNames?.includes('Root')) {
+        rootNavigation = currentNavigation;
+        break;
+      }
+      currentNavigation = currentNavigation.getParent?.();
+    }
+
+    const redirectAction = signupRole === 'driver'
+      ? CommonActions.reset({
+          index: 0,
+          routes: [
+            {
+              name: 'Root',
+              state: {
+                index: 0,
+                routes: [
+                  {
+                    name: 'Dashboard',
+                    state: {
+                      index: 1,
+                      routes: [
+                        { name: 'SettingsMain' },
+                        { name: 'DriverVehicleOnboarding', params: { fromSignup: true } },
+                      ],
+                    },
+                  },
+                ],
+              },
+            },
+          ],
+        })
+      : CommonActions.reset({
+          index: 0,
+          routes: [
+            {
+              name: 'Root',
+              state: {
+                index: 0,
+                routes: [
+                  {
+                    name: 'Home',
+                    state: {
+                      index: 0,
+                      routes: [{ name: 'PickDrop' }],
+                    },
+                  },
+                ],
+              },
+            },
+          ],
+        });
+
+    rootNavigation.dispatch(redirectAction);
+  }, [navigation, signupRole, user]);
+
   const handleVerifyOtp = async () => {
     if (!otp || otp.length !== 6) {
       setErrorMessage(t('auth.enterValidOtp') || 'Please enter the 6-digit OTP');
@@ -58,7 +124,6 @@ const VerifySignupOtpScreen = () => {
     try {
       setLoading(true);
       await registerWithOtp(phone, otp, name || undefined);
-      // User is set in AuthContext; Root will re-render as AuthenticatedTabs
     } catch (error) {
       setErrorMessage(error.response?.data?.message || error.message || t('auth.invalidOtp') || 'Invalid OTP. Please try again.');
       setShowErrorModal(true);

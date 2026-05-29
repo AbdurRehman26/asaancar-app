@@ -151,7 +151,7 @@ const SearchableDropdown = ({
                           { backgroundColor: theme.colors.primary + '20' },
                         ],
                       ]}
-                      onPress={() => handleSelect(item.value || item.id, item)}
+                      onPress={() => handleSelect(item.value !== undefined ? item.value : item.id, item)}
                     >
                       <Text
                         style={[
@@ -258,6 +258,5 @@ const styles = StyleSheet.create({
 });
 
 export default SearchableDropdown;
-
 
 

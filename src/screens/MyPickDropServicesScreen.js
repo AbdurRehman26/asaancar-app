@@ -133,9 +133,31 @@ const MyPickDropServicesScreen = () => {
     return timeString;
   };
 
+  const getAreaLabel = (value) => {
+    if (typeof value === 'string') {
+      return value;
+    }
+
+    return value?.name || value?.area || value?.title || value?.location || '';
+  };
+
+  const getServiceRouteLabel = (service, target) => {
+    const areaKeys = target === 'start'
+      ? ['pickup_area', 'start_area']
+      : ['dropoff_area', 'end_area'];
+    const locationKey = target === 'start' ? 'start_location' : 'end_location';
+
+    for (const key of areaKeys) {
+      const label = getAreaLabel(service?.[key]);
+      if (label) return label;
+    }
+
+    return service?.[locationKey] || '';
+  };
+
   const renderServiceItem = ({ item }) => {
-    const startLocation = item.start_location || item.start_area || 'N/A';
-    const endLocation = item.end_location || item.end_area || 'N/A';
+    const startLocation = getServiceRouteLabel(item, 'start') || 'N/A';
+    const endLocation = getServiceRouteLabel(item, 'end') || 'N/A';
     const departureDate = item.departure_date || item.departureDate || null;
     const departureTime = item.departure_time || item.departureTime || null;
     const returnTime = item.return_time || item.returnTime || null;
@@ -302,7 +324,7 @@ const MyPickDropServicesScreen = () => {
           setServiceToDelete(null);
         }}
         title="Delete Service"
-        message={`Are you sure you want to delete this service from ${serviceToDelete?.start_location || serviceToDelete?.start_area || 'start'} to ${serviceToDelete?.end_location || serviceToDelete?.end_area || 'end'}? This action cannot be undone.`}
+        message={`Are you sure you want to delete this service from ${getServiceRouteLabel(serviceToDelete, 'start') || 'start'} to ${getServiceRouteLabel(serviceToDelete, 'end') || 'end'}? This action cannot be undone.`}
         confirmText="Delete"
         cancelText="Cancel"
         confirmColor="#ff4444"

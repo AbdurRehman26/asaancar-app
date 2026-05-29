@@ -14,6 +14,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { useTranslation } from 'react-i18next';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { CommonActions } from '@react-navigation/native';
 
 const { width, height } = Dimensions.get('window');
 
@@ -71,12 +72,36 @@ const OnboardingScreen = ({ navigation }) => {
     };
 
     const finishOnboarding = async () => {
+        const signupRedirect = CommonActions.reset({
+            index: 0,
+            routes: [
+                {
+                    name: 'Root',
+                    state: {
+                        index: 0,
+                        routes: [
+                            {
+                                name: 'Home',
+                                state: {
+                                    index: 1,
+                                    routes: [
+                                        { name: 'PickDrop' },
+                                        { name: 'Register' },
+                                    ],
+                                },
+                            },
+                        ],
+                    },
+                },
+            ],
+        });
+
         try {
             await AsyncStorage.setItem('IS_ONBOARDING_COMPLETE', 'true');
-            navigation.replace('AppHome');
+            navigation.dispatch(signupRedirect);
         } catch (error) {
             console.error('Error saving onboarding state:', error);
-            navigation.replace('AppHome');
+            navigation.dispatch(signupRedirect);
         }
     };
 

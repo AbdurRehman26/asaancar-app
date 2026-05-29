@@ -12,21 +12,41 @@ import {
   Pressable,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Constants from 'expo-constants';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { CommonActions, useNavigation, useRoute } from '@react-navigation/native';
 import { useTheme } from '@/context/ThemeContext';
 import { useAuth } from '@/context/AuthContext';
-import { pickDropAPI, googlePlacesAPI } from '@/services/api';
+import { locationAPI, pickDropAPI, userVehiclesAPI } from '@/services/api';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import ErrorModal from '@/components/ErrorModal';
 import SuccessModal from '@/components/SuccessModal';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import PageHeader from '@/components/PageHeader';
 
+const AREA_CITY_ID = 197;
+
+const normalizeArea = (area) => {
+  const id = area?.id ?? area?.area_id ?? null;
+  const label = area?.name || area?.area || area?.title || area?.location || '';
+  return {
+    id,
+    label,
+  };
+};
+
+const getAreaLabel = (value) => {
+  if (typeof value === 'string') {
+    return value;
+  }
+
+  return value?.name || value?.area || value?.title || value?.location || '';
+};
+
 const CreatePickDropServiceScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
   const { service } = route.params || {};
+  const initialStep = route.params?.initialStep ?? 0;
+  const returnToHomeOnSuccess = route.params?.returnToHomeOnSuccess === true;
   const isEditing = !!service;
   const { theme } = useTheme();
   const { user } = useAuth();
@@ -37,23 +57,19 @@ const CreatePickDropServiceScreen = () => {
   const [successMessage, setSuccessMessage] = useState('');
 
   // Stepper State
-  const [currentStep, setCurrentStep] = useState(0);
+  const [currentStep, setCurrentStep] = useState(initialStep);
   const steps = [
+    { title: 'Vehicle', required: false, subtitle: 'Vehicle Information' },
     { title: 'Route', required: true, subtitle: 'Locations & Schedule' },
     { title: 'Service', required: true, subtitle: 'Details & Price' },
-    { title: 'Car', required: false, subtitle: 'Optional' },
     { title: 'Preview', required: true, subtitle: 'Review & Submit' },
   ];
 
   // Route Information
   const [startArea, setStartArea] = useState('');
-  const [startPlaceId, setStartPlaceId] = useState(null);
-  const [startLatitude, setStartLatitude] = useState(null);
-  const [startLongitude, setStartLongitude] = useState(null);
+  const [startAreaId, setStartAreaId] = useState(null);
   const [endArea, setEndArea] = useState('');
-  const [endPlaceId, setEndPlaceId] = useState(null);
-  const [endLatitude, setEndLatitude] = useState(null);
-  const [endLongitude, setEndLongitude] = useState(null);
+  const [endAreaId, setEndAreaId] = useState(null);
   const [scheduleType, setScheduleType] = useState('once'); // 'once', 'everyday', 'weekday', 'weekends', 'custom'
   const [selectedDays, setSelectedDays] = useState([]);
   const [isRoundTrip, setIsRoundTrip] = useState(false);
@@ -77,12 +93,16 @@ const CreatePickDropServiceScreen = () => {
   const [description, setDescription] = useState('');
 
   // Car Details (Optional)
+  const [selectedVehicleId, setSelectedVehicleId] = useState(route.params?.selectedVehicleId || null);
+  const [selectedVehicleType, setSelectedVehicleType] = useState(route.params?.selectedVehicle?.vehicle_type || 'car');
   const [carBrand, setCarBrand] = useState('');
   const [carModel, setCarModel] = useState('');
   const [carColor, setCarColor] = useState('');
   const [seats, setSeats] = useState('');
   const [transmission, setTransmission] = useState('');
   const [fuelType, setFuelType] = useState('');
+  const [userVehicles, setUserVehicles] = useState([]);
+  const [loadingUserVehicles, setLoadingUserVehicles] = useState(false);
 
   // Stops
   const [stops, setStops] = useState([]);
@@ -91,6 +111,8 @@ const CreatePickDropServiceScreen = () => {
   const [showStartAreaDropdown, setShowStartAreaDropdown] = useState(false);
   const [showEndAreaDropdown, setShowEndAreaDropdown] = useState(false);
   const [showDriverGenderDropdown, setShowDriverGenderDropdown] = useState(false);
+  const [showVehicleDropdown, setShowVehicleDropdown] = useState(false);
+  const [showVehicleTypeDropdown, setShowVehicleTypeDropdown] = useState(false);
   // Currency dropdown removed
   const [showTransmissionDropdown, setShowTransmissionDropdown] = useState(false);
   const [showFuelTypeDropdown, setShowFuelTypeDropdown] = useState(false);
@@ -101,18 +123,44 @@ const CreatePickDropServiceScreen = () => {
   const [startAreaSearch, setStartAreaSearch] = useState('');
   const [endAreaSearch, setEndAreaSearch] = useState('');
   const [stopAreaSearch, setStopAreaSearch] = useState('');
-  const [startPlaceResults, setStartPlaceResults] = useState([]);
-  const [endPlaceResults, setEndPlaceResults] = useState([]);
-  const [stopPlaceResults, setStopPlaceResults] = useState([]);
-  const [placesLoading, setPlacesLoading] = useState(false);
-
-  const googleMapsApiKey = Constants.expoConfig?.extra?.googleMapsApiKey;
+  const [startAreaResults, setStartAreaResults] = useState([]);
+  const [endAreaResults, setEndAreaResults] = useState([]);
+  const [stopAreaResults, setStopAreaResults] = useState([]);
+  const [areasLoading, setAreasLoading] = useState(false);
 
 
 
   const driverGenders = ['Male', 'Female', 'Any'];
+  const vehicleTypes = ['Car', 'Bike'];
   const transmissions = ['Automatic', 'Manual'];
   const fuelTypes = ['Petrol', 'Diesel', 'Hybrid', 'Electric', 'CNG'];
+
+  const formatStoredOption = (value) =>
+    typeof value === 'string' && value.length
+      ? value.charAt(0).toUpperCase() + value.slice(1)
+      : '';
+
+  const applyUserVehicle = (vehicle) => {
+    if (!vehicle) return;
+    setSelectedVehicleId(vehicle.id || null);
+    setSelectedVehicleType(vehicle.vehicle_type || 'car');
+    setCarBrand(vehicle.brand || '');
+    setCarModel(vehicle.model || '');
+    setCarColor(vehicle.color || '');
+    setSeats(vehicle.seats != null ? String(vehicle.seats) : '');
+    setTransmission(formatStoredOption(vehicle.transmission));
+    setFuelType(formatStoredOption(vehicle.fuel_type));
+  };
+
+  const getVehicleLabel = (vehicle) => {
+    const typeLabel = vehicle?.vehicle_type === 'bike' ? 'Bike' : 'Car';
+    const detail = [vehicle?.brand, vehicle?.model].filter(Boolean).join(' ');
+    return detail ? `${typeLabel} • ${detail}` : typeLabel;
+  };
+  const userVehicleOptions = userVehicles.map((vehicle) => ({
+    ...vehicle,
+    displayLabel: getVehicleLabel(vehicle),
+  }));
 
   // Initialize form
   useEffect(() => {
@@ -123,14 +171,22 @@ const CreatePickDropServiceScreen = () => {
     }
 
     if (service) {
-      setStartArea(service.start_area || service.start_location || '');
-      setStartPlaceId(service.start_place_id || null);
-      setStartLatitude(service.start_latitude ?? null);
-      setStartLongitude(service.start_longitude ?? null);
-      setEndArea(service.end_area || service.end_location || '');
-      setEndPlaceId(service.end_place_id || null);
-      setEndLatitude(service.end_latitude ?? null);
-      setEndLongitude(service.end_longitude ?? null);
+      setStartArea(getAreaLabel(service.start_area) || service.start_location || '');
+      setStartAreaId(
+        service.pickup_area_id ||
+        service.start_area_id ||
+        service.pickup_area?.id ||
+        service.start_area?.id ||
+        null
+      );
+      setEndArea(getAreaLabel(service.end_area) || service.end_location || '');
+      setEndAreaId(
+        service.dropoff_area_id ||
+        service.end_area_id ||
+        service.dropoff_area?.id ||
+        service.end_area?.id ||
+        null
+      );
 
       // Map legacy boolean to schedule type if needed
       if (service.schedule_type) {
@@ -188,43 +244,91 @@ const CreatePickDropServiceScreen = () => {
       setCarBrand(service.car_brand || '');
       setCarModel(service.car_model || '');
       setCarColor(service.car_color || '');
-      setSeats(service.seats?.toString() || '');
-      setTransmission(service.transmission || '');
-      setFuelType(service.fuel_type || '');
+      setSeats(service.car_seats?.toString() || service.seats?.toString() || '');
+      setTransmission(formatStoredOption(service.car_transmission || service.transmission || ''));
+      setFuelType(formatStoredOption(service.car_fuel_type || service.fuel_type || ''));
 
       if (service.stops && Array.isArray(service.stops)) {
         setStops(service.stops.map((s) => ({
           ...s,
-          place_id: s.place_id || null,
-          latitude: s.latitude ?? null,
-          longitude: s.longitude ?? null,
+          area_id: s.area_id || s.area?.id || null,
+          city_id: s.city_id || AREA_CITY_ID,
+          location: getAreaLabel(s.area) || s.location || '',
           id: s.id || Date.now() + Math.random(),
         })));
       }
     }
   }, [service, user]);
 
-  const loadPlacePredictions = async (query, setResults) => {
-    if (!query.trim() || !googleMapsApiKey) {
+  useEffect(() => {
+    if (!user?.data) {
+      setUserVehicles([]);
+      return;
+    }
+
+    loadUserVehicles();
+  }, [user?.data?.id]);
+
+  const loadUserVehicles = async () => {
+    try {
+      setLoadingUserVehicles(true);
+      const data = await userVehiclesAPI.listUserVehicles();
+      const vehicles = Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : [];
+      setUserVehicles(vehicles);
+
+      if (service) {
+        return;
+      }
+
+      const routeVehicle = route.params?.selectedVehicle;
+      if (routeVehicle) {
+        applyUserVehicle(routeVehicle);
+        return;
+      }
+
+      if (selectedVehicleId) {
+        const matchedVehicle = vehicles.find((vehicle) => vehicle?.id === selectedVehicleId);
+        if (matchedVehicle) {
+          applyUserVehicle(matchedVehicle);
+          return;
+        }
+      }
+
+      const hasManualVehicleData = !!(carBrand || carModel || carColor || seats || transmission || fuelType);
+      if (!hasManualVehicleData && vehicles.length > 0) {
+        const defaultVehicle = vehicles.find((vehicle) => vehicle?.is_default) || vehicles[0];
+        applyUserVehicle(defaultVehicle);
+      }
+    } catch (error) {
+      console.error('Failed to load user vehicles:', error);
+      setUserVehicles([]);
+    } finally {
+      setLoadingUserVehicles(false);
+    }
+  };
+
+  const loadAreaResults = async (query, setResults) => {
+    if (!query.trim()) {
       setResults([]);
       return;
     }
 
     try {
-      setPlacesLoading(true);
-      const predictions = await googlePlacesAPI.autocomplete(query, googleMapsApiKey);
-      setResults(predictions);
+      setAreasLoading(true);
+      const response = await locationAPI.getAreas(AREA_CITY_ID, query);
+      const areas = Array.isArray(response?.data) ? response.data : Array.isArray(response) ? response : [];
+      setResults(areas.map(normalizeArea).filter((area) => area.id && area.label));
     } catch (error) {
-      console.error('Failed to load Google Places predictions:', error);
+      console.error('Failed to load areas:', error);
       setResults([]);
     } finally {
-      setPlacesLoading(false);
+      setAreasLoading(false);
     }
   };
 
   const handlePlaceSearchChange = (value, setSearch, setResults) => {
     setSearch(value);
-    loadPlacePredictions(value, setResults);
+    loadAreaResults(value, setResults);
   };
 
   const closePlacesModal = (setVisible, setQuery, setResults) => {
@@ -233,87 +337,63 @@ const CreatePickDropServiceScreen = () => {
     setResults([]);
   };
 
-  const extractCoordinates = (details) => ({
-    latitude: details?.geometry?.location?.lat ?? null,
-    longitude: details?.geometry?.location?.lng ?? null,
-  });
-
-  const resolvePlaceMetadata = async (locationText, existingPlaceId = null) => {
-    if (!googleMapsApiKey || !locationText?.trim()) {
-      return {
-        location: locationText || '',
-        placeId: existingPlaceId,
-        latitude: null,
-        longitude: null,
-      };
-    }
-
-    try {
-      let placeId = existingPlaceId;
-
-      if (!placeId) {
-        const predictions = await googlePlacesAPI.autocomplete(locationText, googleMapsApiKey);
-        placeId = predictions?.[0]?.place_id || null;
-      }
-
-      const details = placeId
-        ? await googlePlacesAPI.getPlaceDetails(placeId, googleMapsApiKey)
-        : null;
-      const coordinates = extractCoordinates(details);
-
-      return {
-        location: details?.formatted_address || locationText,
-        placeId: placeId || details?.place_id || null,
-        latitude: coordinates.latitude,
-        longitude: coordinates.longitude,
-      };
-    } catch (error) {
-      console.error('Failed to resolve place metadata:', error);
-      return {
-        location: locationText,
-        placeId: existingPlaceId,
-        latitude: null,
-        longitude: null,
-      };
-    }
-  };
-
-  const handleSelectPlace = async (place, type) => {
-    const locationText = place?.description || place?.structured_formatting?.main_text || '';
-    const placeMetadata = await resolvePlaceMetadata(locationText, place?.place_id);
-
+  const handleSelectArea = (area, type) => {
+    const locationText = area?.label || '';
+    const areaId = area?.id || null;
     if (type === 'start') {
-      setStartArea(placeMetadata.location);
-      setStartPlaceId(placeMetadata.placeId);
-      setStartLatitude(placeMetadata.latitude);
-      setStartLongitude(placeMetadata.longitude);
-      closePlacesModal(setShowStartAreaDropdown, setStartAreaSearch, setStartPlaceResults);
+      setStartArea(locationText);
+      setStartAreaId(areaId);
+      closePlacesModal(setShowStartAreaDropdown, setStartAreaSearch, setStartAreaResults);
       return;
     }
 
     if (type === 'end') {
-      setEndArea(placeMetadata.location);
-      setEndPlaceId(placeMetadata.placeId);
-      setEndLatitude(placeMetadata.latitude);
-      setEndLongitude(placeMetadata.longitude);
-      closePlacesModal(setShowEndAreaDropdown, setEndAreaSearch, setEndPlaceResults);
+      setEndArea(locationText);
+      setEndAreaId(areaId);
+      closePlacesModal(setShowEndAreaDropdown, setEndAreaSearch, setEndAreaResults);
       return;
     }
 
     setStops((prev) => [
       ...prev,
       {
-        location: placeMetadata.location,
-        place_id: placeMetadata.placeId,
-        latitude: placeMetadata.latitude,
-        longitude: placeMetadata.longitude,
+        location: locationText,
+        area_id: areaId,
+        city_id: AREA_CITY_ID,
         notes: null,
         order: prev.length,
         stop_time: '',
         id: Date.now(),
       }
     ]);
-    closePlacesModal(setShowStopAreaDropdown, setStopAreaSearch, setStopPlaceResults);
+    closePlacesModal(setShowStopAreaDropdown, setStopAreaSearch, setStopAreaResults);
+  };
+
+  const resolveAreaSelection = async (locationText, existingAreaId = null) => {
+    if (existingAreaId) {
+      return { id: existingAreaId, label: locationText || '' };
+    }
+
+    if (!locationText?.trim()) {
+      return { id: null, label: '' };
+    }
+
+    try {
+      const response = await locationAPI.getAreas(AREA_CITY_ID, locationText);
+      const areas = Array.isArray(response?.data) ? response.data : Array.isArray(response) ? response : [];
+      const normalizedAreas = areas.map(normalizeArea).filter((area) => area.id && area.label);
+      const matchedArea =
+        normalizedAreas.find((area) => area.label.toLowerCase() === locationText.trim().toLowerCase()) ||
+        normalizedAreas[0];
+
+      return {
+        id: matchedArea?.id || null,
+        label: matchedArea?.label || locationText,
+      };
+    } catch (error) {
+      console.error('Failed to resolve area selection:', error);
+      return { id: null, label: locationText };
+    }
   };
 
   const formatDate = (date) => {
@@ -359,7 +439,10 @@ const CreatePickDropServiceScreen = () => {
 
   const validateStep = (step) => {
     switch (step) {
-      case 0: // Route
+      case 0: // Car
+        return true;
+
+      case 1: // Route
         if (!startArea || !endArea) {
           setErrorMessage('Please select pick-up and drop-off locations');
           return false;
@@ -382,7 +465,7 @@ const CreatePickDropServiceScreen = () => {
         }
         return true;
 
-      case 1: // Service (Was 2)
+      case 2: // Service
         if (!availableSpaces || parseInt(availableSpaces) < 1) {
           setErrorMessage('Please enter available spaces (minimum 1)');
           return false;
@@ -397,10 +480,7 @@ const CreatePickDropServiceScreen = () => {
         }
         return true;
 
-      case 2: // Car (Was 3)
-        return true;
-
-      case 3: // Stops (Was 4)
+      case 3: // Preview
         return true;
 
       default:
@@ -439,17 +519,21 @@ const CreatePickDropServiceScreen = () => {
   const handleSubmit = async () => {
     try {
       setLoading(true);
-      const resolvedStart = await resolvePlaceMetadata(startArea, startPlaceId);
-      const resolvedEnd = await resolvePlaceMetadata(endArea, endPlaceId);
+      const resolvedStart = await resolveAreaSelection(startArea, startAreaId);
+      const resolvedEnd = await resolveAreaSelection(endArea, endAreaId);
+      if (!resolvedStart.id || !resolvedEnd.id) {
+        throw new Error('Please select valid pick-up and drop-off areas.');
+      }
       const resolvedStops = await Promise.all(
         stops.map(async (stop, index) => {
-          const resolvedStop = await resolvePlaceMetadata(stop.location, stop.place_id);
-
+          const resolvedStop = await resolveAreaSelection(stop.location, stop.area_id);
+          if (!resolvedStop.id) {
+            throw new Error('Please select a valid area for each stop.');
+          }
           return {
-            location: resolvedStop.location,
-            place_id: resolvedStop.placeId,
-            latitude: resolvedStop.latitude,
-            longitude: resolvedStop.longitude,
+            area_id: resolvedStop.id,
+            city_id: AREA_CITY_ID,
+            location: resolvedStop.label || stop.location,
             notes: stop.notes ?? null,
             order: index,
             stop_time: formatStopTimeForApi(stop.stop_time),
@@ -466,16 +550,15 @@ const CreatePickDropServiceScreen = () => {
         car_model: carModel || '',
         car_seats: seats ? parseInt(seats) : null,
         car_transmission: transmission || '',
+        city_id: AREA_CITY_ID,
         contact: contactPhone || '',
         currency: currency || 'PKR',
         departure_time: `${String(departureTime.getHours()).padStart(2, '0')}:${String(departureTime.getMinutes()).padStart(2, '0')}`,
         ...(scheduleType === 'once' ? { departure_date: formatDate(departureDate) } : {}),
         description: description || '',
         driver_gender: driverGender.toLowerCase(),
-        end_latitude: resolvedEnd.latitude ?? endLatitude,
-        end_location: resolvedEnd.location || endArea,
-        end_longitude: resolvedEnd.longitude ?? endLongitude,
-        end_place_id: resolvedEnd.placeId ?? endPlaceId,
+        end_location: resolvedEnd.label || endArea,
+        dropoff_area_id: resolvedEnd.id,
         is_active: active,
         is_everyday: scheduleType === 'everyday',
         is_roundtrip: isRoundTrip,
@@ -486,10 +569,8 @@ const CreatePickDropServiceScreen = () => {
           : null,
         schedule_type: scheduleType,
         selected_days: scheduleType === 'custom' ? selectedDays : null,
-        start_latitude: resolvedStart.latitude ?? startLatitude,
-        start_location: resolvedStart.location || startArea,
-        start_longitude: resolvedStart.longitude ?? startLongitude,
-        start_place_id: resolvedStart.placeId ?? startPlaceId,
+        start_location: resolvedStart.label || startArea,
+        pickup_area_id: resolvedStart.id,
         stops: resolvedStops,
       };
 
@@ -504,6 +585,28 @@ const CreatePickDropServiceScreen = () => {
 
       // Navigate back after success
       setTimeout(() => {
+        if (returnToHomeOnSuccess) {
+          let rootNavigation = navigation;
+          let currentNavigation = navigation;
+
+          while (currentNavigation) {
+            const state = currentNavigation.getState?.();
+            if (state?.routeNames?.includes('AppHome')) {
+              rootNavigation = currentNavigation;
+              break;
+            }
+            currentNavigation = currentNavigation.getParent?.();
+          }
+
+          rootNavigation.dispatch(
+            CommonActions.reset({
+              index: 0,
+              routes: [{ name: 'AppHome' }],
+            })
+          );
+          return;
+        }
+
         navigation.goBack();
       }, 1500);
     } catch (error) {
@@ -647,43 +750,38 @@ const CreatePickDropServiceScreen = () => {
               contentContainerStyle={styles.placesResultsContent}
               keyboardShouldPersistTaps="handled"
             >
-              {placesLoading ? (
+              {areasLoading ? (
                 <View style={styles.placesStatusContainer}>
                   <ActivityIndicator size="small" color={theme.colors.primary} />
                 </View>
               ) : null}
 
-              {!placesLoading && query.trim() && results.length === 0 ? (
+              {!areasLoading && query.trim() && results.length === 0 ? (
                 <View style={styles.placesStatusContainer}>
                   <Text style={[styles.placesStatusText, { color: theme.colors.textSecondary }]}>
-                    No places found
+                    No areas found
                   </Text>
                 </View>
               ) : null}
 
-              {!placesLoading && !query.trim() ? (
+              {!areasLoading && !query.trim() ? (
                 <View style={styles.placesStatusContainer}>
                   <Text style={[styles.placesStatusText, { color: theme.colors.textSecondary }]}>
-                    Start typing to search places
+                    Start typing to search areas
                   </Text>
                 </View>
               ) : null}
 
               {results.map((item, index) => (
                 <TouchableOpacity
-                  key={`${item.place_id}-${index}`}
+                  key={`${item.id}-${index}`}
                   style={styles.dropdownOption}
                   onPress={() => onSelect(item)}
                 >
                   <View style={styles.placeOptionContent}>
                     <Text style={[styles.dropdownOptionText, { color: theme.colors.text }]} numberOfLines={1}>
-                      {item.structured_formatting?.main_text || item.description}
+                      {item.label}
                     </Text>
-                    {item.structured_formatting?.secondary_text ? (
-                      <Text style={[styles.placeSecondaryText, { color: theme.colors.textSecondary }]} numberOfLines={1}>
-                        {item.structured_formatting.secondary_text}
-                      </Text>
-                    ) : null}
                   </View>
                 </TouchableOpacity>
               ))}
@@ -754,7 +852,123 @@ const CreatePickDropServiceScreen = () => {
   // Render Steps Content
   const renderStepContent = () => {
     switch (currentStep) {
-      case 0: // Route
+      case 0: // Car
+        return (
+          <View>
+            {userVehicles.length > 0 && (
+              <View style={styles.inputGroup}>
+                <Text style={[styles.label, { color: theme.colors.text }]}>Saved Vehicle</Text>
+                <TouchableOpacity
+                  style={[styles.input, { borderColor: theme.colors.border, backgroundColor: theme.colors.inputBackground }]}
+                  onPress={() => setShowVehicleDropdown(true)}
+                >
+                  <Text style={[styles.inputText, { color: theme.colors.text }]} numberOfLines={1}>
+                    {selectedVehicleId
+                      ? getVehicleLabel(userVehicles.find((vehicle) => vehicle?.id === selectedVehicleId) || route.params?.selectedVehicle)
+                      : 'Select saved vehicle'}
+                  </Text>
+                  {loadingUserVehicles ? (
+                    <ActivityIndicator size="small" color={theme.colors.primary} />
+                  ) : (
+                    <Icon name="keyboard-arrow-down" size={20} color={theme.colors.textSecondary} />
+                  )}
+                </TouchableOpacity>
+                <Text style={[styles.helperText, { color: theme.colors.textSecondary, marginTop: 8 }]}>
+                  Selecting a saved vehicle will prefill the details below. You can still edit them manually.
+                </Text>
+              </View>
+            )}
+
+            <View style={styles.inputGroup}>
+              <Text style={[styles.label, { color: theme.colors.text }]}>Vehicle Type</Text>
+              <TouchableOpacity
+                style={[styles.input, { borderColor: theme.colors.border, backgroundColor: theme.colors.inputBackground }]}
+                onPress={() => setShowVehicleTypeDropdown(true)}
+              >
+                <Text style={[styles.inputText, { color: theme.colors.text }]}>
+                  {selectedVehicleType === 'bike' ? 'Bike' : 'Car'}
+                </Text>
+                <Icon name="keyboard-arrow-down" size={20} color={theme.colors.textSecondary} />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.row}>
+              <View style={[styles.inputGroup, styles.flex1, { marginRight: 8 }]}>
+                <Text style={[styles.label, { color: theme.colors.text }]}>Brand</Text>
+                <TextInput
+                  style={[styles.input, { borderColor: theme.colors.border, color: theme.colors.text, backgroundColor: theme.colors.inputBackground }]}
+                  value={carBrand}
+                  onChangeText={setCarBrand}
+                  placeholder="Enter car brand"
+                  placeholderTextColor={theme.colors.placeholder}
+                />
+              </View>
+              <View style={[styles.inputGroup, styles.flex1, { marginLeft: 8 }]}>
+                <Text style={[styles.label, { color: theme.colors.text }]}>Model</Text>
+                <TextInput
+                  style={[styles.input, { borderColor: theme.colors.border, color: theme.colors.text, backgroundColor: theme.colors.inputBackground }]}
+                  value={carModel}
+                  onChangeText={setCarModel}
+                  placeholder="Enter car model"
+                  placeholderTextColor={theme.colors.placeholder}
+                />
+              </View>
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={[styles.label, { color: theme.colors.text }]}>Color</Text>
+              <TextInput
+                style={[styles.input, { borderColor: theme.colors.border, color: theme.colors.text, backgroundColor: theme.colors.inputBackground }]}
+                value={carColor}
+                onChangeText={setCarColor}
+                placeholder="Enter car color"
+                placeholderTextColor={theme.colors.placeholder}
+              />
+            </View>
+
+            <View style={styles.row}>
+              <View style={[styles.inputGroup, { width: '30%', marginRight: 8 }]}>
+                <Text style={[styles.label, { color: theme.colors.text }]}>Seats</Text>
+                <TextInput
+                  style={[styles.input, { borderColor: theme.colors.border, color: theme.colors.text, backgroundColor: theme.colors.inputBackground }]}
+                  value={seats}
+                  onChangeText={setSeats}
+                  keyboardType="numeric"
+                  placeholder="4"
+                  placeholderTextColor={theme.colors.placeholder}
+                />
+              </View>
+
+              <View style={[styles.inputGroup, styles.flex1, { marginRight: 8 }]}>
+                <Text style={[styles.label, { color: theme.colors.text }]}>Transmission</Text>
+                <TouchableOpacity
+                  style={[styles.input, { borderColor: theme.colors.border, backgroundColor: theme.colors.inputBackground }]}
+                  onPress={() => setShowTransmissionDropdown(true)}
+                >
+                  <Text style={[styles.inputText, { color: transmission ? theme.colors.text : theme.colors.placeholder }]} numberOfLines={1}>
+                    {transmission || 'Select'}
+                  </Text>
+                  <Icon name="keyboard-arrow-down" size={20} color={theme.colors.textSecondary} />
+                </TouchableOpacity>
+              </View>
+
+              <View style={[styles.inputGroup, styles.flex1]}>
+                <Text style={[styles.label, { color: theme.colors.text }]}>Fuel Type</Text>
+                <TouchableOpacity
+                  style={[styles.input, { borderColor: theme.colors.border, backgroundColor: theme.colors.inputBackground }]}
+                  onPress={() => setShowFuelTypeDropdown(true)}
+                >
+                  <Text style={[styles.inputText, { color: fuelType ? theme.colors.text : theme.colors.placeholder }]} numberOfLines={1}>
+                    {fuelType || 'Select'}
+                  </Text>
+                  <Icon name="keyboard-arrow-down" size={20} color={theme.colors.textSecondary} />
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        );
+
+      case 1: // Route
         return (
           <View>
             {/* Timeline-style Route Container */}
@@ -954,7 +1168,7 @@ const CreatePickDropServiceScreen = () => {
           </View>
         );
 
-      case 1: // Service (Was 2)
+      case 2: // Service
         return (
           <View>
             <View style={styles.inputGroup}>
@@ -1026,85 +1240,6 @@ const CreatePickDropServiceScreen = () => {
                 placeholder="Enter service description..."
                 placeholderTextColor={theme.colors.placeholder}
               />
-            </View>
-          </View>
-        );
-
-      case 2: // Car (Was 3)
-        return (
-          <View>
-            <View style={styles.row}>
-              <View style={[styles.inputGroup, styles.flex1, { marginRight: 8 }]}>
-                <Text style={[styles.label, { color: theme.colors.text }]}>Car Brand</Text>
-                <TextInput
-                  style={[styles.input, { borderColor: theme.colors.border, color: theme.colors.text, backgroundColor: theme.colors.inputBackground }]}
-                  value={carBrand}
-                  onChangeText={setCarBrand}
-                  placeholder="Enter car brand"
-                  placeholderTextColor={theme.colors.placeholder}
-                />
-              </View>
-              <View style={[styles.inputGroup, styles.flex1, { marginLeft: 8 }]}>
-                <Text style={[styles.label, { color: theme.colors.text }]}>Car Model</Text>
-                <TextInput
-                  style={[styles.input, { borderColor: theme.colors.border, color: theme.colors.text, backgroundColor: theme.colors.inputBackground }]}
-                  value={carModel}
-                  onChangeText={setCarModel}
-                  placeholder="Enter car model"
-                  placeholderTextColor={theme.colors.placeholder}
-                />
-              </View>
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={[styles.label, { color: theme.colors.text }]}>Car Color</Text>
-              <TextInput
-                style={[styles.input, { borderColor: theme.colors.border, color: theme.colors.text, backgroundColor: theme.colors.inputBackground }]}
-                value={carColor}
-                onChangeText={setCarColor}
-                placeholder="Enter car color"
-                placeholderTextColor={theme.colors.placeholder}
-              />
-            </View>
-
-            <View style={styles.row}>
-              <View style={[styles.inputGroup, { width: '30%', marginRight: 8 }]}>
-                <Text style={[styles.label, { color: theme.colors.text }]}>Seats</Text>
-                <TextInput
-                  style={[styles.input, { borderColor: theme.colors.border, color: theme.colors.text, backgroundColor: theme.colors.inputBackground }]}
-                  value={seats}
-                  onChangeText={setSeats}
-                  keyboardType="numeric"
-                  placeholder="4"
-                  placeholderTextColor={theme.colors.placeholder}
-                />
-              </View>
-
-              <View style={[styles.inputGroup, styles.flex1, { marginRight: 8 }]}>
-                <Text style={[styles.label, { color: theme.colors.text }]}>Transmission</Text>
-                <TouchableOpacity
-                  style={[styles.input, { borderColor: theme.colors.border, backgroundColor: theme.colors.inputBackground }]}
-                  onPress={() => setShowTransmissionDropdown(true)}
-                >
-                  <Text style={[styles.inputText, { color: transmission ? theme.colors.text : theme.colors.placeholder }]} numberOfLines={1}>
-                    {transmission || 'Select'}
-                  </Text>
-                  <Icon name="keyboard-arrow-down" size={20} color={theme.colors.textSecondary} />
-                </TouchableOpacity>
-              </View>
-
-              <View style={[styles.inputGroup, styles.flex1]}>
-                <Text style={[styles.label, { color: theme.colors.text }]}>Fuel Type</Text>
-                <TouchableOpacity
-                  style={[styles.input, { borderColor: theme.colors.border, backgroundColor: theme.colors.inputBackground }]}
-                  onPress={() => setShowFuelTypeDropdown(true)}
-                >
-                  <Text style={[styles.inputText, { color: fuelType ? theme.colors.text : theme.colors.placeholder }]} numberOfLines={1}>
-                    {fuelType || 'Select'}
-                  </Text>
-                  <Icon name="keyboard-arrow-down" size={20} color={theme.colors.textSecondary} />
-                </TouchableOpacity>
-              </View>
             </View>
           </View>
         );
@@ -1211,10 +1346,14 @@ const CreatePickDropServiceScreen = () => {
               )}
             </View>
 
-            {(carBrand || carModel || carColor) && (
+            {(carBrand || carModel || carColor || selectedVehicleType) && (
               <>
-                <Text style={[styles.previewSectionTitle, { color: theme.colors.primary }]}>Car Details</Text>
+                <Text style={[styles.previewSectionTitle, { color: theme.colors.primary }]}>Vehicle Details</Text>
                 <View style={[styles.previewCard, { backgroundColor: theme.colors.backgroundSecondary }]}>
+                  <View style={styles.previewRow}>
+                    <Text style={[styles.previewLabel, { color: theme.colors.textSecondary }]}>Type</Text>
+                    <Text style={[styles.previewValue, { color: theme.colors.text }]}>{selectedVehicleType === 'bike' ? 'Bike' : 'Car'}</Text>
+                  </View>
                   {carBrand && (
                     <View style={styles.previewRow}>
                       <Text style={[styles.previewLabel, { color: theme.colors.textSecondary }]}>Brand</Text>
@@ -1363,10 +1502,10 @@ const CreatePickDropServiceScreen = () => {
         setShowStartAreaDropdown,
         startAreaSearch,
         setStartAreaSearch,
-        startPlaceResults,
-        setStartPlaceResults,
-        (value) => handlePlaceSearchChange(value, setStartAreaSearch, setStartPlaceResults),
-        (place) => handleSelectPlace(place, 'start'),
+        startAreaResults,
+        setStartAreaResults,
+        (value) => handlePlaceSearchChange(value, setStartAreaSearch, setStartAreaResults),
+        (area) => handleSelectArea(area, 'start'),
         'Search pick-up location'
       )}
 
@@ -1375,15 +1514,37 @@ const CreatePickDropServiceScreen = () => {
         setShowEndAreaDropdown,
         endAreaSearch,
         setEndAreaSearch,
-        endPlaceResults,
-        setEndPlaceResults,
-        (value) => handlePlaceSearchChange(value, setEndAreaSearch, setEndPlaceResults),
-        (place) => handleSelectPlace(place, 'end'),
+        endAreaResults,
+        setEndAreaResults,
+        (value) => handlePlaceSearchChange(value, setEndAreaSearch, setEndAreaResults),
+        (area) => handleSelectArea(area, 'end'),
         'Search drop-off location'
       )}
 
       {renderDropdown(driverGenders, driverGender.charAt(0).toUpperCase() + driverGender.slice(1), (val) => setDriverGender(val.toLowerCase()), showDriverGenderDropdown, setShowDriverGenderDropdown)}
 
+      {renderDropdown(
+        userVehicleOptions,
+        selectedVehicleId,
+        (vehicleId) => {
+          const vehicle = userVehicles.find((item) => item.id === vehicleId);
+          if (vehicle) {
+            applyUserVehicle(vehicle);
+          }
+        },
+        showVehicleDropdown,
+        setShowVehicleDropdown,
+        true,
+        'displayLabel',
+        'id'
+      )}
+      {renderDropdown(
+        vehicleTypes,
+        selectedVehicleType === 'bike' ? 'Bike' : 'Car',
+        (val) => setSelectedVehicleType(val.toLowerCase()),
+        showVehicleTypeDropdown,
+        setShowVehicleTypeDropdown
+      )}
       {renderDropdown(transmissions, transmission, setTransmission, showTransmissionDropdown, setShowTransmissionDropdown)}
       {renderDropdown(fuelTypes, fuelType, setFuelType, showFuelTypeDropdown, setShowFuelTypeDropdown)}
 
@@ -1393,10 +1554,10 @@ const CreatePickDropServiceScreen = () => {
         setShowStopAreaDropdown,
         stopAreaSearch,
         setStopAreaSearch,
-        stopPlaceResults,
-        setStopPlaceResults,
-        (value) => handlePlaceSearchChange(value, setStopAreaSearch, setStopPlaceResults),
-        (place) => handleSelectPlace(place, 'stop'),
+        stopAreaResults,
+        setStopAreaResults,
+        (value) => handlePlaceSearchChange(value, setStopAreaSearch, setStopAreaResults),
+        (area) => handleSelectArea(area, 'stop'),
         'Search stop location'
       )}
 

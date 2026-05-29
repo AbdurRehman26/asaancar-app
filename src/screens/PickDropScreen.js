@@ -32,13 +32,9 @@ const PickDropScreen = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [filters, setFilters] = useState({
     startLocation: '',
-    startLatitude: '',
-    startLongitude: '',
-    startPlaceId: '',
+    startAreaId: '',
     endLocation: '',
-    endLatitude: '',
-    endLongitude: '',
-    endPlaceId: '',
+    endAreaId: '',
     driverGender: '',
     departureTime: '',
     departureDate: '',
@@ -101,6 +97,28 @@ const PickDropScreen = () => {
     } catch (error) {
       return timeString;
     }
+  };
+
+  const getAreaLabel = (value) => {
+    if (typeof value === 'string') {
+      return value;
+    }
+
+    return value?.name || value?.area || value?.title || value?.location || '';
+  };
+
+  const getServiceRouteLabel = (service, target) => {
+    const areaKeys = target === 'start'
+      ? ['pickup_area', 'start_area']
+      : ['dropoff_area', 'end_area'];
+    const locationKey = target === 'start' ? 'start_location' : 'end_location';
+
+    for (const key of areaKeys) {
+      const label = getAreaLabel(service?.[key]);
+      if (label) return label;
+    }
+
+    return service?.[locationKey] || '';
   };
 
   // Helper function to handle phone calls
@@ -261,13 +279,9 @@ const PickDropScreen = () => {
   const clearFilters = () => {
     const emptyFilters = {
       startLocation: '',
-      startLatitude: '',
-      startLongitude: '',
-      startPlaceId: '',
+      startAreaId: '',
       endLocation: '',
-      endLatitude: '',
-      endLongitude: '',
-      endPlaceId: '',
+      endAreaId: '',
       driverGender: '',
       departureTime: '',
       departureDate: '',
@@ -283,13 +297,9 @@ const PickDropScreen = () => {
     // Create a completely new object to ensure React detects the change
     const newFilters = {
       startLocation: filtersToApply.startLocation || '',
-      startLatitude: filtersToApply.startLatitude || '',
-      startLongitude: filtersToApply.startLongitude || '',
-      startPlaceId: filtersToApply.startPlaceId || '',
+      startAreaId: filtersToApply.startAreaId || '',
       endLocation: filtersToApply.endLocation || '',
-      endLatitude: filtersToApply.endLatitude || '',
-      endLongitude: filtersToApply.endLongitude || '',
-      endPlaceId: filtersToApply.endPlaceId || '',
+      endAreaId: filtersToApply.endAreaId || '',
       driverGender: filtersToApply.driverGender || '',
       departureTime: filtersToApply.departureTime || '',
       departureDate: filtersToApply.departureDate || '',
@@ -350,64 +360,68 @@ const PickDropScreen = () => {
           </View>
         ) : services.length > 0 ? (
           <View style={styles.servicesContainer}>
-            {services.map((service) => (
-              <TouchableOpacity
-                key={service.id}
-                style={[
-                  styles.serviceCard,
-                  glassCardStyle,
-                ]}
-                onPress={() => {
-                  navigation.navigate('PickDropDetail', { serviceId: service.id, serviceData: service });
-                }}
-                activeOpacity={0.7}
-              >
-                {/* Top Section: Route */}
-                <View style={styles.cardHeader}>
-                  <View style={styles.routeContainer}>
-                    {/* Start Point */}
-                    <View style={styles.timelineItem}>
-                      <View style={[styles.timelineDotGreen, { borderColor: glassCardStyle.backgroundColor }]} />
-                      <View style={styles.timelineContent}>
-                        <Text style={[styles.locationTitle, { color: theme.colors.text }]} numberOfLines={1}>
-                          {service.start_location || t('pickDropDetail.startLocation')}
-                        </Text>
-                        <Text style={[styles.locationLabel, { color: theme.colors.textLight }]}>{t('pickdrop.startPoint')}</Text>
-                      </View>
-                    </View>
+            {services.map((service) => {
+              const startLabel = getServiceRouteLabel(service, 'start');
+              const endLabel = getServiceRouteLabel(service, 'end');
 
-                    {/* Connecting Line & Stops */}
-                    <View
-                      style={[
-                        styles.timelineLineContainer,
-                        !service.stops?.length && styles.timelineLineContainerCompact,
-                        { borderLeftColor: isDark ? theme.colors.border : '#E0E0E0' },
-                      ]}
-                    >
-                      <View style={styles.timelineLine} />
-                      {service.stops && service.stops.length > 0 && (
-                        <View style={[styles.stopsTag, glassChipStyle]}>
-                          <Text style={[styles.stopsTagText, { color: isDark ? '#c77dba' : theme.colors.primary }]}>
-                            {t('pickdrop.stopsInBetween', { count: service.stops.length })}
+              return (
+                <TouchableOpacity
+                  key={service.id}
+                  style={[
+                    styles.serviceCard,
+                    glassCardStyle,
+                  ]}
+                  onPress={() => {
+                    navigation.navigate('PickDropDetail', { serviceId: service.id, serviceData: service });
+                  }}
+                  activeOpacity={0.7}
+                >
+                  {/* Top Section: Route */}
+                  <View style={styles.cardHeader}>
+                    <View style={styles.routeContainer}>
+                      {/* Start Point */}
+                      <View style={styles.timelineItem}>
+                        <View style={[styles.timelineDotGreen, { borderColor: glassCardStyle.backgroundColor }]} />
+                        <View style={styles.timelineContent}>
+                          <Text style={[styles.locationTitle, { color: theme.colors.text }]} numberOfLines={1}>
+                            {startLabel || t('pickDropDetail.startLocation')}
                           </Text>
-                          <Icon name="keyboard-arrow-down" size={14} color={isDark ? '#c77dba' : theme.colors.primary} />
+                          <Text style={[styles.locationLabel, { color: theme.colors.textLight }]}>{t('pickdrop.startPoint')}</Text>
                         </View>
-                      )}
-                    </View>
+                      </View>
 
-                    {/* Destination */}
-                    <View style={styles.timelineItem}>
-                      <Icon name="location-pin" size={18} color={isDark ? '#c77dba' : theme.colors.primary} style={{ marginLeft: -1 }} />
-                      <View style={styles.timelineContent}>
-                        <Text style={[styles.locationTitle, { color: theme.colors.text }]} numberOfLines={1}>
-                          {service.end_location || t('pickDropDetail.endLocation')}
-                        </Text>
-                        <Text style={[styles.locationLabel, { color: theme.colors.textLight }]}>{t('pickdrop.destination')}</Text>
+                      {/* Connecting Line & Stops */}
+                      <View
+                        style={[
+                          styles.timelineLineContainer,
+                          !service.stops?.length && styles.timelineLineContainerCompact,
+                          { borderLeftColor: isDark ? theme.colors.border : '#E0E0E0' },
+                        ]}
+                      >
+                        <View style={styles.timelineLine} />
+                        {service.stops && service.stops.length > 0 && (
+                          <View style={[styles.stopsTag, glassChipStyle]}>
+                            <Text style={[styles.stopsTagText, { color: isDark ? '#c77dba' : theme.colors.primary }]}>
+                              {t('pickdrop.stopsInBetween', { count: service.stops.length })}
+                            </Text>
+                            <Icon name="keyboard-arrow-down" size={14} color={isDark ? '#c77dba' : theme.colors.primary} />
+                          </View>
+                        )}
+                      </View>
+
+                      {/* Destination */}
+                      <View style={styles.timelineItem}>
+                        <Icon name="location-pin" size={18} color={isDark ? '#c77dba' : theme.colors.primary} style={{ marginLeft: -1 }} />
+                        <View style={styles.timelineContent}>
+                          <Text style={[styles.locationTitle, { color: theme.colors.text }]} numberOfLines={1}>
+                            {endLabel || t('pickDropDetail.endLocation')}
+                          </Text>
+                          <Text style={[styles.locationLabel, { color: theme.colors.textLight }]}>{t('pickdrop.destination')}</Text>
+                        </View>
                       </View>
                     </View>
-                  </View>
 
-                </View>
+                  </View>
 
                 {(() => {
                   const price =
@@ -574,6 +588,19 @@ const PickDropScreen = () => {
                       service.contact_phone ||
                       service.phone ||
                       null;
+                    const providerCity =
+                      provider?.city?.name ||
+                      provider?.city?.city ||
+                      provider?.city_name ||
+                      provider?.city ||
+                      provider?.user?.city?.name ||
+                      provider?.user?.city?.city ||
+                      provider?.user?.city_name ||
+                      provider?.user?.city ||
+                      service.city?.name ||
+                      service.city_name ||
+                      service.city ||
+                      null;
                     const providerImage =
                       provider?.profile_image ||
                       provider?.profileImage ||
@@ -628,6 +655,9 @@ const PickDropScreen = () => {
                               {phone ? (
                                 <Text style={[styles.driverPhone, { color: theme.colors.textSecondary }]}>{phone}</Text>
                               ) : null}
+                              {providerCity ? (
+                                <Text style={[styles.driverPhone, { color: theme.colors.textSecondary }]}>{providerCity}</Text>
+                              ) : null}
                             </View>
                           </>
                         ) : (
@@ -658,8 +688,9 @@ const PickDropScreen = () => {
                     <Text style={styles.viewDetailsText}>{t('common.viewDetails')}</Text>
                   </TouchableOpacity>
                 </View>
-              </TouchableOpacity>
-            ))}
+                </TouchableOpacity>
+              );
+            })}
           </View>
         ) : (
           <View style={styles.emptyContainer}>

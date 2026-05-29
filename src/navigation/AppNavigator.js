@@ -28,9 +28,13 @@ import AboutUsScreen from '@/screens/AboutUsScreen';
 import CreateStoreScreen from '@/screens/CreateStoreScreen';
 import OnboardingScreen from '@/screens/OnboardingScreen';
 import AppHomeScreen from '@/screens/AppHomeScreen';
+import DriversScreen from '@/screens/DriversScreen';
+import DriverProfileScreen from '@/screens/DriverProfileScreen';
+import DriverVehicleOnboardingScreen from '@/screens/DriverVehicleOnboardingScreen';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import VerifySignupOtpScreen from '@/screens/VerifySignupOtpScreen';
 import SetPasswordModal from '@/components/SetPasswordModal';
+import RequiredCityModal from '@/components/RequiredCityModal';
 import RideRequestsScreen from '@/screens/RideRequestsScreen';
 import RideRequestDetailScreen from '@/screens/RideRequestDetailScreen';
 import RideRequestFormScreen from '@/screens/RideRequestFormScreen';
@@ -67,6 +71,26 @@ const MainStack = ({ initialScreen }) => {
         options={{
           headerShown: false
         }}
+      />
+      <Stack.Screen
+        name="Drivers"
+        component={DriversScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="DriverProfile"
+        component={DriverProfileScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="DriverVehicleOnboarding"
+        component={DriverVehicleOnboardingScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="CreatePickDropService"
+        component={CreatePickDropServiceScreen}
+        options={{ headerShown: false }}
       />
       <Stack.Screen
         name="Conversations"
@@ -148,6 +172,13 @@ const SettingsStack = () => {
       <Stack.Screen
         name="CreatePickDropService"
         component={CreatePickDropServiceScreen}
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="DriverVehicleOnboarding"
+        component={DriverVehicleOnboardingScreen}
         options={{
           headerShown: false,
         }}
@@ -275,6 +306,31 @@ const AppHomeStack = () => {
         options={{ headerShown: false }}
       />
       <Stack.Screen
+        name="Drivers"
+        component={DriversScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="DriverProfile"
+        component={DriverProfileScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="DriverVehicleOnboarding"
+        component={DriverVehicleOnboardingScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="CreatePickDropService"
+        component={CreatePickDropServiceScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="PickDropDetail"
+        component={PickDropDetailScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
         name="Login"
         component={LoginScreen}
         options={{
@@ -360,10 +416,10 @@ const AppTabs = () => {
         tabBarIcon: ({ focused, color, size }) => {
           let iconName;
 
-          if (route.name === 'AppHomeTab') {
-            iconName = 'home';
-          } else if (route.name === 'Home') {
+          if (route.name === 'Home') {
             iconName = 'alt-route';
+          } else if (route.name === 'DriversTab') {
+            iconName = 'person-pin-circle';
           } else if (route.name === 'RideRequests') {
             iconName = 'description';
           } else if (route.name === 'ChatTab') {
@@ -385,19 +441,6 @@ const AppTabs = () => {
       })}
     >
       <Tab.Screen
-        name="AppHomeTab"
-        component={AppHomeStack}
-        options={{ tabBarLabel: t('navigation.home') }}
-        listeners={({ navigation }) => ({
-          tabPress: (e) => {
-            e.preventDefault();
-            navigation.navigate('AppHomeTab', {
-              screen: 'AppHomeMain',
-            });
-          },
-        })}
-      />
-      <Tab.Screen
         name="Home"
         component={MainStack}
         options={{ tabBarLabel: t('pickdrop.title') }}
@@ -407,6 +450,19 @@ const AppTabs = () => {
             e.preventDefault();
             navigation.navigate('Home', {
               screen: 'PickDrop',
+            });
+          },
+        })}
+      />
+      <Tab.Screen
+        name="DriversTab"
+        component={AppHomeStack}
+        options={{ tabBarLabel: t('drivers.title') }}
+        listeners={({ navigation }) => ({
+          tabPress: (e) => {
+            e.preventDefault();
+            navigation.navigate('DriversTab', {
+              screen: 'Drivers',
             });
           },
         })}
@@ -511,6 +567,7 @@ const AppNavigator = () => {
         </Stack.Navigator>
       </NavigationContainer>
       <SetPasswordModal />
+      <RequiredCityModal />
     </View>
   );
 };

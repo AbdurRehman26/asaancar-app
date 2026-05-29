@@ -65,6 +65,21 @@ const AppHomeScreen = () => {
     );
   };
 
+  const openDrivers = () => {
+    navigateThroughAvailableNavigator(
+      'DriversTab',
+      {
+        screen: 'Drivers',
+      },
+      {
+        screen: 'DriversTab',
+        params: {
+          screen: 'Drivers',
+        },
+      }
+    );
+  };
+
   const openLogin = () => {
     navigateThroughAvailableNavigator(
       'Home',
@@ -121,6 +136,31 @@ const AppHomeScreen = () => {
                 </Text>
                 <Text style={[styles.optionDescription, { color: theme.colors.textSecondary }]}>
                   {t('appHome.findRideDescription')}
+                </Text>
+              </View>
+              <Icon name="arrow-forward" size={22} color={theme.colors.primary} />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              activeOpacity={0.88}
+              onPress={openDrivers}
+              style={[
+                styles.optionCard,
+                {
+                  backgroundColor: theme.colors.cardBackground,
+                  borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(126,36,108,0.12)',
+                },
+              ]}
+            >
+              <View style={[styles.optionIconWrap, { backgroundColor: 'rgba(34,197,94,0.14)' }]}>
+                <Icon name="person-pin-circle" size={24} color="#22C55E" />
+              </View>
+              <View style={styles.optionTextWrap}>
+                <Text style={[styles.optionTitle, { color: theme.colors.text }]}>
+                  {t('appHome.driversTitle')}
+                </Text>
+                <Text style={[styles.optionDescription, { color: theme.colors.textSecondary }]}>
+                  {t('appHome.driversDescription')}
                 </Text>
               </View>
               <Icon name="arrow-forward" size={22} color={theme.colors.primary} />

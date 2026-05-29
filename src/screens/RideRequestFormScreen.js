@@ -11,13 +11,12 @@ import {
   Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Constants from 'expo-constants';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useTheme } from '@/context/ThemeContext';
 import { useAuth } from '@/context/AuthContext';
-import { googlePlacesAPI, rideRequestAPI } from '@/services/api';
+import { locationAPI, rideRequestAPI } from '@/services/api';
 import PageHeader from '@/components/PageHeader';
 import SearchableDropdown from '@/components/SearchableDropdown';
 import ErrorModal from '@/components/ErrorModal';
@@ -30,6 +29,25 @@ const DRIVER_OPTIONS = [
   { value: 'female', label: 'Female' },
   { value: 'any', label: 'Any' },
 ];
+const AREA_CITY_ID = 197;
+
+const normalizeArea = (area) => {
+  const id = area?.id ?? area?.area_id ?? null;
+  const label = area?.name || area?.area || area?.title || area?.location || '';
+  return {
+    id,
+    value: label,
+    label,
+  };
+};
+
+const getAreaLabel = (value) => {
+  if (typeof value === 'string') {
+    return value;
+  }
+
+  return value?.name || value?.area || value?.title || value?.location || '';
+};
 
 const formatDateForApi = (date) => {
   if (!date) return null;
@@ -95,13 +113,9 @@ const RideRequestFormScreen = () => {
   const [name, setName] = useState(user?.data?.name || '');
   const [contact, setContact] = useState(user?.data?.phone_number || user?.data?.phone || '');
   const [startLocation, setStartLocation] = useState('');
-  const [startPlaceId, setStartPlaceId] = useState('');
-  const [startLatitude, setStartLatitude] = useState(null);
-  const [startLongitude, setStartLongitude] = useState(null);
+  const [startAreaId, setStartAreaId] = useState('');
   const [endLocation, setEndLocation] = useState('');
-  const [endPlaceId, setEndPlaceId] = useState('');
-  const [endLatitude, setEndLatitude] = useState(null);
-  const [endLongitude, setEndLongitude] = useState(null);
+  const [endAreaId, setEndAreaId] = useState('');
   const [scheduleType, setScheduleType] = useState('once');
   const [selectedDays, setSelectedDays] = useState([]);
   const [departureDate, setDepartureDate] = useState(new Date());
@@ -122,11 +136,6 @@ const RideRequestFormScreen = () => {
   const [loadingStartPlaces, setLoadingStartPlaces] = useState(false);
   const [loadingEndPlaces, setLoadingEndPlaces] = useState(false);
 
-  const googleMapsApiKey =
-    Constants.expoConfig?.extra?.googleMapsApiKey ||
-    Constants.manifest?.extra?.googleMapsApiKey ||
-    '';
-
   useEffect(() => {
     if (!rideRequest) {
       return;
@@ -134,14 +143,20 @@ const RideRequestFormScreen = () => {
 
     setName(rideRequest.name || user?.data?.name || '');
     setContact(rideRequest.contact || user?.data?.phone_number || user?.data?.phone || '');
-    setStartLocation(rideRequest.start_location || '');
-    setStartPlaceId(rideRequest.start_place_id || '');
-    setStartLatitude(rideRequest.start_latitude ?? null);
-    setStartLongitude(rideRequest.start_longitude ?? null);
-    setEndLocation(rideRequest.end_location || '');
-    setEndPlaceId(rideRequest.end_place_id || '');
-    setEndLatitude(rideRequest.end_latitude ?? null);
-    setEndLongitude(rideRequest.end_longitude ?? null);
+    setStartLocation(getAreaLabel(rideRequest.start_area) || rideRequest.start_location || '');
+    setStartAreaId(
+      rideRequest.start_area_id ||
+      rideRequest.pickup_area_id ||
+      rideRequest.start_area?.id ||
+      ''
+    );
+    setEndLocation(getAreaLabel(rideRequest.end_area) || rideRequest.end_location || '');
+    setEndAreaId(
+      rideRequest.end_area_id ||
+      rideRequest.dropoff_area_id ||
+      rideRequest.end_area?.id ||
+      ''
+    );
     setScheduleType(rideRequest.schedule_type || 'once');
     setSelectedDays(Array.isArray(rideRequest.selected_days) ? rideRequest.selected_days : []);
     setIsRoundTrip(!!rideRequest.is_roundtrip);
@@ -168,29 +183,24 @@ const RideRequestFormScreen = () => {
     }
   }, [rideRequest, user]);
 
-  const mapPredictionsToOptions = (predictions = [], currentValue = '') => {
-    const placeOptions = predictions.map((prediction) => ({
-      value: prediction.description || prediction.structured_formatting?.main_text || '',
-      label: prediction.description || prediction.structured_formatting?.main_text || '',
-      id: prediction.place_id,
-    }));
-
-    const hasCurrentValue = currentValue && placeOptions.some((option) => option.value === currentValue);
+  const mapAreaOptions = (areas = [], currentValue = '', currentAreaId = '') => {
+    const areaOptions = areas.map(normalizeArea).filter((area) => area.id && area.label);
+    const hasCurrentValue = currentValue && areaOptions.some((option) => option.value === currentValue || option.id === currentAreaId);
 
     return [
-      ...(hasCurrentValue ? [] : currentValue ? [{ value: currentValue, label: currentValue, id: `current-${currentValue}` }] : []),
-      ...placeOptions,
+      ...(hasCurrentValue ? [] : currentValue ? [{ value: currentValue, label: currentValue, id: currentAreaId || `current-${currentValue}` }] : []),
+      ...areaOptions,
     ];
   };
 
   const initialStartOptions = useMemo(
-    () => mapPredictionsToOptions([], startLocation),
-    [startLocation]
+    () => mapAreaOptions([], startLocation, startAreaId),
+    [startAreaId, startLocation]
   );
 
   const initialEndOptions = useMemo(
-    () => mapPredictionsToOptions([], endLocation),
-    [endLocation]
+    () => mapAreaOptions([], endLocation, endAreaId),
+    [endAreaId, endLocation]
   );
 
   useEffect(() => {
@@ -201,55 +211,67 @@ const RideRequestFormScreen = () => {
     setEndOptions(initialEndOptions);
   }, [initialEndOptions]);
 
-  const loadPlaces = async (search, target) => {
+  const loadAreas = async (search, target) => {
     const setLoadingState = target === 'start' ? setLoadingStartPlaces : setLoadingEndPlaces;
     const setOptions = target === 'start' ? setStartOptions : setEndOptions;
     const currentValue = target === 'start' ? startLocation : endLocation;
+    const currentAreaId = target === 'start' ? startAreaId : endAreaId;
 
     if (!search.trim()) {
-      setOptions(mapPredictionsToOptions([], currentValue));
+      setOptions(mapAreaOptions([], currentValue, currentAreaId));
       return;
     }
 
     try {
       setLoadingState(true);
-      const predictions = await googlePlacesAPI.autocomplete(search, googleMapsApiKey);
-      setOptions(mapPredictionsToOptions(predictions, currentValue));
+      const response = await locationAPI.getAreas(AREA_CITY_ID, search);
+      const areas = Array.isArray(response?.data) ? response.data : Array.isArray(response) ? response : [];
+      setOptions(mapAreaOptions(areas, currentValue, currentAreaId));
     } catch (error) {
-      setOptions(mapPredictionsToOptions([], currentValue));
+      setOptions(mapAreaOptions([], currentValue, currentAreaId));
     } finally {
       setLoadingState(false);
     }
   };
 
-  const applyPlaceSelection = async (target, value, option) => {
+  const applyAreaSelection = (target, value, option) => {
     const setLocation = target === 'start' ? setStartLocation : setEndLocation;
-    const setPlaceId = target === 'start' ? setStartPlaceId : setEndPlaceId;
-    const setLatitude = target === 'start' ? setStartLatitude : setEndLatitude;
-    const setLongitude = target === 'start' ? setStartLongitude : setEndLongitude;
+    const setAreaId = target === 'start' ? setStartAreaId : setEndAreaId;
 
     setLocation(value || '');
-    setPlaceId(option?.id || '');
+    setAreaId(option?.id || '');
 
-    if (!option?.id) {
-      setLatitude(null);
-      setLongitude(null);
-      return;
+    if (option?.label) {
+      setLocation(option.label);
+    }
+  };
+
+  const resolveAreaSelection = async (locationText, existingAreaId = '') => {
+    if (existingAreaId) {
+      return { id: existingAreaId, label: locationText || '' };
+    }
+
+    if (!locationText?.trim()) {
+      return { id: null, label: '' };
     }
 
     try {
-      const details = await googlePlacesAPI.getPlaceDetails(option.id, googleMapsApiKey);
-      const location = details?.geometry?.location;
-      const latitude = typeof location?.lat === 'function' ? location.lat() : location?.lat;
-      const longitude = typeof location?.lng === 'function' ? location.lng() : location?.lng;
+      const response = await locationAPI.getAreas(AREA_CITY_ID, locationText);
+      const areas = Array.isArray(response?.data) ? response.data : Array.isArray(response) ? response : [];
+      const normalizedAreas = areas.map(normalizeArea).filter((area) => area.id && area.label);
+      const matchedArea =
+        normalizedAreas.find((area) => area.label.toLowerCase() === locationText.trim().toLowerCase()) ||
+        normalizedAreas[0];
 
-      setLatitude(latitude ?? null);
-      setLongitude(longitude ?? null);
-      setLocation(details?.formatted_address || details?.name || value || '');
-      setPlaceId(details?.place_id || option.id);
+      return {
+        id: matchedArea?.id || null,
+        label: matchedArea?.label || locationText,
+      };
     } catch (error) {
-      setLatitude(null);
-      setLongitude(null);
+      return {
+        id: null,
+        label: locationText,
+      };
     }
   };
 
@@ -260,17 +282,13 @@ const RideRequestFormScreen = () => {
   };
 
   const clearUnconfirmedPlace = (target) => {
-    if (target === 'start' && !startPlaceId) {
+    if (target === 'start' && !startAreaId) {
       setStartLocation('');
-      setStartLatitude(null);
-      setStartLongitude(null);
       setStartOptions([]);
     }
 
-    if (target === 'end' && !endPlaceId) {
+    if (target === 'end' && !endAreaId) {
       setEndLocation('');
-      setEndLatitude(null);
-      setEndLongitude(null);
       setEndOptions([]);
     }
   };
@@ -296,18 +314,20 @@ const RideRequestFormScreen = () => {
 
     try {
       setLoading(true);
+      const resolvedStart = await resolveAreaSelection(startLocation, startAreaId);
+      const resolvedEnd = await resolveAreaSelection(endLocation, endAreaId);
+      if (!resolvedStart.id || !resolvedEnd.id) {
+        throw new Error('Please select valid start and end areas.');
+      }
 
       const payload = {
         name: name.trim() || null,
         contact: contact.trim() || null,
-        start_location: startLocation,
-        start_place_id: startPlaceId || null,
-        start_latitude: startLatitude,
-        start_longitude: startLongitude,
-        end_location: endLocation,
-        end_place_id: endPlaceId || null,
-        end_latitude: endLatitude,
-        end_longitude: endLongitude,
+        start_location: resolvedStart.label || startLocation,
+        start_area_id: resolvedStart.id,
+        end_location: resolvedEnd.label || endLocation,
+        end_area_id: resolvedEnd.id,
+        city_id: AREA_CITY_ID,
         departure_date: scheduleType === 'once' ? formatDateForApi(departureDate) : null,
         departure_time: formatTimeForApi(departureTime),
         schedule_type: scheduleType,
@@ -372,10 +392,10 @@ const RideRequestFormScreen = () => {
             label="Start Location"
             options={startOptions}
             value={startLocation}
-            onSelect={(value, option) => applyPlaceSelection('start', value || '', option)}
+            onSelect={(value, option) => applyAreaSelection('start', value || '', option)}
             placeholder="Search start location"
             searchable
-            onSearch={(search) => loadPlaces(search, 'start')}
+            onSearch={(search) => loadAreas(search, 'start')}
             loading={loadingStartPlaces}
             onClose={() => clearUnconfirmedPlace('start')}
           />
@@ -384,10 +404,10 @@ const RideRequestFormScreen = () => {
             label="End Location"
             options={endOptions}
             value={endLocation}
-            onSelect={(value, option) => applyPlaceSelection('end', value || '', option)}
+            onSelect={(value, option) => applyAreaSelection('end', value || '', option)}
             placeholder="Search destination"
             searchable
-            onSearch={(search) => loadPlaces(search, 'end')}
+            onSearch={(search) => loadAreas(search, 'end')}
             loading={loadingEndPlaces}
             onClose={() => clearUnconfirmedPlace('end')}
           />

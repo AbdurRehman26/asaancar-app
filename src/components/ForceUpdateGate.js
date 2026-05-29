@@ -98,27 +98,16 @@ const getInstalledAppInfo = () => {
 };
 
 const shouldSkipForceUpdateCheck = () => {
-  const appOwnership = Constants.appOwnership;
-  const executionEnvironment = Constants.executionEnvironment;
-
-  if (__DEV__) {
-    return true;
-  }
-
-  if (appOwnership && appOwnership !== 'standalone') {
-    return true;
-  }
-
-  if (
-    executionEnvironment &&
-    executionEnvironment !== 'standalone' &&
-    executionEnvironment !== 'storeClient'
-  ) {
-    return true;
+  // Set this to true to test the force update screen in development/simulator
+  const TEST_FORCE_UPDATE = false;
+  if (TEST_FORCE_UPDATE) {
+    return false;
   }
 
   return false;
 };
+
+const canEnforceForceUpdate = () => Constants.executionEnvironment !== 'storeClient';
 
 const resolveForceUpdateConfig = (remoteConfig, localConfig) => ({
   enabled: remoteConfig?.enabled ?? localConfig?.enabled,
@@ -188,7 +177,9 @@ const ForceUpdateGate = ({ children }) => {
   });
 
   const checkForceUpdate = async (isManual = false) => {
+    console.log('[ForceUpdate] Initiating version check. isManual:', isManual);
     if (shouldSkipForceUpdateCheck()) {
+      console.log('[ForceUpdate] Version check skipped based on shouldSkipForceUpdateCheck rules.');
       setState((prev) => ({
         ...prev,
         checking: false,
@@ -208,15 +199,20 @@ const ForceUpdateGate = ({ children }) => {
     );
 
     const packageName = expoConfig?.android?.package;
+    console.log('[ForceUpdate] Config resolved:', { endpoint, packageName, localConfig });
 
     try {
+      console.log('[ForceUpdate] Fetching remote config from endpoint:', endpoint);
       // Try to get remote config from endpoint first
       let remoteConfig = endpoint ? await forceUpdateAPI.getConfig(endpoint) : null;
-      console.log(remoteConfig, 222);
+      console.log('[ForceUpdate] Remote config response:', remoteConfig);
+
       // If no endpoint or fetch failed, and we're on Android, try Play Store scraping
       if (!remoteConfig && Platform.OS === 'android' && packageName) {
+        console.log('[ForceUpdate] No remote config or fetch failed. Attempting Play Store scraping...');
         try {
           const playStoreVersion = await forceUpdateAPI.getPlayStoreVersion(packageName);
+          console.log('[ForceUpdate] Play Store version resolved:', playStoreVersion);
           if (playStoreVersion) {
             remoteConfig = {
               enabled: true,
@@ -227,17 +223,26 @@ const ForceUpdateGate = ({ children }) => {
             };
           }
         } catch (scrapeError) {
-          console.warn('Play Store scraping failed:', scrapeError);
+          console.warn('[ForceUpdate] Play Store scraping failed:', scrapeError);
         }
       }
 
       const mergedConfig = resolveForceUpdateConfig(remoteConfig, localConfig);
       const installedInfo = getInstalledAppInfo();
       const decision = getForceUpdateDecision(mergedConfig, installedInfo);
+      const shouldEnforce = canEnforceForceUpdate();
+
+      console.log('[ForceUpdate] Decision resolved:', {
+        installedInfo,
+        mergedConfig,
+        decision,
+        enforced: shouldEnforce,
+        executionEnvironment: Constants.executionEnvironment,
+      });
 
       setState({
         checking: false,
-        required: decision.required,
+        required: shouldEnforce ? decision.required : false,
         title: mergedConfig.title || null,
         message: mergedConfig.message || null,
         storeUrl: mergedConfig.storeUrl || null,
@@ -245,7 +250,7 @@ const ForceUpdateGate = ({ children }) => {
         minimumVersionCode: decision.minimumVersionCode,
       });
     } catch (error) {
-      console.error('Force update check failed:', error);
+      console.error('[ForceUpdate] Force update check failed with error:', error);
       setState((prev) => ({
         ...prev,
         checking: false,

@@ -10,26 +10,34 @@ import {
   Dimensions,
   TextInput,
 } from 'react-native';
-import Constants from 'expo-constants';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/context/ThemeContext';
-import { googlePlacesAPI } from '@/services/api';
+import { locationAPI } from '@/services/api';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import SearchableDropdown from '@/components/SearchableDropdown';
 
 const { width, height } = Dimensions.get('window');
+const AREA_CITY_ID = 197;
 
 const EMPTY_FILTERS = {
   startLocation: '',
-  startLatitude: '',
-  startLongitude: '',
+  startAreaId: '',
   endLocation: '',
-  endLatitude: '',
-  endLongitude: '',
+  endAreaId: '',
   preferredDriverGender: '',
   requiredSeats: '',
   departureTime: '',
   departureDate: '',
+};
+
+const normalizeArea = (area) => {
+  const id = area?.id ?? area?.area_id ?? null;
+  const label = area?.name || area?.area || area?.title || area?.location || '';
+  return {
+    id,
+    value: label,
+    label,
+  };
 };
 
 const RideRequestFilterDrawer = ({
@@ -47,10 +55,6 @@ const RideRequestFilterDrawer = ({
   const [endLocations, setEndLocations] = React.useState([]);
   const [loadingStartLocations, setLoadingStartLocations] = React.useState(false);
   const [loadingEndLocations, setLoadingEndLocations] = React.useState(false);
-  const googleMapsApiKey =
-    Constants.expoConfig?.extra?.googleMapsApiKey ||
-    Constants.manifest?.extra?.googleMapsApiKey ||
-    '';
 
   React.useEffect(() => {
     if (visible) {
@@ -64,85 +68,61 @@ const RideRequestFilterDrawer = ({
     }
   }, [slideAnim, visible]);
 
-  const mapPredictionsToOptions = React.useCallback((predictions = [], currentValue = '') => {
-    const placeOptions = predictions.map((prediction) => ({
-      value: prediction.description || prediction.structured_formatting?.main_text || '',
-      label: prediction.description || prediction.structured_formatting?.main_text || '',
-      id: prediction.place_id,
-    }));
-
-    const hasCurrentValue = currentValue && placeOptions.some((option) => option.value === currentValue);
+  const mapAreaOptions = React.useCallback((areas = [], currentValue = '', currentAreaId = '') => {
+    const normalizedAreas = areas.map(normalizeArea).filter((area) => area.id && area.label);
+    const hasCurrentValue = currentValue && normalizedAreas.some((option) => option.value === currentValue || option.id === currentAreaId);
 
     return [
       { value: '', label: 'Any Location', id: 'any-location' },
-      ...(hasCurrentValue ? [] : currentValue ? [{ value: currentValue, label: currentValue, id: `current-${currentValue}` }] : []),
-      ...placeOptions,
+      ...(hasCurrentValue ? [] : currentValue ? [{ value: currentValue, label: currentValue, id: currentAreaId || `current-${currentValue}` }] : []),
+      ...normalizedAreas,
     ];
   }, []);
 
-  const loadPlaces = async (search = '', target = 'start') => {
+  const loadAreas = async (search = '', target = 'start') => {
     const setLoading = target === 'start' ? setLoadingStartLocations : setLoadingEndLocations;
     const setOptions = target === 'start' ? setStartLocations : setEndLocations;
     const currentValue = target === 'start' ? filters.startLocation : filters.endLocation;
+    const currentAreaId = target === 'start' ? filters.startAreaId : filters.endAreaId;
 
     if (!search.trim()) {
-      setOptions(mapPredictionsToOptions([], currentValue));
+      setOptions(mapAreaOptions([], currentValue, currentAreaId));
       return;
     }
 
     try {
       setLoading(true);
-      const predictions = await googlePlacesAPI.autocomplete(search, googleMapsApiKey);
-      setOptions(mapPredictionsToOptions(predictions, currentValue));
+      const response = await locationAPI.getAreas(AREA_CITY_ID, search);
+      const areas = Array.isArray(response?.data) ? response.data : Array.isArray(response) ? response : [];
+      setOptions(mapAreaOptions(areas, currentValue, currentAreaId));
     } catch (error) {
-      console.error(`Error loading ${target} places:`, error);
-      setOptions(mapPredictionsToOptions([], currentValue));
+      console.error(`Error loading ${target} areas:`, error);
+      setOptions(mapAreaOptions([], currentValue, currentAreaId));
     } finally {
       setLoading(false);
     }
   };
 
   React.useEffect(() => {
-    setStartLocations(mapPredictionsToOptions([], filters.startLocation));
-  }, [filters.startLocation, mapPredictionsToOptions]);
+    setStartLocations(mapAreaOptions([], filters.startLocation, filters.startAreaId));
+  }, [filters.startAreaId, filters.startLocation, mapAreaOptions]);
 
   React.useEffect(() => {
-    setEndLocations(mapPredictionsToOptions([], filters.endLocation));
-  }, [filters.endLocation, mapPredictionsToOptions]);
+    setEndLocations(mapAreaOptions([], filters.endLocation, filters.endAreaId));
+  }, [filters.endAreaId, filters.endLocation, mapAreaOptions]);
 
-  const applyPlaceSelection = async (target, value, option) => {
+  const applyAreaSelection = (target, value, option) => {
     const locationKey = target === 'start' ? 'startLocation' : 'endLocation';
-    const latitudeKey = target === 'start' ? 'startLatitude' : 'endLatitude';
-    const longitudeKey = target === 'start' ? 'startLongitude' : 'endLongitude';
+    const areaIdKey = target === 'start' ? 'startAreaId' : 'endAreaId';
 
     if (!value) {
       onFilterChange(locationKey, '');
-      onFilterChange(latitudeKey, '');
-      onFilterChange(longitudeKey, '');
+      onFilterChange(areaIdKey, '');
       return;
     }
 
     onFilterChange(locationKey, value);
-
-    if (!option?.id) {
-      onFilterChange(latitudeKey, '');
-      onFilterChange(longitudeKey, '');
-      return;
-    }
-
-    try {
-      const details = await googlePlacesAPI.getPlaceDetails(option.id, googleMapsApiKey);
-      const location = details?.geometry?.location;
-      const latitude = typeof location?.lat === 'function' ? location.lat() : location?.lat;
-      const longitude = typeof location?.lng === 'function' ? location.lng() : location?.lng;
-
-      onFilterChange(latitudeKey, latitude ?? '');
-      onFilterChange(longitudeKey, longitude ?? '');
-    } catch (error) {
-      console.error(`Error loading ${target} place details:`, error);
-      onFilterChange(latitudeKey, '');
-      onFilterChange(longitudeKey, '');
-    }
+    onFilterChange(areaIdKey, option?.id || '');
   };
 
   const handleClose = () => {
@@ -215,10 +195,10 @@ const RideRequestFilterDrawer = ({
                 label="Start Location"
                 options={startLocations}
                 value={filters.startLocation}
-                onSelect={(value, option) => applyPlaceSelection('start', value || '', option)}
+                onSelect={(value, option) => applyAreaSelection('start', value || '', option)}
                 placeholder="Select start location"
                 searchable
-                onSearch={(query) => loadPlaces(query, 'start')}
+                onSearch={(query) => loadAreas(query, 'start')}
                 loading={loadingStartLocations}
                 style={styles.dropdownStyle}
               />
@@ -229,10 +209,10 @@ const RideRequestFilterDrawer = ({
                 label="End Location"
                 options={endLocations}
                 value={filters.endLocation}
-                onSelect={(value, option) => applyPlaceSelection('end', value || '', option)}
+                onSelect={(value, option) => applyAreaSelection('end', value || '', option)}
                 placeholder="Select end location"
                 searchable
-                onSearch={(query) => loadPlaces(query, 'end')}
+                onSearch={(query) => loadAreas(query, 'end')}
                 loading={loadingEndLocations}
                 style={styles.dropdownStyle}
               />

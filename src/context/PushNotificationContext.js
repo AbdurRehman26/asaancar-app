@@ -94,7 +94,6 @@ export const PushNotificationProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [isRegistering, setIsRegistering] = useState(false);
   const [error, setError] = useState('');
-  const [hasPromptedThisSession, setHasPromptedThisSession] = useState(false);
 
   const syncStoredState = useCallback(async () => {
     const [storedStatus, storedToken] = await Promise.all([
@@ -161,11 +160,6 @@ export const PushNotificationProvider = ({ children }) => {
     };
   }, [syncStoredState]);
 
-  useEffect(() => {
-    if (!user) {
-      setHasPromptedThisSession(false);
-    }
-  }, [user]);
 
   const enablePushNotifications = useCallback(async () => {
     try {
@@ -221,7 +215,6 @@ export const PushNotificationProvider = ({ children }) => {
     try {
       setIsRegistering(true);
       setError('');
-      setHasPromptedThisSession(true);
 
       const storedToken = devicePushToken || (await AsyncStorage.getItem(PUSH_TOKEN_STORAGE_KEY));
 
@@ -255,46 +248,6 @@ export const PushNotificationProvider = ({ children }) => {
     }
   }, [devicePushToken]);
 
-  useEffect(() => {
-    if (Platform.OS === 'web') {
-      return;
-    }
-
-    if (loading || authLoading || isRegistering || hasPromptedThisSession) {
-      return;
-    }
-
-    if (!user || devicePushToken) {
-      return;
-    }
-
-    setHasPromptedThisSession(true);
-
-    Alert.alert(
-      i18n.t('notifications.enablePromptTitle'),
-      i18n.t('notifications.enablePromptMessage'),
-      [
-        {
-          text: i18n.t('notifications.notNow'),
-          style: 'cancel',
-        },
-        {
-          text: i18n.t('notifications.enablePush'),
-          onPress: () => {
-            enablePushNotifications();
-          },
-        },
-      ]
-    );
-  }, [
-    authLoading,
-    devicePushToken,
-    enablePushNotifications,
-    hasPromptedThisSession,
-    isRegistering,
-    loading,
-    user,
-  ]);
 
   const value = useMemo(
     () => ({

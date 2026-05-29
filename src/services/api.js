@@ -4,6 +4,7 @@ import { Platform } from 'react-native';
 
 const API_BASE_URL = 'https://asaancar.com/api';
 const PUSH_DEVICE_TOKEN_STORAGE_KEY = 'pushDeviceToken';
+const PICK_DROP_CITY_ID = 197;
 
 const pickFirstDefined = (...values) =>
   values.find((value) => value !== undefined && value !== null && value !== '');
@@ -24,12 +25,22 @@ const normalizeForceUpdatePayload = (payload = {}) => {
   const raw = payload?.data || payload;
   const nestedConfig = raw?.data || raw || {};
   const androidVersion = nestedConfig.android_version;
+  const isAndroidVersionInteger = isIntegerLikeValue(androidVersion);
+
   const androidVersionAsVersion =
     androidVersion !== undefined &&
     androidVersion !== null &&
     androidVersion !== '' &&
-    !isIntegerLikeValue(androidVersion)
+    !isAndroidVersionInteger
       ? String(androidVersion).trim()
+      : null;
+
+  const androidVersionAsBuildCode =
+    androidVersion !== undefined &&
+    androidVersion !== null &&
+    androidVersion !== '' &&
+    isAndroidVersionInteger
+      ? Number(androidVersion)
       : null;
 
   return {
@@ -42,12 +53,13 @@ const normalizeForceUpdatePayload = (payload = {}) => {
       raw.required,
       raw.is_required
     ),
-    androidVersion: androidVersionAsVersion ?? androidVersion,
+    androidVersion: androidVersionAsVersion,
     androidBuildCode: pickFirstDefined(
       nestedConfig.minimumVersionCode,
       nestedConfig.minimum_version_code,
       raw.minimumVersionCode,
-      raw.minimum_version_code
+      raw.minimum_version_code,
+      androidVersionAsBuildCode
     ),
     message: pickFirstDefined(raw.message, raw.description, raw.note),
     title: pickFirstDefined(raw.title, raw.heading),
@@ -361,6 +373,12 @@ export const storeAPI = {
 };
 
 export const locationAPI = {
+  // Get all cities
+  getCities: async () => {
+    const response = await api.get('/cities');
+    return response.data;
+  },
+
   // Get all areas for a city
   getAreas: async (cityId = 197, search = '') => {
     const params = new URLSearchParams();
@@ -516,10 +534,43 @@ export const googlePlacesAPI = {
   },
 };
 
+export const driversAPI = {
+  getDrivers: async (filters = {}) => {
+    const params = new URLSearchParams();
+
+    if (filters.page) {
+      params.append('page', filters.page);
+    }
+
+    if (filters.per_page || filters.perPage) {
+      params.append('per_page', filters.per_page || filters.perPage);
+    }
+
+    if (filters.city_id || filters.cityId) {
+      params.append('city_id', filters.city_id || filters.cityId);
+    }
+
+    if (filters.gender) {
+      params.append('gender', filters.gender);
+    }
+
+    const queryString = params.toString();
+    const response = await api.get(queryString ? `/drivers?${queryString}` : '/drivers');
+    return response.data;
+  },
+
+  getDriverById: async (id) => {
+    const response = await api.get(`/drivers/${id}`);
+    return response.data;
+  },
+};
+
 export const pickDropAPI = {
   // Get pick and drop services with filters
   getPickDropServices: async (filters = {}) => {
     const params = new URLSearchParams();
+
+    params.append('city_id', PICK_DROP_CITY_ID);
 
     // Add pagination
     if (filters.page) {
@@ -537,20 +588,16 @@ export const pickDropAPI = {
     // Add filters - convert camelCase to snake_case for API
     const filterMapping = {
       startLocation: 'start_location',
-      startLatitude: 'start_latitude',
-      startLongitude: 'start_longitude',
-      startPlaceId: 'start_place_id',
+      startAreaId: 'pickup_area_id',
       endLocation: 'end_location',
-      endLatitude: 'end_latitude',
-      endLongitude: 'end_longitude',
-      endPlaceId: 'end_place_id',
+      endAreaId: 'dropoff_area_id',
       driverGender: 'driver_gender',
       departureTime: 'departure_time',
       departureDate: 'departure_date',
     };
 
     Object.keys(filters).forEach((key) => {
-      if (filters[key] && key !== 'page' && key !== 'per_page' && key !== 'search') {
+      if (filters[key] && key !== 'page' && key !== 'per_page' && key !== 'search' && key !== 'city_id' && key !== 'cityId') {
         const apiKey = filterMapping[key] || key;
         params.append(apiKey, filters[key]);
       }
@@ -610,17 +657,27 @@ export const pickDropAPI = {
   },
 };
 
+export const userVehiclesAPI = {
+  listUserVehicles: async () => {
+    const response = await api.get('/user/vehicles');
+    return response.data;
+  },
+
+  storeUserVehicle: async (vehicleData) => {
+    const response = await api.post('/user/vehicles', vehicleData);
+    return response.data;
+  },
+};
+
 export const rideRequestAPI = {
   getRideRequests: async (filters = {}) => {
     const params = new URLSearchParams();
 
     const filterMapping = {
       startLocation: 'start_location',
-      startLatitude: 'start_latitude',
-      startLongitude: 'start_longitude',
+      startAreaId: 'start_area_id',
       endLocation: 'end_location',
-      endLatitude: 'end_latitude',
-      endLongitude: 'end_longitude',
+      endAreaId: 'end_area_id',
       preferredDriverGender: 'preferred_driver_gender',
       requiredSeats: 'required_seats',
       departureDate: 'departure_date',

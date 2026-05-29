@@ -11,6 +11,8 @@ import {
   Platform,
   Image,
   Alert,
+  Modal,
+  FlatList,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@/context/AuthContext';
@@ -18,7 +20,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import * as ImagePicker from 'expo-image-picker';
-import { authAPI } from '@/services/api';
+import { authAPI, locationAPI } from '@/services/api';
 import ErrorModal from '@/components/ErrorModal';
 import SuccessModal from '@/components/SuccessModal';
 import { useTranslation } from 'react-i18next';
@@ -102,6 +104,24 @@ const isLocalImageUri = (uri = '') =>
     uri.startsWith('content:') ||
     uri.startsWith('data:'));
 
+const normalizeCity = (cityValue) => {
+  if (!cityValue) {
+    return { id: null, name: '' };
+  }
+
+  if (typeof cityValue === 'object') {
+    return {
+      id: cityValue.id ?? cityValue.city_id ?? null,
+      name: cityValue.name ?? cityValue.city ?? '',
+    };
+  }
+
+  return {
+    id: null,
+    name: String(cityValue).trim(),
+  };
+};
+
 const ProfileScreen = () => {
   const navigation = useNavigation();
   const { user, setUserFromStorage } = useAuth();
@@ -116,6 +136,12 @@ const ProfileScreen = () => {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [cities, setCities] = useState([]);
+  const [selectedCityId, setSelectedCityId] = useState(user?.data?.city_id ?? normalizeCity(user?.data?.city).id ?? null);
+  const [selectedCityName, setSelectedCityName] = useState(normalizeCity(user?.data?.city).name || '');
+  const [citySearchQuery, setCitySearchQuery] = useState('');
+  const [isCityModalVisible, setIsCityModalVisible] = useState(false);
+  const [loadingCities, setLoadingCities] = useState(false);
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
@@ -136,7 +162,37 @@ const ProfileScreen = () => {
     if (user?.data?.profile_image) {
       setProfileImageUri(user.data.profile_image);
     }
+    const normalizedCity = normalizeCity(user?.data?.city);
+    setSelectedCityId(user?.data?.city_id ?? normalizedCity.id ?? null);
+    setSelectedCityName(normalizedCity.name || '');
   }, [user]);
+
+  const filteredCities = cities.filter((city) =>
+    city.name?.toLowerCase().includes(citySearchQuery.trim().toLowerCase())
+  );
+
+  const loadCities = async () => {
+    if (cities.length > 0) {
+      return;
+    }
+
+    try {
+      setLoadingCities(true);
+      const response = await locationAPI.getCities();
+      setCities(Array.isArray(response?.data) ? response.data : []);
+    } catch (error) {
+      setErrorMessage(error.response?.data?.message || error.message || t('cityPrompt.loadError'));
+      setShowErrorModal(true);
+    } finally {
+      setLoadingCities(false);
+    }
+  };
+
+  const openCityModal = async () => {
+    setCitySearchQuery('');
+    setIsCityModalVisible(true);
+    await loadCities();
+  };
 
   const pickImage = async () => {
     try {
@@ -196,6 +252,8 @@ const ProfileScreen = () => {
       const updateData = {
         name: name.trim(),
         profile_image: finalProfileImage,
+        city_id: selectedCityId,
+        city: selectedCityName || undefined,
       };
 
       await authAPI.updateProfile(updateData);
@@ -303,6 +361,30 @@ const ProfileScreen = () => {
                 value={name}
                 onChangeText={setName}
               />
+            </View>
+
+            <View style={styles.inputSection}>
+              <Text style={[styles.label, { color: theme.colors.text }]}>{t('auth.city')}</Text>
+              <TouchableOpacity
+                style={[
+                  styles.selectButton,
+                  {
+                    borderColor: theme.colors.border,
+                    backgroundColor: theme.colors.inputBackground,
+                  }
+                ]}
+                onPress={openCityModal}
+              >
+                <Text
+                  style={[
+                    styles.selectButtonText,
+                    { color: selectedCityName ? theme.colors.text : theme.colors.placeholder }
+                  ]}
+                >
+                  {selectedCityName || t('auth.selectCity')}
+                </Text>
+                <Icon name="expand-more" size={22} color={theme.colors.textSecondary} />
+              </TouchableOpacity>
             </View>
 
             <TouchableOpacity
@@ -464,6 +546,87 @@ const ProfileScreen = () => {
           message={successMessage}
         />
 
+        <Modal
+          visible={isCityModalVisible}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setIsCityModalVisible(false)}
+        >
+          <TouchableOpacity
+            style={styles.modalOverlay}
+            activeOpacity={1}
+            onPress={() => setIsCityModalVisible(false)}
+          >
+            <TouchableOpacity
+              activeOpacity={1}
+              style={[styles.cityModalCard, { backgroundColor: theme.colors.cardBackground }]}
+              onPress={() => {}}
+            >
+              <Text style={[styles.cityModalTitle, { color: theme.colors.text }]}>
+                {t('auth.selectCity')}
+              </Text>
+
+              <TextInput
+                style={[
+                  styles.citySearchInput,
+                  {
+                    color: theme.colors.text,
+                    borderColor: theme.colors.border,
+                    backgroundColor: theme.colors.inputBackground,
+                  }
+                ]}
+                placeholder={t('cityPrompt.searchPlaceholder')}
+                placeholderTextColor={theme.colors.placeholder}
+                value={citySearchQuery}
+                onChangeText={setCitySearchQuery}
+              />
+
+              {loadingCities ? (
+                <View style={styles.cityLoader}>
+                  <ActivityIndicator color={theme.colors.primary} />
+                </View>
+              ) : (
+                <FlatList
+                  data={filteredCities}
+                  keyExtractor={(item) => item.id?.toString() || item.name}
+                  keyboardShouldPersistTaps="handled"
+                  ListEmptyComponent={
+                    <Text style={[styles.cityEmptyText, { color: theme.colors.textSecondary }]}>
+                      {t('common.noResults')}
+                    </Text>
+                  }
+                  renderItem={({ item }) => {
+                    const isSelected = selectedCityId === item.id;
+
+                    return (
+                      <TouchableOpacity
+                        style={[
+                          styles.cityOption,
+                          isSelected && { backgroundColor: theme.colors.primary + '18' },
+                        ]}
+                        onPress={() => {
+                          setSelectedCityId(item.id);
+                          setSelectedCityName(item.name);
+                          setIsCityModalVisible(false);
+                        }}
+                      >
+                        <Text
+                          style={[
+                            styles.cityOptionText,
+                            { color: isSelected ? theme.colors.primary : theme.colors.text }
+                          ]}
+                        >
+                          {item.name}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  }}
+                />
+              )}
+            </TouchableOpacity>
+          </TouchableOpacity>
+        </Modal>
+
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -527,6 +690,20 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     fontSize: 16,
     height: 50,
+  },
+  selectButton: {
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    height: 50,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  selectButtonText: {
+    fontSize: 16,
+    flex: 1,
+    marginRight: 12,
   },
   passwordInputContainer: {
     flexDirection: 'row',
@@ -607,6 +784,50 @@ const styles = StyleSheet.create({
   imageHint: {
     fontSize: 12,
     marginTop: 8,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    padding: 24,
+  },
+  cityModalCard: {
+    borderRadius: 16,
+    padding: 20,
+    maxHeight: '70%',
+  },
+  cityModalTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    marginBottom: 14,
+    textAlign: 'center',
+  },
+  citySearchInput: {
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    height: 48,
+    fontSize: 16,
+    marginBottom: 12,
+  },
+  cityLoader: {
+    minHeight: 120,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  cityOption: {
+    paddingHorizontal: 14,
+    paddingVertical: 14,
+    borderRadius: 10,
+  },
+  cityOptionText: {
+    fontSize: 15,
+    fontWeight: '500',
+  },
+  cityEmptyText: {
+    paddingVertical: 24,
+    textAlign: 'center',
+    fontSize: 14,
   },
 });
 

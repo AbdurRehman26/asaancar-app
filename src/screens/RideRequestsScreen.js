@@ -19,11 +19,9 @@ import RideRequestFilterDrawer from '@/components/RideRequestFilterDrawer';
 
 const EMPTY_FILTERS = {
   startLocation: '',
-  startLatitude: '',
-  startLongitude: '',
+  startAreaId: '',
   endLocation: '',
-  endLatitude: '',
-  endLongitude: '',
+  endAreaId: '',
   preferredDriverGender: '',
   requiredSeats: '',
   departureDate: '',
@@ -65,6 +63,22 @@ const formatTime = (timeString) => {
   } catch (error) {
     return timeString;
   }
+};
+
+const getAreaLabel = (value) => {
+  if (typeof value === 'string') {
+    return value;
+  }
+
+  return value?.name || value?.area || value?.title || value?.location || '';
+};
+
+const getRequestRouteLabel = (request, target) => {
+  const areaKey = target === 'start' ? 'start_area' : 'end_area';
+  const locationKey = target === 'start' ? 'start_location' : 'end_location';
+  const areaLabel = getAreaLabel(request?.[areaKey]);
+
+  return areaLabel || request?.[locationKey] || '';
 };
 
 const RideRequestsScreen = () => {
@@ -182,7 +196,18 @@ const RideRequestsScreen = () => {
   };
 
   const renderRequestCard = (item) => {
+    const startLabel = getRequestRouteLabel(item, 'start');
+    const endLabel = getRequestRouteLabel(item, 'end');
     const requesterName = item.user?.name || item.name || 'Rider';
+    const requesterCity =
+      item.user?.city?.name ||
+      item.user?.city?.city ||
+      item.user?.city_name ||
+      item.user?.city ||
+      item.city?.name ||
+      item.city_name ||
+      item.city ||
+      null;
     const budget = item.budget_per_seat || item.budgetPerSeat || null;
     const seats = item.required_seats || item.requiredSeats || 1;
     const departureLabel = item.schedule_type === 'once' && item.departure_date
@@ -206,7 +231,7 @@ const RideRequestsScreen = () => {
               <View style={[styles.timelineDotGreen, { borderColor: glassCardStyle.backgroundColor }]} />
               <View style={styles.timelineContent}>
                 <Text style={[styles.locationTitle, { color: theme.colors.text }]} numberOfLines={1}>
-                  {item.start_location || 'Start Location'}
+                  {startLabel || 'Start Location'}
                 </Text>
                 <Text style={[styles.locationLabel, { color: theme.colors.textLight }]}>Start Point</Text>
               </View>
@@ -220,7 +245,7 @@ const RideRequestsScreen = () => {
               <Icon name="location-pin" size={18} color={isDark ? '#c77dba' : theme.colors.primary} style={{ marginLeft: -1 }} />
               <View style={styles.timelineContent}>
                 <Text style={[styles.locationTitle, { color: theme.colors.text }]} numberOfLines={1}>
-                  {item.end_location || 'End Location'}
+                  {endLabel || 'End Location'}
                 </Text>
                 <Text style={[styles.locationLabel, { color: theme.colors.textLight }]}>Destination</Text>
               </View>
@@ -302,6 +327,11 @@ const RideRequestsScreen = () => {
               <Text style={[styles.driverPhone, { color: theme.colors.textSecondary }]}>
                 {user ? (item.contact || 'Contact on details page') : 'Login to view contact details'}
               </Text>
+              {user && requesterCity ? (
+                <Text style={[styles.driverPhone, { color: theme.colors.textSecondary }]}>
+                  {requesterCity}
+                </Text>
+              ) : null}
             </View>
           </View>
 

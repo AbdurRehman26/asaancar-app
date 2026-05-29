@@ -12,7 +12,6 @@ import {
   Modal,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import ErrorModal from '@/components/ErrorModal';
@@ -24,12 +23,11 @@ import { authAPI } from '@/services/api';
 const RegisterScreen = () => {
   const navigation = useNavigation();
   const { theme, isDark, toggleTheme } = useTheme();
-  const { register } = useAuth();
   const { t, i18n } = useTranslation();
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
-    role: 'user',
+    role: '',
   });
   const [loading, setLoading] = useState(false);
   const [showErrorModal, setShowErrorModal] = useState(false);
@@ -46,6 +44,12 @@ const RegisterScreen = () => {
 
     if (!formData.phone || formData.phone.length !== 10) {
       setErrorMessage('Please enter a valid 10-digit phone number');
+      setShowErrorModal(true);
+      return;
+    }
+
+    if (!formData.role) {
+      setErrorMessage(t('auth.selectSignupIntentError'));
       setShowErrorModal(true);
       return;
     }
@@ -120,6 +124,69 @@ const RegisterScreen = () => {
           <Text style={[styles.accountInfoTitle, { color: theme.colors.text }]}>
             {t('auth.createAccount')}
           </Text>
+
+          <View style={styles.labelContainer}>
+            <Text style={[styles.label, { color: theme.colors.text }]}>{t('auth.signupIntentTitle')}</Text>
+          </View>
+          <View style={styles.roleSelector}>
+            <TouchableOpacity
+              style={[
+                styles.roleCard,
+                {
+                  borderColor: formData.role === 'rider' ? theme.colors.primary : theme.colors.border,
+                  backgroundColor: formData.role === 'rider' ? `${theme.colors.primary}14` : theme.colors.inputBackground,
+                },
+              ]}
+              activeOpacity={0.85}
+              onPress={() => setFormData({ ...formData, role: 'rider' })}
+            >
+              <Icon
+                name="search"
+                size={22}
+                color={formData.role === 'rider' ? theme.colors.primary : theme.colors.textSecondary}
+              />
+              <Text
+                style={[
+                  styles.roleCardTitle,
+                  { color: formData.role === 'rider' ? theme.colors.primary : theme.colors.text },
+                ]}
+              >
+                {t('auth.lookingForRideTitle')}
+              </Text>
+              <Text style={[styles.roleCardDescription, { color: theme.colors.textSecondary }]}>
+                {t('auth.lookingForRideDescription')}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.roleCard,
+                {
+                  borderColor: formData.role === 'driver' ? theme.colors.primary : theme.colors.border,
+                  backgroundColor: formData.role === 'driver' ? `${theme.colors.primary}14` : theme.colors.inputBackground,
+                },
+              ]}
+              activeOpacity={0.85}
+              onPress={() => setFormData({ ...formData, role: 'driver' })}
+            >
+              <Icon
+                name="directions-car"
+                size={22}
+                color={formData.role === 'driver' ? theme.colors.primary : theme.colors.textSecondary}
+              />
+              <Text
+                style={[
+                  styles.roleCardTitle,
+                  { color: formData.role === 'driver' ? theme.colors.primary : theme.colors.text },
+                ]}
+              >
+                {t('auth.driverTitle')}
+              </Text>
+              <Text style={[styles.roleCardDescription, { color: theme.colors.textSecondary }]}>
+                {t('auth.driverDescription')}
+              </Text>
+            </TouchableOpacity>
+          </View>
 
           {/* Name Input */}
           <View style={styles.labelContainer}>
@@ -347,6 +414,25 @@ const styles = StyleSheet.create({
   },
   labelContainer: {
     marginBottom: 8,
+  },
+  roleSelector: {
+    gap: 12,
+    marginBottom: 18,
+  },
+  roleCard: {
+    borderWidth: 1,
+    borderRadius: 16,
+    padding: 16,
+  },
+  roleCardTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    marginTop: 10,
+    marginBottom: 4,
+  },
+  roleCardDescription: {
+    fontSize: 13,
+    lineHeight: 19,
   },
   label: {
     fontSize: 14,
